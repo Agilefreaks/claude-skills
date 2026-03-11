@@ -1,3 +1,8 @@
+---
+name: code-review
+description: "Outside-in, risk-driven code review methodology. Use when reviewing pull requests, evaluating code changes, or conducting code reviews for any change type: bug fixes, new features, add-ons, extensions, and refinements. Also use when asked to assess code quality, review a diff, or provide feedback on proposed changes."
+---
+
 # Code Review Skill
 
 > Outside-in, risk-driven code review methodology based on Gregory Brown's "Effective Code Reviews" (Programming Beyond Practices, 2015).

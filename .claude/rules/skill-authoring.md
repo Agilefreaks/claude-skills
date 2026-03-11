@@ -8,6 +8,35 @@ A skill file must contain no project-specific names, paths, tools, commands, or 
 
 A useful test: could this skill be installed in any AgileFreaks project — or any software project — without modification? If not, extract the project-specific parts.
 
+## Frontmatter
+
+Every SKILL.md **must** begin with a YAML frontmatter block:
+
+```yaml
+---
+name: skill-name
+description: "What the skill does and when to trigger it."
+---
+```
+
+Required fields:
+- `name` — kebab-case, max 64 characters
+- `description` — max 1024 characters. This is the **primary triggering mechanism**. Describe what the skill does AND the contexts or phrases that should activate it. Lean slightly "pushy" to ensure the skill triggers when useful.
+
+Optional fields: `license`, `allowed-tools`, `metadata`, `compatibility`. Do not add unrecognized keys — validation rejects them.
+
+## Skill anatomy
+
+```
+skill-name/
+├── SKILL.md          # Required — keep under 500 lines
+├── scripts/          # Executable code for deterministic tasks
+├── references/       # Docs loaded into context as needed
+└── assets/           # Templates, icons, fonts used in output
+```
+
+Keep SKILL.md under 500 lines. Move detailed reference content to `references/`. For large reference files (>300 lines), include a table of contents. When a skill supports multiple domains, organize by variant under `references/`.
+
 ## Structure
 
 Use clear phase or section headings. Skills that describe a multi-step process should use numbered phases. Skills that describe a reference or checklist can use descriptive headings.
@@ -24,11 +53,9 @@ Describe in the skill — typically in the relevant phase — that project-speci
 
 ## Trigger description
 
-Open the skill with a blockquote (or frontmatter if supported) that describes:
-- What the skill does in one or two sentences
-- What is handled externally (platform mechanics, project conventions)
+The `description` frontmatter field is the primary trigger. After the frontmatter block, you may optionally open the skill body with a blockquote summarizing what is handled externally (platform mechanics, project conventions). This is for human readers; triggering relies solely on the frontmatter `description`.
 
-Example:
+Example blockquote:
 ```
 > Outside-in, risk-driven code review methodology.
 >
