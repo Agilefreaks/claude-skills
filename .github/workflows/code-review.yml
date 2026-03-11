@@ -1,0 +1,66 @@
+name: Automated PR Code Review
+
+# Template workflow for consuming projects.
+#
+# This workflow checks out the agilefreaks/claude-skills repo alongside your
+# project and passes the code-review skill to Claude. The skill provides the
+# generic 6-phase methodology; your project's .claude/rules/code-review.md
+# provides posting mechanics, context gathering, and project-specific checks.
+#
+# Required secrets:
+#   CLAUDE_CODE_OAUTH_TOKEN — Claude Code OAuth token with code review permissions
+#
+# Required permissions:
+#   pull-requests: write — to post review comments
+#   contents: read      — to read repository contents
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  code-review:
+    name: Claude Code Review
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout AgileFreaks skills
+        uses: actions/checkout@v4
+        with:
+          repository: agilefreaks/claude-skills
+          path: .skills
+
+      - name: Run code review
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          allowed_tools: |
+            Bash(gh pr view:*)
+            Bash(gh pr diff:*)
+            Bash(gh pr review:*)
+            Bash(gh issue view:*)
+            Bash(gh api:*)
+            Bash(jq:*)
+            Read
+            Glob
+            Grep
+          prompt: |
+            You are performing an automated code review for PR #${{ github.event.pull_request.number }}.
+
+            Review methodology is defined in .skills/plugins/code-review/skills/code-review/SKILL.md.
+
+            Follow all six phases of the skill. For Phase 5 (Project-Specific Checks) and Phase 6
+            (output format and posting mechanics), follow the instructions in .claude/rules/code-review.md
+            if it exists in this repository. If it does not exist, use the generic output structure
+            from the skill and post via `gh pr review --comment`.
+
+            PR number: ${{ github.event.pull_request.number }}
+            Repository: ${{ github.repository }}

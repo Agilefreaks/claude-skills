@@ -1,0 +1,26 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "agilefreaks-skills",
+  "owner": {
+    "name": "AgileFreaks",
+    "email": "dev@agilefreaks.com"
+  },
+  "metadata": {
+    "description": "Internal AgileFreaks skills library for Claude Code and Claude.ai Cowork.",
+    "version": "1.0.0",
+    "pluginRoot": "./plugins"
+  },
+  "plugins": [
+    {
+      "name": "code-review",
+      "source": "./plugins/code-review",
+      "description": "Outside-in, risk-driven code review methodology based on Gregory Brown's Effective Code Reviews. Covers all change types: bug fixes, new features, enhancements, and refinements.",
+      "version": "1.0.0",
+      "author": {
+        "name": "AgileFreaks"
+      },
+      "category": "productivity",
+      "keywords": ["code-review", "pr-review", "quality", "risk-assessment"]
+    }
+  ]
+}

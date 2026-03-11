@@ -1,0 +1,9 @@
+{
+  "name": "code-review",
+  "description": "Outside-in, risk-driven code review methodology. Reviews pull requests across all change types: bug fixes, new features, add-ons, extensions, and refinements. Project-specific checks, posting mechanics, and context gathering are configured via a companion rules file in your project.",
+  "version": "1.0.0",
+  "author": {
+    "name": "AgileFreaks"
+  },
+  "keywords": ["code-review", "pr-review", "quality", "risk-assessment", "testing"]
+}
