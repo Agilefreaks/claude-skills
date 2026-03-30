@@ -21,7 +21,7 @@ Ask two questions:
 
 If the answer to either is no — **stop**. Don't review the code. Get in touch with whoever decides what gets built and talk it through. Reviewing code that won't survive in production is a waste of time.
 
-To answer these questions: read the linked issue or ticket, supporting documentation, and any relevant discussion. If no issue exists, use the PR title and description as the source of truth. Check whether the diff plausibly addresses what was described.
+To answer these questions: read the linked issue or ticket, supporting documentation, and any relevant discussion. If your project defines how to locate the relevant issue or ticket (task management integration, branch naming conventions), follow that. If no issue exists or no integration is configured, use the PR title and description as the source of truth. Check whether the diff plausibly addresses what was described.
 
 **What to defer to a human:** Actually running the feature and verifying it works from the user's perspective. You can validate logical alignment between the stated problem and the diff; a human must verify it actually works.
 
@@ -32,6 +32,8 @@ To answer these questions: read the linked issue or ticket, supporting documenta
 - Is the build passing? If not, pause the review. A broken build can't be trusted. Even if the new change works correctly, other things could be broken. Don't assume a build failure is innocuous.
 - Is the code running somewhere other than the author's machine? A production environment is ideal; a staging environment or another developer's machine is an acceptable smoke test.
 - Did getting the code running require asking someone for help? If so, documentation is missing or setup needs to be automated — or both.
+
+If your project defines how to verify build status (CI system, status checks), use that. Otherwise, check for any available build indicators in the change context.
 
 **What to defer to a human:** Running the code locally or in staging, trying out the feature from the perspective of the people who will use it, and raising any concerns about usability, error handling, or surprising behavior.
 
@@ -107,7 +109,9 @@ Find every piece of functionality that depends on the code being modified. Each 
 
 ## Phase 5: Project-Specific Checks
 
-Apply your project's coding conventions, architecture patterns, and style rules to the diff. Check for violations of whatever standards the project has established.
+If your project defines coding conventions, architecture patterns, or style rules, apply them to the diff and check for violations.
+
+If no project conventions are defined, check for: inconsistent naming within the diff, dead code introduced by the change, obvious duplication, missing error handling at system boundaries, and security concerns (unsanitized input, hardcoded secrets, overly broad permissions).
 
 If your project has defined platform-specific posting mechanics (how to post a review, format for inline comments, etc.), follow them in the next phase.
 
