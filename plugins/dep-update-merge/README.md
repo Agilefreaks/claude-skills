@@ -12,19 +12,21 @@ Bundles open dependency-update PRs/MRs into a single verified change with change
 
 4. **Phase 4: Branch Preparation** — Creates a combined branch from the default branch by applying selected updates in alphabetical order. Reports any conflicts without silently resolving them.
 
-5. **Phase 5: Build & Test Verification** — Runs build, tests, and lint on the combined branch. Compares warnings against the default branch baseline. Reports new warnings and fails clearly on build or test failure.
+5. **Phase 5: Build & Test Verification** — Runs the project's build, tests, and lint using whatever commands are already configured in the project's CLAUDE.md or rules files. Compares warnings against the default branch baseline. Reports new warnings and fails clearly on build or test failure.
 
 6. **Phase 6: Completion & Output** — Produces a summary report of bundled updates, deferred updates with reasons, and verification results. Creates the final PR/MR if configured, otherwise leaves the branch ready for manual submission.
 
 ## Companion rules file (recommended)
 
-The skill is fully generic and works out of the box for Phases 1–4. Phases 5 and 6 require project configuration to be effective — without build and test commands, verification cannot run.
+The skill works out of the box with no configuration. Phase 5 uses whatever build, test, and lint commands your project already has in `CLAUDE.md` or `.claude/rules/` — do not add those here. The companion rules file only needs skill-specific settings: how to discover dependency PRs and how to submit the bundle.
 
 Set up your project's rules with:
 
 ```
-Use the dep-update-merge skill to configure this project
+set up dep-update-merge
 ```
+
+Or equivalently: "configure dep-update-merge", "onboard dep-update-merge".
 
 Or create `.claude/rules/dep-update-merge.md` manually. Example:
 
@@ -33,27 +35,14 @@ Or create `.claude/rules/dep-update-merge.md` manually. Example:
 
 ## PR/MR Discovery
 
-Use `gh pr list --label dependencies --state open --json number,title,headRefName,author` to list dependency-update PRs. Filter to PRs authored by `dependabot[bot]` or `renovate[bot]`.
+Use `gh pr list --author dependabot[bot] --state open --json number,title,headRefName` to list dependency-update PRs.
 
-## Build Command
+## Changelog Retrieval
 
-npm run build
-
-## Test Command
-
-npm test
-
-## Lint Command
-
-npm run lint
-
-## Warning Patterns
-
-Scan for lines matching: `warning TS`, `DeprecationWarning`, `ExperimentalWarning`.
+Check RubyGems.org and GitHub release pages for changelogs covering each gem's version range.
 
 ## Completion Action
 
-Create the PR with:
 gh pr create \
   --title "chore: bundle dependency updates" \
   --label dependencies \
@@ -80,14 +69,14 @@ glab mr create \
 ### Claude Code (terminal)
 
 ```
-Use the dep-update-merge skill to bundle open dependency PRs
-```
-
-Or after configuring your rules file:
-
-```
 Bundle the dependency updates
 Merge the open Dependabot PRs
+```
+
+To configure the skill first:
+
+```
+set up dep-update-merge
 ```
 
 ### Claude.ai Cowork

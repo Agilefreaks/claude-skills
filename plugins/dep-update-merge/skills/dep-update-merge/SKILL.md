@@ -1,13 +1,29 @@
 ---
 name: dep-update-merge
-description: "Bundle and merge dependency update PRs/MRs into a single verified change. Use when asked to merge dependency updates, combine Dependabot or Renovate PRs, batch dependency bumps, update dependencies, or consolidate open dependency PRs. Also use when asked to check changelogs for dependency updates, verify that dependency bumps are safe, or create a bundled dependency update branch."
+description: "Bundle and merge dependency update PRs/MRs into a single verified change. Use when asked to merge dependency updates, combine Dependabot or Renovate PRs, batch dependency bumps, update dependencies, or consolidate open dependency PRs. Also use when asked to check changelogs for dependency updates, verify that dependency bumps are safe, or create a bundled dependency update branch. Also use when asked to set up, configure, or onboard this skill."
 ---
 
 # Dependency Update Merge Skill
 
 > Bundles open dependency-update PRs/MRs into one verified change with changelog analysis and breaking change triage.
 >
-> Platform integration, build commands, and project-specific checks are defined separately in your project's rules.
+> Platform integration and project-specific checks are defined separately in your project's rules. Build, test, and lint commands are not configured here — the skill uses whatever your project already has in CLAUDE.md or .claude/rules/.
+
+---
+
+## Setup
+
+When asked to set up, configure, onboard, or create a rules file for this skill:
+
+1. Read all existing project rules (`.claude/rules/`, `CLAUDE.md`) to understand what is already configured. Do not duplicate build, test, or lint commands — those are project-level concerns that belong in the project's own configuration, not here.
+2. Inspect the project for dependency bot configuration (`.github/dependabot.yml`, `renovate.json`, `.renovaterc`) and package manifests (`Gemfile`, `package.json`, `go.mod`, etc.).
+3. Present the user with interactive choices for each skill-specific decision, using a choice dialog with options for each:
+   - **PR/MR Discovery** — how to list and filter dependency-update PRs/MRs; suggest a concrete command based on the bot detected
+   - **Changelog Retrieval** — how to find changelogs; suggest based on detected package ecosystem
+   - **Completion Action** — how to submit the bundle (e.g., create PR via CLI, leave branch for manual submission)
+4. Write `.claude/rules/dep-update-merge.md` containing only the user's choices. Omit any decision where the user accepts the default — the skill's built-in behavior handles those.
+
+If the user accepts all defaults and no choices were made, confirm that no rules file is needed and stop.
 
 ---
 
@@ -87,7 +103,9 @@ Run the project's full verification suite on the combined branch and compare res
 
 ### Build and tests
 
-If your project defines build and test commands, run them. If no commands are defined, this phase cannot be automated — report that build verification requires project configuration and stop.
+Run the project's build, test, and lint commands as already configured in its rules, CLAUDE.md, or project configuration files. This skill does not define its own build or test commands — those are project-level concerns. Look for them in `.claude/rules/`, `CLAUDE.md`, and common project files (Makefile, package.json scripts, etc.).
+
+If no build or test commands are configured anywhere in the project, report that Phase 5 requires project-level configuration (in CLAUDE.md or `.claude/rules/`) and stop. Do not ask the user to configure commands through this skill.
 
 Capture the full output. Report a clear pass/fail.
 
@@ -98,9 +116,7 @@ If the build or tests fail:
 
 ### Warning baseline comparison
 
-After the build and tests pass, compare warnings against the default branch baseline.
-
-If your project defines warning patterns or a baseline, use that. Otherwise, scan build and test output for lines matching common patterns: "warning", "WARN", "deprecated", "deprecation notice".
+After the build and tests pass, compare warnings against the default branch baseline. Scan build and test output for lines matching common warning patterns: "warning", "WARN", "deprecated", "deprecation notice".
 
 Run the same commands on the default branch (or compare against a stored baseline if available). Report:
 - New warnings introduced by the bundle
