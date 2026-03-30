@@ -14,13 +14,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **dep-update-merge** — Removed `onboarding.json` and `rules-template.md` (dead files — nothing in the consuming project reads them). Added interactive Setup section directly in SKILL.md. Removed build/test/lint extension points; those are project-level concerns sourced from existing CLAUDE.md or .claude/rules/. Simplified trigger to "set up dep-update-merge".
-- **Onboarding wizard** — `.claude/rules/onboarding.md` defines an interactive setup experience for any plugin that ships `onboarding.json`. Inspects the consuming project to suggest project-aware defaults, walks through each extension point, and generates a companion rules file.
-- **`onboarding.json`** for code-review plugin — declares all 5 extension points (task-location, build-verification, coding-conventions, posting-mechanics, output-format) with detect hints for project inspection.
-- **`assets/rules-template.md`** for code-review plugin — template with `{{id}}` placeholders used by the wizard to generate the companion rules file.
+- **code-review** — Same cleanup: removed `onboarding.json` and `rules-template.md`, added interactive Setup section to SKILL.md.
+- **skill-authoring.md** — Replaced `onboarding.json` / `rules-template.md` authoring guidance with Setup section guidance. Skills now embed setup instructions directly in SKILL.md.
+- **CLAUDE.md** — Updated plugin onboarding section to reflect the new Setup-section-in-SKILL.md approach.
 
-### Changed
+### Removed
 
-- `skill-authoring.md` — added `onboarding.json` authoring guidance: schema reference, `detect` hints, and rules template placeholder conventions.
+- `.claude/rules/onboarding.md` — wizard behavior that only worked inside the skills repo, never reached consuming projects.
+- `onboarding.json` and `assets/rules-template.md` from both code-review and dep-update-merge plugins — dead files nothing in consuming projects read.
 
 ## [1.0.0] - 2026-03-11
 

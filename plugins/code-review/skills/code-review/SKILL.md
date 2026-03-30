@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: "Outside-in, risk-driven code review methodology. Use when reviewing pull requests, evaluating code changes, or conducting code reviews for any change type: bug fixes, new features, add-ons, extensions, and refinements. Also use when asked to assess code quality, review a diff, or provide feedback on proposed changes."
+description: "Outside-in, risk-driven code review methodology. Use when reviewing pull requests, evaluating code changes, or conducting code reviews for any change type: bug fixes, new features, add-ons, extensions, and refinements. Also use when asked to assess code quality, review a diff, or provide feedback on proposed changes. Also use when asked to set up, configure, or onboard this skill."
 ---
 
 # Code Review Skill
@@ -8,6 +8,24 @@ description: "Outside-in, risk-driven code review methodology. Use when reviewin
 > Outside-in, risk-driven code review methodology based on Gregory Brown's "Effective Code Reviews" (Programming Beyond Practices, 2015).
 >
 > Platform integration and project-specific checks are defined separately in your project's rules.
+
+---
+
+## Setup
+
+When asked to set up, configure, onboard, or create a rules file for this skill:
+
+1. Read all existing project rules (`.claude/rules/`, `CLAUDE.md`) to understand what is already configured. Do not duplicate conventions, commands, or checks that already exist in the project's configuration.
+2. Inspect the project for issue/PR linking conventions, CI configuration, linter/formatter configs, and code review platform indicators.
+3. Present the user with interactive choices for each skill-specific decision, using a choice dialog with options for each:
+   - **Context Gathering** — how to locate the relevant issue or ticket for a PR (branch naming, PR body keywords, task management integration)
+   - **Build Verification** — how to verify the build is passing (CI status checks, specific commands)
+   - **Coding Conventions** — project-specific checks beyond the skill's defaults (architecture rules, style rules already enforced by linters)
+   - **Output Format** — custom structure for the review output, or use the built-in format
+   - **Posting Mechanics** — how to post the review (GitHub PR comment, inline comments, stdout)
+4. Write `.claude/rules/code-review.md` containing only the user's choices. Omit any decision where the user accepts the default — the skill's built-in behavior handles those.
+
+If the user accepts all defaults and no choices were made, confirm that no rules file is needed and stop.
 
 ---
 

@@ -88,54 +88,24 @@ Example blockquote:
 > Platform integration and project-specific checks are defined separately in your project's rules.
 ```
 
-## Onboarding metadata
+## Setup section
 
-When your skill has extension points, declare them in `.claude-plugin/onboarding.json` alongside `plugin.json`. This enables the onboarding wizard (see `.claude/rules/onboarding.md`) to walk consuming projects through interactive setup and generate their companion rules file.
+When your skill has extension points, include a **Setup** section in SKILL.md (before Phase 1) that describes how to interactively configure the skill. This section travels with the plugin and is available wherever the skill is installed — no external files needed.
 
-### onboarding.json structure
+The Setup section should:
 
-```json
-{
-  "skill": "skill-name",
-  "intro": "One or two sentences describing the skill and what setup will do.",
-  "extensionPoints": [
-    {
-      "id": "kebab-case-id",
-      "phase": "Phase N: Phase Name",
-      "description": "What this extension point controls.",
-      "default": "Fallback behavior if not configured, or null if none.",
-      "required": false,
-      "prompt": "The question the wizard asks the user.",
-      "detect": {
-        "description": "What to look for in the consuming project.",
-        "hints": ["glob/pattern/**", "another-file.yml"]
-      }
-    }
-  ]
-}
-```
+1. **Read existing project rules first.** Instruct Claude to read `.claude/rules/` and `CLAUDE.md` before asking anything. Do not duplicate configuration that already exists in the project (build commands, test commands, coding conventions, etc.).
+2. **Inspect the project.** List what to look for: CI configs, linter configs, dependency bot configs, package manifests — whatever is relevant to the skill's extension points.
+3. **Present interactive choices.** List each skill-specific decision with a brief description. Use choice dialogs (not walls of text) so the user can select from detected options.
+4. **Write the companion rules file.** Generate `.claude/rules/<skill-name>.md` containing only the user's choices. Omit decisions where the user accepts the default.
 
-**Field reference:**
-- `id` — kebab-case, unique within the plugin. Must match placeholder IDs in `assets/rules-template.md`.
-- `phase` — the SKILL.md phase this belongs to, for display grouping.
-- `description` — what this extension point controls (one sentence).
-- `default` — the skill's fallback behavior as a string, or `null` if the phase is skipped without configuration.
-- `required` — set `true` only if the skill cannot function at all without this configured.
-- `prompt` — the question asked during interactive setup. Be concrete; give examples.
-- `detect` (optional) — project inspection hints. The wizard globs for `hints` patterns and reads matching files to suggest project-aware defaults. Omit `detect` for extension points that are pure preferences (not detectable from project structure).
+### Only configure skill-specific decisions
 
-Keep `onboarding.json` in sync with SKILL.md. When you add, rename, or remove an extension point in the skill, update the corresponding entry here.
+Extension points should be decisions unique to the skill's workflow. Project-level concerns like build commands, test commands, and lint commands belong in the project's own `CLAUDE.md` or `.claude/rules/` — not in a skill's companion rules file. If a skill needs to run the project's build, it should say "use whatever the project has configured" rather than asking the user to re-enter those commands.
 
-### Rules template
+### Add setup triggers to the description
 
-If you ship `assets/rules-template.md`, the wizard uses it as the skeleton for the generated companion rules file. Use these placeholder conventions:
-
-- `{{id}}` — replaced with the user's answer for that extension point.
-- `{{#id}}...{{/id}}` — the entire block is included only if the user provided a value (not "use default"). Remove the markers; keep the content with the substitution applied.
-
-Sections for extension points where the user accepted the default are omitted from the generated file — the skill's built-in behavior handles them.
-
-If no template is present, the wizard generates a minimal rules file from the extension point metadata directly.
+Include "set up", "configure", and "onboard" in the frontmatter `description` so the skill activates when users ask to configure it.
 
 ## Versioning
 

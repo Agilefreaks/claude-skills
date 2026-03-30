@@ -41,15 +41,14 @@ See `.claude/rules/skill-authoring.md` for the full authoring rules.
 
 Before contributing, read `.claude/soul.md`. It captures why this repo exists and the principles that should inform every change.
 
-## Plugin onboarding
+## Plugin setup
 
-Plugins can ship `.claude-plugin/onboarding.json` to enable an interactive setup wizard. When a user asks to configure or set up a plugin, the wizard inspects their project, suggests project-aware defaults for each extension point, and generates a `.claude/rules/<skill-name>.md` companion rules file.
+Each skill can include a **Setup** section in its SKILL.md that guides interactive configuration when a user says "set up [skill]". The setup reads the consuming project's existing rules, inspects for relevant config files, presents interactive choices, and generates a `.claude/rules/<skill-name>.md` companion rules file. No external metadata files are needed — the setup instructions travel with the SKILL.md.
 
-See `.claude/rules/onboarding.md` for the wizard behavior and `.claude/rules/skill-authoring.md` for how to author `onboarding.json`.
+See `.claude/rules/skill-authoring.md` for how to write a Setup section.
 
 ## Rules files
 
 Detailed rules are in `.claude/rules/`:
-- `skill-authoring.md` — how to write SKILL.md files, including `onboarding.json` metadata
+- `skill-authoring.md` — how to write SKILL.md files, including setup sections
 - `marketplace.md` — how to maintain marketplace structure and versioning
-- `onboarding.md` — the plugin setup wizard behavior
