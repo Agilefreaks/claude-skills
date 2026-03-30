@@ -1,0 +1,93 @@
+{
+  "skill": "code-review",
+  "intro": "The code-review skill provides a 6-phase, risk-driven review methodology. It works out of the box, but becomes richer when configured for your project. This wizard will walk you through each customization point and inspect your project to suggest sensible defaults.",
+  "extensionPoints": [
+    {
+      "id": "task-location",
+      "phase": "Phase 1: Problem Validation",
+      "description": "How to locate the relevant issue or ticket for a PR.",
+      "default": "Use the PR title and description as the source of truth.",
+      "required": false,
+      "prompt": "How does your project link PRs to issues? (e.g., branch naming like '733-fix-login', PR body keywords like 'Fixes #N', a task management tool, or a CLI command like 'gh issue view')",
+      "detect": {
+        "description": "Look for issue/PR linking conventions and task management configuration",
+        "hints": [
+          ".github/ISSUE_TEMPLATE/**",
+          ".github/PULL_REQUEST_TEMPLATE*",
+          ".github/pull_request_template.md",
+          ".linear/**",
+          ".jira/**"
+        ]
+      }
+    },
+    {
+      "id": "build-verification",
+      "phase": "Phase 2: Build & Runability",
+      "description": "How to verify the build is passing for a PR.",
+      "default": "Check for any available build indicators in the change context.",
+      "required": false,
+      "prompt": "How should the reviewer verify build status? (e.g., 'Check GitHub Actions status checks using gh pr checks', 'Run make test', a specific CI command)",
+      "detect": {
+        "description": "Look for CI/build configuration to suggest how to verify build status",
+        "hints": [
+          ".github/workflows/*.yml",
+          "Makefile",
+          "Jenkinsfile",
+          ".circleci/config.yml",
+          ".gitlab-ci.yml",
+          "package.json"
+        ]
+      }
+    },
+    {
+      "id": "coding-conventions",
+      "phase": "Phase 5: Project-Specific Checks",
+      "description": "Coding standards, architecture patterns, and style rules to check the diff against.",
+      "default": "Check for inconsistent naming, dead code, obvious duplication, missing error handling at system boundaries, and security concerns.",
+      "required": false,
+      "prompt": "Describe your project's coding conventions, architecture rules, and style checks. You can organize by category (Architecture, Performance, Security, Testing).",
+      "detect": {
+        "description": "Look for linter, formatter, and style configuration to understand project conventions",
+        "hints": [
+          ".eslintrc*",
+          ".eslintrc.js",
+          ".eslintrc.json",
+          ".eslintrc.yml",
+          ".prettierrc*",
+          ".rubocop.yml",
+          "pyproject.toml",
+          ".editorconfig",
+          "biome.json",
+          ".golangci.yml",
+          "rustfmt.toml",
+          ".stylelintrc*"
+        ]
+      }
+    },
+    {
+      "id": "posting-mechanics",
+      "phase": "Phase 6: Risk Assessment & Output",
+      "description": "How the review is posted to your code review platform.",
+      "default": null,
+      "required": false,
+      "prompt": "How should the review be posted? (e.g., 'Post as a GitHub PR review comment using gh pr review --comment', 'Post inline comments on specific lines using the GitHub API'). Leave blank to output to stdout only.",
+      "detect": {
+        "description": "Look for code review platform indicators to suggest posting mechanics",
+        "hints": [
+          ".github/**",
+          ".github/workflows/*.yml",
+          ".gitlab-ci.yml",
+          "bitbucket-pipelines.yml"
+        ]
+      }
+    },
+    {
+      "id": "output-format",
+      "phase": "Phase 6: Risk Assessment & Output",
+      "description": "The structure and format of the review output.",
+      "default": "Use the built-in structure: Context, Looks Good, Concerns Found, Risk Assessment, Human Reviewer Checklist.",
+      "required": false,
+      "prompt": "Do you want a custom output format for reviews? Describe the structure you want, or leave blank to use the built-in format."
+    }
+  ]
+}

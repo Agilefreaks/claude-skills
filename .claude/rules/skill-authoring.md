@@ -88,6 +88,55 @@ Example blockquote:
 > Platform integration and project-specific checks are defined separately in your project's rules.
 ```
 
+## Onboarding metadata
+
+When your skill has extension points, declare them in `.claude-plugin/onboarding.json` alongside `plugin.json`. This enables the onboarding wizard (see `.claude/rules/onboarding.md`) to walk consuming projects through interactive setup and generate their companion rules file.
+
+### onboarding.json structure
+
+```json
+{
+  "skill": "skill-name",
+  "intro": "One or two sentences describing the skill and what setup will do.",
+  "extensionPoints": [
+    {
+      "id": "kebab-case-id",
+      "phase": "Phase N: Phase Name",
+      "description": "What this extension point controls.",
+      "default": "Fallback behavior if not configured, or null if none.",
+      "required": false,
+      "prompt": "The question the wizard asks the user.",
+      "detect": {
+        "description": "What to look for in the consuming project.",
+        "hints": ["glob/pattern/**", "another-file.yml"]
+      }
+    }
+  ]
+}
+```
+
+**Field reference:**
+- `id` — kebab-case, unique within the plugin. Must match placeholder IDs in `assets/rules-template.md`.
+- `phase` — the SKILL.md phase this belongs to, for display grouping.
+- `description` — what this extension point controls (one sentence).
+- `default` — the skill's fallback behavior as a string, or `null` if the phase is skipped without configuration.
+- `required` — set `true` only if the skill cannot function at all without this configured.
+- `prompt` — the question asked during interactive setup. Be concrete; give examples.
+- `detect` (optional) — project inspection hints. The wizard globs for `hints` patterns and reads matching files to suggest project-aware defaults. Omit `detect` for extension points that are pure preferences (not detectable from project structure).
+
+Keep `onboarding.json` in sync with SKILL.md. When you add, rename, or remove an extension point in the skill, update the corresponding entry here.
+
+### Rules template
+
+If you ship `assets/rules-template.md`, the wizard uses it as the skeleton for the generated companion rules file. Use these placeholder conventions:
+
+- `{{id}}` — replaced with the user's answer for that extension point.
+- `{{#id}}...{{/id}}` — the entire block is included only if the user provided a value (not "use default"). Remove the markers; keep the content with the substitution applied.
+
+Sections for extension points where the user accepted the default are omitted from the generated file — the skill's built-in behavior handles them.
+
+If no template is present, the wizard generates a minimal rules file from the extension point metadata directly.
+
 ## Versioning
 
 Skills are versioned via `plugin.json` and the marketplace entry. When updating a skill's behavior materially, bump the version. Document the change in `CHANGELOG.md`.

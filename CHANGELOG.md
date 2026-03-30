@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Onboarding wizard** — `.claude/rules/onboarding.md` defines an interactive setup experience for any plugin that ships `onboarding.json`. Inspects the consuming project to suggest project-aware defaults, walks through each extension point, and generates a companion rules file.
+- **`onboarding.json`** for code-review plugin — declares all 5 extension points (task-location, build-verification, coding-conventions, posting-mechanics, output-format) with detect hints for project inspection.
+- **`assets/rules-template.md`** for code-review plugin — template with `{{id}}` placeholders used by the wizard to generate the companion rules file.
+
+### Changed
+
+- `skill-authoring.md` — added `onboarding.json` authoring guidance: schema reference, `detect` hints, and rules template placeholder conventions.
+
 ## [1.0.0] - 2026-03-11
 
 ### Added
