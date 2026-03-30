@@ -8,6 +8,8 @@ A skill file must contain no project-specific names, paths, tools, commands, or 
 
 A useful test: could this skill be installed in any AgileFreaks project — or any software project — without modification? If not, extract the project-specific parts.
 
+The mechanism for this separation is the Template Method pattern — described in [Project-specific configuration](#project-specific-configuration) below.
+
 ## Frontmatter
 
 Every SKILL.md **must** begin with a YAML frontmatter block:
@@ -49,7 +51,31 @@ Any phase where the skill cannot fully verify an outcome must include a "What to
 
 ## Project-specific configuration
 
-Describe in the skill — typically in the relevant phase — that project-specific behavior is configured via a companion rules file in the consuming project. Don't specify what the rules file is called or where it lives; that's up to the consuming project.
+Skills follow the Template Method pattern: the skill defines the methodology skeleton with explicit extension points that projects can override through companion rules files.
+
+### Extension points must be explicit
+
+Each phase or section where behavior varies by project should include a clear callout identifying what the project can configure. Name the decision the project needs to make, but don't prescribe the shape of the project's rules file — that's up to the consuming project.
+
+Good example:
+
+> If a project output format is defined, follow it. Otherwise, structure the output clearly with the sections above.
+
+### Provide defaults where possible
+
+Every extension point should supply a reasonable fallback so the skill works with zero project configuration. A skill that requires setup before it produces any value has a high adoption barrier. Aim for: useful out of the box, richer when configured.
+
+### When no default is possible, say so
+
+Some extension points genuinely need project configuration to be effective. Be explicit:
+
+> This phase requires project configuration to be effective. Define your project's conventions in a companion rules file.
+
+Don't silently skip the phase or produce empty output — tell the user what's missing so they can act on it.
+
+### What to name, what not to prescribe
+
+Extension points should name the decision ("output format", "platform posting mechanics", "coding conventions") without dictating file names, directory structures, or rule formats. The consuming project decides how to organize its configuration.
 
 ## Trigger description
 
