@@ -1,0 +1,143 @@
+{
+  "skill": "dep-update-merge",
+  "intro": "This skill bundles open dependency-update PRs/MRs into a single verified change. Setup will configure how your project lists PRs/MRs, retrieves changelogs, runs its build and test suite, and creates the final bundled PR.",
+  "extensionPoints": [
+    {
+      "id": "pr-discovery",
+      "phase": "Phase 1: Discovery",
+      "description": "How to list and filter open dependency-update PRs/MRs.",
+      "default": "List all open PRs/MRs and filter by common dependency-bot author names and title patterns (bump, update, upgrade, chore(deps)).",
+      "required": false,
+      "prompt": "How should dependency-update PRs/MRs be listed? (e.g., 'gh pr list --label dependencies', 'glab mr list --author renovate[bot]', filter by author like 'dependabot[bot]')",
+      "detect": {
+        "description": "Look for dependency bot configuration files to understand which bot and labels are in use.",
+        "hints": [
+          ".github/dependabot.yml",
+          "renovate.json",
+          "renovate.json5",
+          ".renovaterc",
+          ".renovaterc.json",
+          ".github/renovate.json",
+          ".gitlab/renovate.json"
+        ]
+      }
+    },
+    {
+      "id": "changelog-retrieval",
+      "phase": "Phase 2: Changelog Analysis",
+      "description": "How to find changelogs for dependencies in this project's ecosystem.",
+      "default": "Attempt to locate CHANGELOG.md, release notes, or registry pages for each dependency based on its package ecosystem.",
+      "required": false,
+      "prompt": "How should changelogs be retrieved for your dependencies? (e.g., 'Check npm registry for release notes', 'Read CHANGELOG.md from the dependency GitHub repo', 'Use gem info for Ruby gems')",
+      "detect": {
+        "description": "Look for package manifests to identify the dependency ecosystem.",
+        "hints": [
+          "package.json",
+          "Gemfile",
+          "requirements.txt",
+          "pyproject.toml",
+          "go.mod",
+          "Cargo.toml",
+          "build.gradle",
+          "build.gradle.kts",
+          "pom.xml",
+          "composer.json",
+          "mix.exs"
+        ]
+      }
+    },
+    {
+      "id": "build-command",
+      "phase": "Phase 5: Build & Test Verification",
+      "description": "The command to build the project.",
+      "default": null,
+      "required": false,
+      "prompt": "What command builds your project? (e.g., 'npm run build', 'make build', 'cargo build', 'mvn compile', 'mix compile')",
+      "detect": {
+        "description": "Look for build configuration files to suggest the appropriate build command.",
+        "hints": [
+          "Makefile",
+          "package.json",
+          "Cargo.toml",
+          "build.gradle",
+          "pom.xml",
+          "CMakeLists.txt",
+          "mix.exs",
+          "build.sbt"
+        ]
+      }
+    },
+    {
+      "id": "test-command",
+      "phase": "Phase 5: Build & Test Verification",
+      "description": "The command to run the full test suite.",
+      "default": null,
+      "required": false,
+      "prompt": "What command runs your test suite? (e.g., 'npm test', 'bundle exec rspec', 'pytest', 'cargo test', 'make test', 'mix test')",
+      "detect": {
+        "description": "Look for test configuration files to suggest the appropriate test command.",
+        "hints": [
+          "package.json",
+          "Gemfile",
+          "pytest.ini",
+          "setup.cfg",
+          "pyproject.toml",
+          "Cargo.toml",
+          "Makefile",
+          "mix.exs",
+          "build.sbt"
+        ]
+      }
+    },
+    {
+      "id": "lint-command",
+      "phase": "Phase 5: Build & Test Verification",
+      "description": "The command to run linting or static analysis.",
+      "default": "Skip lint checks.",
+      "required": false,
+      "prompt": "What command runs your linter or static analysis? (e.g., 'npm run lint', 'rubocop', 'flake8', 'cargo clippy', 'mix credo'). Leave blank to skip.",
+      "detect": {
+        "description": "Look for linter configuration files to suggest the appropriate lint command.",
+        "hints": [
+          ".eslintrc",
+          ".eslintrc.js",
+          ".eslintrc.json",
+          ".eslintrc.yml",
+          ".rubocop.yml",
+          "pyproject.toml",
+          ".golangci.yml",
+          ".golangci.yaml",
+          "biome.json",
+          ".prettierrc",
+          ".credo.exs"
+        ]
+      }
+    },
+    {
+      "id": "warning-patterns",
+      "phase": "Phase 5: Build & Test Verification",
+      "description": "How to identify warnings in build and test output.",
+      "default": "Scan for lines containing 'warning', 'WARN', 'deprecated', or 'deprecation notice'.",
+      "required": false,
+      "prompt": "How should warnings be identified in build output? (e.g., specific patterns, compiler-specific formats, a warnings baseline file). Leave blank to use common patterns."
+    },
+    {
+      "id": "completion-action",
+      "phase": "Phase 6: Completion & Output",
+      "description": "How to create the final bundled PR/MR after verification passes.",
+      "default": null,
+      "required": false,
+      "prompt": "How should the final bundled change be submitted? (e.g., 'gh pr create --title \"chore: bundle dependency updates\" --label dependencies', 'glab mr create'). Leave blank to output a report and leave the branch ready for manual PR creation.",
+      "detect": {
+        "description": "Look for forge configuration to suggest the appropriate PR/MR creation command.",
+        "hints": [
+          ".github/**",
+          ".github/PULL_REQUEST_TEMPLATE.md",
+          ".github/pull_request_template.md",
+          ".gitlab-ci.yml",
+          "bitbucket-pipelines.yml"
+        ]
+      }
+    }
+  ]
+}

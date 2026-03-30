@@ -1,0 +1,157 @@
+---
+name: dep-update-merge
+description: "Bundle and merge dependency update PRs/MRs into a single verified change. Use when asked to merge dependency updates, combine Dependabot or Renovate PRs, batch dependency bumps, update dependencies, or consolidate open dependency PRs. Also use when asked to check changelogs for dependency updates, verify that dependency bumps are safe, or create a bundled dependency update branch."
+---
+
+# Dependency Update Merge Skill
+
+> Bundles open dependency-update PRs/MRs into one verified change with changelog analysis and breaking change triage.
+>
+> Platform integration, build commands, and project-specific checks are defined separately in your project's rules.
+
+---
+
+## Phase 1: Discovery
+
+List all open PRs/MRs and identify those that are dependency updates.
+
+If your project defines how to list and filter dependency-update PRs/MRs (platform command, label filter, author filter), follow that. Otherwise, list all open PRs/MRs and identify dependency updates by examining titles and authors for common patterns: titles containing "bump", "update", "upgrade", or "chore(deps)", and authors matching common bot names such as "dependabot" or "renovate".
+
+Present the discovered list to the user with: PR/MR number, title, source branch, dependency name, and version range (old → new). Ask the user to confirm which PRs/MRs to include before proceeding.
+
+If no dependency-update PRs/MRs are found, report that and stop.
+
+**What to defer to a human:** Deciding whether a PR/MR that looks like a dependency update but has non-standard formatting or an unexpected author should be included. When in doubt, ask rather than assume.
+
+---
+
+## Phase 2: Changelog Analysis
+
+For each confirmed dependency, find and read the changelog or release notes covering the version range being applied.
+
+If your project defines how to retrieve changelogs (registry URL convention, local vendored changelogs, changelog location pattern), follow that. Otherwise, attempt to find changelogs by:
+- Looking for CHANGELOG.md, CHANGES.md, HISTORY.md, or RELEASES.md in the dependency's source repository
+- Checking the forge's release page for the dependency
+- Reading the registry page (npm, RubyGems, PyPI, crates.io, pkg.go.dev, etc.) for release notes
+
+Classify each update as:
+- **patch** — bug fixes only, no API changes
+- **minor** — new features, backward-compatible
+- **major / breaking** — breaking changes, API removals, required migration steps, behavior changes
+
+Produce a summary table:
+
+| Dependency | Old Version | New Version | Classification | Notable Changes |
+|------------|-------------|-------------|----------------|-----------------|
+
+Flag any update that contains deprecation notices, migration guides, required code changes, or sections explicitly labeled "breaking changes."
+
+If a changelog cannot be found for a dependency, flag it as "changelog unavailable" and treat it as uncertain.
+
+**What to defer to a human:** Verifying that a change labeled "non-breaking" is truly non-breaking for how this specific project uses that dependency. Changelogs are written by the dependency author and may understate impact. A human familiar with the codebase should review any flagged update.
+
+---
+
+## Phase 3: Breaking Change Triage
+
+If any updates from Phase 2 were classified as breaking or flagged as uncertain, present them with their changelog summaries and ask the user how to proceed:
+
+- **Include all** — bundle all updates, accepting the risk of breaking changes
+- **Exclude breaking updates** — bundle only patch and minor updates; defer the rest
+- **Exclude specific updates** — let the user name which ones to remove from the bundle
+
+If the user chooses to exclude any updates, remove them from the working set and note them as "deferred — breaking changes detected" in the Phase 6 report.
+
+If no breaking changes or uncertain updates were found in Phase 2, skip this phase entirely and proceed to Phase 4.
+
+---
+
+## Phase 4: Branch Preparation
+
+Create a single working branch that combines all selected dependency updates.
+
+1. Start from the project's default branch (main, master, or equivalent)
+2. Create a new branch named `deps/bundled-updates` (or follow your project's branch naming convention)
+3. Apply each selected update by merging or cherry-picking from its source branch
+4. Apply updates in alphabetical order by dependency name for reproducibility
+
+If conflicts arise between updates, stop and report them. Do not silently resolve conflicts — present the conflicting updates and ask whether to resolve manually, exclude one of the conflicting updates, or abort.
+
+**What to defer to a human:** Resolving merge conflicts that require understanding of how two dependency updates interact. Some conflicts are mechanical; others require knowing which version's behavior the project needs.
+
+---
+
+## Phase 5: Build & Test Verification
+
+Run the project's full verification suite on the combined branch and compare results against the default branch.
+
+### Build and tests
+
+If your project defines build and test commands, run them. If no commands are defined, this phase cannot be automated — report that build verification requires project configuration and stop.
+
+Capture the full output. Report a clear pass/fail.
+
+If the build or tests fail:
+- Report which step failed and the relevant error output
+- Suggest options: exclude the update most likely responsible, investigate the failure, or abort
+- Do not proceed to Phase 6 on failure
+
+### Warning baseline comparison
+
+After the build and tests pass, compare warnings against the default branch baseline.
+
+If your project defines warning patterns or a baseline, use that. Otherwise, scan build and test output for lines matching common patterns: "warning", "WARN", "deprecated", "deprecation notice".
+
+Run the same commands on the default branch (or compare against a stored baseline if available). Report:
+- New warnings introduced by the bundle
+- Warnings resolved by the bundle
+- Net change
+
+If new warnings were introduced, report them and ask whether to proceed or investigate. The goal is zero new warnings, but the user decides the threshold.
+
+**What to defer to a human:** Diagnosing build failures that require domain knowledge about the project's architecture or the dependency's internals. Evaluating whether a new warning is acceptable or indicates upcoming breakage.
+
+---
+
+## Phase 6: Completion & Output
+
+Produce a summary report:
+
+```
+## Dependency Bundle: <branch-name>
+
+### Bundled Updates
+| Dependency | Old Version | New Version | Classification | Notes |
+|------------|-------------|-------------|----------------|-------|
+
+### Deferred Updates
+| Dependency | Old Version | New Version | Reason Deferred |
+|------------|-------------|-------------|-----------------|
+
+### Verification
+- Build: PASS / FAIL
+- Tests: PASS / FAIL
+- Lint: PASS / FAIL / SKIPPED
+- New warnings: N
+
+### Branch
+<branch-name> — ready for review
+```
+
+If your project defines how to create the final PR/MR or how to post the output (platform command, PR template), follow that. Otherwise, output the report to stdout and leave the branch ready for the user to create a PR/MR manually.
+
+**What to defer to a human:** The final decision to merge. This skill prepares and verifies the combined change but does not merge to the default branch. A human must review the bundle and approve the merge.
+
+---
+
+## Core Principles
+
+1. **Safety first.** Never merge automatically. The skill prepares a verified bundle; a human decides to ship it.
+
+2. **Transparency.** Every exclusion, conflict, warning, and failure is reported. Nothing is silently skipped or resolved.
+
+3. **Platform-agnostic.** The methodology works regardless of forge or CI system. Platform specifics live in the companion rules file.
+
+4. **Reproducible.** Alphabetical merge order and explicit conflict reporting mean the same inputs produce the same bundle.
+
+5. **Conservative on breaking changes.** Default to offering exclusion of breaking updates rather than silently including them. The user can always opt in.

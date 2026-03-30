@@ -12,6 +12,17 @@
   },
   "plugins": [
     {
+      "name": "dep-update-merge",
+      "source": "./plugins/dep-update-merge",
+      "description": "Bundles open dependency-update PRs/MRs into a single verified change with changelog analysis, breaking change triage, and build/test verification.",
+      "version": "1.0.0",
+      "author": {
+        "name": "AgileFreaks"
+      },
+      "category": "productivity",
+      "keywords": ["dependency-update", "dependabot", "renovate", "merge", "bundling", "changelog"]
+    },
+    {
       "name": "code-review",
       "source": "./plugins/code-review",
       "description": "Outside-in, risk-driven code review methodology based on Gregory Brown's Effective Code Reviews. Covers all change types: bug fixes, new features, enhancements, and refinements.",

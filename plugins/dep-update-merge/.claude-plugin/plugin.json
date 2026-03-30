@@ -1,0 +1,9 @@
+{
+  "name": "dep-update-merge",
+  "description": "Bundles open dependency-update PRs/MRs into a single verified change. Analyzes changelogs for breaking changes, runs build/test/lint verification, compares warning baselines, and offers to exclude breaking updates. Platform-agnostic — works with GitHub, GitLab, or any forge that exposes PRs/MRs via CLI.",
+  "version": "1.0.0",
+  "author": {
+    "name": "AgileFreaks"
+  },
+  "keywords": ["dependency-update", "dependabot", "renovate", "merge", "bundling", "changelog"]
+}
