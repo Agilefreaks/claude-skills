@@ -15,7 +15,7 @@
       "name": "dep-update-merge",
       "source": "./plugins/dep-update-merge",
       "description": "Bundles open dependency-update PRs/MRs into a single verified change with changelog analysis, breaking change triage, and build/test verification.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "author": {
         "name": "AgileFreaks"
       },
