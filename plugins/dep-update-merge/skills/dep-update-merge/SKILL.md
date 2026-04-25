@@ -49,6 +49,7 @@ If your project defines how to retrieve changelogs (registry URL convention, loc
 - Looking for CHANGELOG.md, CHANGES.md, HISTORY.md, or RELEASES.md in the dependency's source repository
 - Checking the forge's release page for the dependency
 - Reading the registry page (npm, RubyGems, PyPI, crates.io, pkg.go.dev, etc.) for release notes
+- As a last resort, performing a web search starting from the author's website or project homepage declared in the package manifest (e.g., `homepage`, `homepage_uri`, `Home-page`) to find release notes, blog posts, or doc-site changelogs published outside the registry
 
 Classify each update as:
 - **patch** — bug fixes only, no API changes

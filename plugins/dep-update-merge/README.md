@@ -39,7 +39,7 @@ Use `gh pr list --author dependabot[bot] --state open --json number,title,headRe
 
 ## Changelog Retrieval
 
-Check RubyGems.org and GitHub release pages for changelogs covering each gem's version range.
+Check RubyGems.org and GitHub release pages for changelogs covering each gem's version range. If neither has release notes, fall back to a web search starting from the gem's declared homepage.
 
 ## Completion Action
 
