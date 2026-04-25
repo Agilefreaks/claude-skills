@@ -23,6 +23,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `.claude/rules/onboarding.md` — wizard behavior that only worked inside the skills repo, never reached consuming projects.
 - `onboarding.json` and `assets/rules-template.md` from both code-review and dep-update-merge plugins — dead files nothing in consuming projects read.
 
+## [1.0.1] - 2026-04-25
+
+### Fixed
+
+- **code-review** — `.github/workflows/code-review.yml` now grants `id-token: write` (required by `anthropics/claude-code-action@v1` to mint an OIDC token) and uses `claude_args: --allowedTools "..."` in place of the now-invalid `allowed_tools` input. Without these, the workflow failed at the OIDC step and silently ran with default tool permissions.
+
 ## [1.0.0] - 2026-03-11
 
 ### Added

@@ -26,7 +26,7 @@
       "name": "code-review",
       "source": "./plugins/code-review",
       "description": "Outside-in, risk-driven code review methodology based on Gregory Brown's Effective Code Reviews. Covers all change types: bug fixes, new features, enhancements, and refinements.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": {
         "name": "AgileFreaks"
       },
