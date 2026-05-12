@@ -7,7 +7,7 @@
   },
   "metadata": {
     "description": "Internal AgileFreaks skills library for Claude Code and Claude.ai Cowork.",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "pluginRoot": "./plugins"
   },
   "plugins": [
@@ -32,6 +32,17 @@
       },
       "category": "productivity",
       "keywords": ["code-review", "pr-review", "quality", "risk-assessment"]
+    },
+    {
+      "name": "android-project-starter",
+      "source": "./plugins/android-project-starter",
+      "description": "Wizard-driven scaffolder for Android projects using a multi-module MVI + Compose + Koin architecture. Generates build-logic, core, feature modules, version catalog, navigation, DI, tooling (Spotless/detekt), CI, and project-local Claude skills.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Denis Coman"
+      },
+      "category": "productivity",
+      "keywords": ["android", "kotlin", "compose", "mvi", "koin", "scaffolding", "wizard", "starter"]
     }
   ]
 }
