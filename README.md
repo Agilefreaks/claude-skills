@@ -6,6 +6,7 @@ Internal Claude skills library. Works across Claude.ai Cowork, Claude Code (term
 
 | Plugin | Description | Version | Category |
 |--------|-------------|---------|----------|
+| [android-project-starter](plugins/android-project-starter/) | Wizard-driven Android project scaffolder. Multi-module MVI + Compose + Koin + Navigation 3, with build-logic convention plugins, tests, CI, and project-local planner/implementer skills. | 0.1.0 | productivity |
 | [code-review](plugins/code-review/) | Outside-in, risk-driven code review. Covers bug fixes, new features, add-ons, extensions, and refinements. | 1.0.0 | productivity |
 | [dep-update-merge](plugins/dep-update-merge/) | Bundles dependency-update PRs/MRs into one verified change with changelog analysis and breaking change triage. | 1.0.0 | productivity |
 
