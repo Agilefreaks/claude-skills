@@ -137,10 +137,11 @@ import org.gradle.kotlin.dsl.configure
 class AndroidApplicationConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
-            with(pluginManager) {
-                apply("com.android.application")
-                apply("org.jetbrains.kotlin.android")
-            }
+            // AGP 9.2+: do NOT apply org.jetbrains.kotlin.android manually — AGP's new DSL
+            // hard-errors on the combination. Kotlin is auto-applied by com.android.application
+            // when android.builtInKotlin=true (the default).
+            pluginManager.apply("com.android.application")
+
             extensions.configure<ApplicationExtension> {
                 compileSdk = libs.findVersion("compileSdk").get().toString().toInt()
                 defaultConfig {
@@ -182,10 +183,9 @@ import org.gradle.kotlin.dsl.project
 class AndroidLibraryConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
-            with(pluginManager) {
-                apply("com.android.library")
-                apply("org.jetbrains.kotlin.android")
-            }
+            // AGP 9.2+: do NOT apply org.jetbrains.kotlin.android manually (see Application plugin).
+            pluginManager.apply("com.android.library")
+
             extensions.configure<LibraryExtension> {
                 compileSdk = libs.findVersion("compileSdk").get().toString().toInt()
                 defaultConfig { minSdk = libs.findVersion("minSdk").get().toString().toInt() }
@@ -213,7 +213,58 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
 }
 ```
 
-**`AndroidApplicationComposeConventionPlugin.kt`** and **`AndroidLibraryComposeConventionPlugin.kt`** — each configures its own extension (`ApplicationExtension` / `LibraryExtension`), applies `org.jetbrains.kotlin.plugin.compose`, enables `buildFeatures { compose = true }`, and adds the Compose BOM-managed deps.
+**`AndroidApplicationComposeConventionPlugin.kt`** and **`AndroidLibraryComposeConventionPlugin.kt`** — each configures its own extension (`ApplicationExtension` / `LibraryExtension`), applies `org.jetbrains.kotlin.plugin.compose`, enables `buildFeatures { compose = true }`, sets `testOptions.unitTests.isIncludeAndroidResources = true`, and adds the Compose BOM-managed deps.
+
+The `isIncludeAndroidResources = true` line is required for Robolectric Compose tests. `createComposeRule()` launches `ComponentActivity` under the hood via `ActivityScenarioRule`. For **unit tests** (`src/test/`, not `src/androidTest/`), AGP does not merge AAR manifests by default — so `ComponentActivity`'s registration (provided by `compose-ui-test-manifest.aar`) is invisible to the test runtime and tests crash with `Unable to resolve activity for Intent { ... cmp=org.robolectric.default/androidx.activity.ComponentActivity }`. Enabling `isIncludeAndroidResources` merges AAR resources/manifests for unit tests and fixes this.
+
+Canonical shape of the Compose convention plugins (substitute `ApplicationExtension` or `LibraryExtension` per plugin):
+
+```kotlin
+import com.android.build.api.dsl.LibraryExtension   // or ApplicationExtension
+import org.gradle.api.Plugin
+import org.gradle.api.Project
+import org.gradle.kotlin.dsl.configure
+import org.gradle.kotlin.dsl.dependencies
+
+class AndroidLibraryComposeConventionPlugin : Plugin<Project> {
+    override fun apply(target: Project) {
+        with(target) {
+            pluginManager.apply("org.jetbrains.kotlin.plugin.compose")
+
+            extensions.configure<LibraryExtension> {
+                buildFeatures {
+                    compose = true
+                }
+                testOptions {
+                    unitTests {
+                        // Required for Robolectric Compose tests — without this, createComposeRule()
+                        // can't find ComponentActivity in the merged manifest and tests crash with
+                        // "Unable to resolve activity for Intent".
+                        isIncludeAndroidResources = true
+                    }
+                }
+            }
+
+            dependencies {
+                val bom = libs.findLibrary("androidx-compose-bom").get()
+                add("implementation", platform(bom))
+                add("implementation", libs.findLibrary("androidx-compose-ui").get())
+                add("implementation", libs.findLibrary("androidx-compose-ui-graphics").get())
+                add("implementation", libs.findLibrary("androidx-compose-ui-tooling-preview").get())
+                add("debugImplementation", libs.findLibrary("androidx-compose-ui-tooling").get())
+                add("debugImplementation", libs.findLibrary("androidx-compose-ui-test-manifest").get())
+                add("testImplementation", platform(bom))
+                add("testImplementation", libs.findLibrary("androidx-compose-ui-test-junit4").get())
+                add("testImplementation", libs.findLibrary("robolectric").get())
+                add("androidTestImplementation", platform(bom))
+                add("androidTestImplementation", libs.findLibrary("androidx-compose-ui-test-junit4").get())
+            }
+        }
+    }
+}
+```
+
+The Application variant is identical except for `LibraryExtension` → `ApplicationExtension` and `add("implementation", libs.findLibrary("androidx-compose-material3").get())` for the Material 3 dep.
 
 **`AndroidFeatureConventionPlugin.kt`** — applies `<project>.android.library`, `<project>.android.library.compose`, `<project>.android.lint`, then adds feature-specific deps (lifecycle, navigation3, koin-androidx-compose, kotlinx-collections-immutable). Does NOT configure any Android extension itself — that's the library plugin's job.
 
@@ -333,7 +384,16 @@ dependencyResolutionManagement {
 }
 ```
 
-**`gradle.properties`** must include `android.builtInKotlin=false` if AGP 9+ is used. AGP 9's built-in Kotlin breaks KSP — the convention plugins explicitly apply `org.jetbrains.kotlin.android` instead.
+**`gradle.properties` Kotlin handling — AGP version matters.**
+
+The right setting flipped between AGP 9.0 and AGP 9.2:
+
+| Resolved AGP | `gradle.properties` | Convention plugins |
+|---|---|---|
+| `9.0.x` – `9.1.x` | `android.builtInKotlin=false` | **Must** `apply("org.jetbrains.kotlin.android")` manually in `AndroidApplicationConventionPlugin` and `AndroidLibraryConventionPlugin`. Built-in Kotlin broke KSP in early 9.0. |
+| `9.2.0+` | `android.builtInKotlin=true` (or omit — `true` is the default with `android.newDsl=true`) | **Do NOT** `apply("org.jetbrains.kotlin.android")` manually — AGP 9.2's new DSL hard-errors with `The 'org.jetbrains.kotlin.android' plugin is not compatible with AGP's 9.0 new DSL`. AGP auto-applies Kotlin. |
+
+The wizard **must** detect the resolved AGP version after Step 9 (version resolution) and pick the matching template. If AGP ≥ 9.2.0, generate the Application/Library convention plugin canonicals **without** the `apply("org.jetbrains.kotlin.android")` line and set `android.builtInKotlin=true` (or omit it). If AGP is 9.0.x or 9.1.x, keep the manual-apply form. New scaffolds should default to the AGP 9.2+ shape since "latest stable" resolves there now.
 
 **Do NOT add these legacy escape hatches to `gradle.properties` — they were removed in AGP 9 and fail at configuration time:**
 - `android.defaults.buildfeatures.buildconfig` — enable `buildConfig` in the `AndroidApplicationConventionPlugin` instead (already done above).
@@ -667,6 +727,14 @@ Re-read the relevant section whenever a Compose decision is in front of you — 
 The wizard scaffolds Navigation 3 (the new type-safe Compose nav library: `androidx.navigation3`). Each feature exposes an `<Feature>Entry` extension on `EntryProviderScope<NavKey>` that registers its routes:
 
 ```kotlin
+package <root-pkg>.feature.home
+
+import androidx.navigation3.runtime.EntryProviderScope
+import androidx.navigation3.runtime.NavKey
+// NOTE: do NOT add `import androidx.navigation3.runtime.entry` — that import does not exist.
+// `entry<K>` is a member function on EntryProviderScope<T> and is auto-available inside
+// any function with EntryProviderScope<NavKey> as its receiver.
+
 fun EntryProviderScope<NavKey>.homeEntry(
     onNavigateToSeries: (String) -> Unit,
 ) {
@@ -676,9 +744,23 @@ fun EntryProviderScope<NavKey>.homeEntry(
 }
 ```
 
-The app-level NavHost composes them inside a `NavDisplay` with `entryProvider { ... }`:
+**Nav3 1.1.x quick-reference (verified package paths):**
+
+| Symbol | Package | Notes |
+|---|---|---|
+| `NavKey` | `androidx.navigation3.runtime.NavKey` | Marker interface every `@Serializable` route implements. |
+| `EntryProviderScope<T>` | `androidx.navigation3.runtime.EntryProviderScope` | DSL receiver for `entryProvider { ... }`. Has the `entry<K>` member. |
+| `entry<K>` | **member function** on `EntryProviderScope<T>` | NOT a top-level function — no separate import. Available inside any function with `EntryProviderScope<T>` as receiver. Signature: `inline fun <reified K : T> EntryProviderScope<T>.entry(contentKey: Any = ..., noinline metadata: (K) -> Map<String, Any> = ..., noinline content: @Composable (K) -> Unit)`. |
+| `entryProvider` | `androidx.navigation3.runtime.entryProvider` | Top-level builder function that creates the `EntryProviderScope`. |
+| `NavDisplay` | `androidx.navigation3.ui.NavDisplay` | The Compose host. |
+| `rememberNavBackStack` | `androidx.navigation3.runtime.rememberNavBackStack` | Optional helper; plain `mutableStateListOf<NavKey>()` works too. |
+
+The app-level NavHost composes feature entries inside a `NavDisplay` with `entryProvider { ... }`:
 
 ```kotlin
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.ui.NavDisplay
+
 NavDisplay(
     backStack = backStack,
     onBack = { if (backStack.isNotEmpty()) backStack.removeAt(backStack.lastIndex) },
@@ -745,6 +827,54 @@ Single catalog file at `gradle/libs.versions.toml`. Sections:
    spotless            = { id = "com.diffplug.spotless", version.ref = "spotless" }
    ```
 
+### Catalog accessor form — use the imperative API in module build scripts
+
+In `build-logic/convention/` Kotlin code, `libs.findLibrary("X").get()` is the only API available (the type-safe `libs.androidx.core.ktx` accessors aren't generated for build-logic).
+
+In **module** `build.gradle.kts` files (`app-mobile`, `core/*`, `feature/*/data`, `feature/*/ui-mobile`), there are two accessor forms:
+
+1. **Type-safe** — `implementation(libs.androidx.core.ktx)`. Idiomatic; what most public docs show.
+2. **Imperative** — `implementation(libs.findLibrary("androidx-core-ktx").get())`. Works everywhere.
+
+**Use the imperative form throughout this project.** Reasons:
+
+- On Gradle 9.5.1 + AGP 9.2 with `includeBuild("build-logic")` and `repositoriesMode = FAIL_ON_PROJECT_REPOS`, the generated `LibrariesForLibs` type-safe accessor class is sometimes not visible to subproject build script classpaths — even when `libs` itself resolves. The result is `Unresolved reference 'androidx'` (or `'kotlinx'`, `'koin'`, ...) errors in module scripts that compile cleanly with the imperative form. Root cause is still under investigation upstream.
+- The convention plugins already use the imperative API; sticking with it across module scripts removes a mixed style.
+- It tolerates catalog reshuffles — renaming an alias is a single-spot grep.
+
+**Canonical helper at the top of every module's `build.gradle.kts` that uses catalog deps directly:**
+
+```kotlin
+import org.gradle.api.artifacts.VersionCatalogsExtension
+
+plugins {
+    alias(libs.plugins.<project>.android.application)
+    // ... other convention + standalone plugin aliases
+}
+
+val libsCatalog = extensions.getByType<VersionCatalogsExtension>().named("libs")
+fun lib(alias: String) = libsCatalog.findLibrary(alias).get()
+
+android {
+    namespace = "<root-pkg>"
+    // ... rest of android block
+}
+
+dependencies {
+    implementation(project(":core:common"))
+    // ... other project deps
+
+    implementation(lib("androidx-core-ktx"))
+    implementation(lib("androidx-activity-compose"))
+    implementation(lib("koin-android"))
+    // ... library deps via the helper
+}
+```
+
+The `lib(...)` helper is a 3-line workaround that keeps call-sites readable. If the type-safe accessor regression is fixed in a future Gradle/AGP version, switching back is a global find-replace.
+
+**Plugin aliases (`libs.plugins.<x>`) and version refs (`libs.versions.<x>`) work fine** — only the `libs.<library>` access path is affected. Keep `alias(libs.plugins.<project>.android.feature)` in `plugins { }` blocks unchanged.
+
 ## Test conventions
 
 **TDD for everything except Compose.** ViewModels, repositories, mappers, validators, extension functions — write the test first.
@@ -758,6 +888,40 @@ Single catalog file at `gradle/libs.versions.toml`. Sections:
 - Turbine for effect/flow assertions (`turbine`)
 - Robolectric for Compose tests (`robolectric`)
 - `MainCoroutineRule` (provided by `core/testing`)
+
+### MainCoroutineRule — defaults to `UnconfinedTestDispatcher`
+
+The canonical `MainCoroutineRule` in `core/testing` must default to `UnconfinedTestDispatcher`, not `StandardTestDispatcher`:
+
+```kotlin
+package <root-pkg>.testing
+
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.setMain
+import org.junit.rules.TestWatcher
+import org.junit.runner.Description
+
+@OptIn(ExperimentalCoroutinesApi::class)
+class MainCoroutineRule(
+    val testDispatcher: TestDispatcher = UnconfinedTestDispatcher(),
+) : TestWatcher() {
+    override fun starting(description: Description) {
+        Dispatchers.setMain(testDispatcher)
+    }
+
+    override fun finished(description: Description) {
+        Dispatchers.resetMain()
+    }
+}
+```
+
+**Why `UnconfinedTestDispatcher` is the default:** `BaseViewModel`'s `init { viewModelScope.launch { _actions.onEach(::onAction).collect() } }` block is what drains the action buffer. With `StandardTestDispatcher`, that `launch` doesn't run until the dispatcher is advanced (`advanceUntilIdle()` etc.) — so a test that calls `setAction(...)` and then awaits an effect via Turbine times out at 3s because `onAction` was never invoked. `UnconfinedTestDispatcher` runs launched coroutines eagerly, so `setAction` → `onAction` → `setEffect` all happen synchronously, and Turbine sees the effect immediately.
+
+Pass `StandardTestDispatcher()` explicitly only when you need manual scheduling (e.g., testing time-based behavior with `advanceTimeBy`).
 
 ### ViewModel test pattern
 
