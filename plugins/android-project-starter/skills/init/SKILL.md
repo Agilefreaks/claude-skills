@@ -104,6 +104,46 @@ Use `WebSearch` and `WebFetch` per the **Version-lookup sources** section in the
 
 Print the resolved version table to the user so they can flag anything they want to pin to an older version.
 
+## Step 9.5 — Pre-flight compatibility check
+
+Before generating files, run a compatibility-matrix check on the resolved versions and pick the right template variant. This catches "latest stable everything" combinations that don't compile together.
+
+**Required checks:**
+
+1. **AGP ↔ `android.builtInKotlin`** — read the resolved AGP version:
+   - **AGP ≥ 9.2.0** → set `android.builtInKotlin=true` (or omit) and DO NOT apply `org.jetbrains.kotlin.android` manually in the convention plugins. AGP's new DSL hard-errors otherwise.
+   - **AGP 9.0.x – 9.1.x** → set `android.builtInKotlin=false` and apply Kotlin manually. Early AGP 9 broke KSP without this.
+   - **AGP 8.x** → no explicit `builtInKotlin` setting needed; apply Kotlin manually (this is the pre-AGP-9 default).
+   
+   Pick the matching `AndroidApplicationConventionPlugin.kt` / `AndroidLibraryConventionPlugin.kt` template variant from the conventions skill.
+
+2. **Kotlin ↔ Compose Compiler plugin** — they must share the same version. Both reference `kotlin = "<X.Y.Z>"` in the catalog. Confirm `compose-gradlePlugin` resolves to `org.jetbrains.kotlin:compose-compiler-gradle-plugin:<kotlin version>`.
+
+3. **Kotlin ↔ KSP** — KSP versioning is `<kotlin major.minor.patch>-<ksp revision>`. If the resolved Kotlin is `2.3.21`, KSP must be `2.3.21-X.Y.Z` (or, if no patch-matching KSP exists yet, `2.3.20-X.Y.Z` is usually safe). Mismatched KSP fails at configuration time with `KSP not compatible with Kotlin X.Y.Z`.
+
+4. **Compose BOM ↔ Compose Compiler** — the BOM month should not lead the compiler version by more than ~3 months. If BOM is `2026.04.01` and compiler is from a Kotlin from 2025, downgrade the BOM to the matching window or upgrade Kotlin.
+
+5. **Robolectric ↔ Android SDK** — `robolectric.properties` `sdk=` value must be ≤ Robolectric's supported SDK ceiling. Robolectric 4.16 supports up to Android 14 (SDK 34); newer SDKs may require Robolectric `5.x`. Default `sdk=34`; bump only if Robolectric supports it.
+
+6. **navigation3 ↔ Compose BOM** — Nav3 1.1.x targets Compose 1.7+. If Compose BOM resolves to a Compose < 1.7, downgrade Nav3 or upgrade Compose.
+
+**Output:** print the matrix to the user so they can confirm or override:
+
+```
+Compatibility check:
+  AGP                          9.2.0  → using built-in Kotlin variant of convention plugins ✓
+  Kotlin                       2.3.21
+  Compose Compiler             2.3.21 ✓ matches Kotlin
+  KSP                          2.3.21-2.0.0 ✓ matches Kotlin patch
+  Compose BOM                  2026.04.01
+  navigation3                  1.1.1 ✓ targets Compose 1.7+
+  Robolectric                  4.16.1 → robolectric.properties sdk=34 ✓
+
+All compatible.
+```
+
+If a check fails, propose a fix (downgrade or upgrade one specific library) and ask the user to confirm before proceeding. Don't push through with a known-incompatible set — that's the bug class that ate ~3 min on real scaffolds.
+
 ## Step 10 — Generate files
 
 Follow the conventions skill for every file. Strict rules:
@@ -113,10 +153,40 @@ Follow the conventions skill for every file. Strict rules:
 - **Skip `AndroidRoomConventionPlugin.kt`** entirely if Room was not picked (and remove its `register("androidRoom")` block from `build-logic/convention/build.gradle.kts`).
 
 ### 10.1 — Root scaffolding
-- `gradle.properties` — include `android.builtInKotlin=false`, `kotlin.code.style=official`, `org.gradle.parallel=true`, `org.gradle.caching=true`, `android.useAndroidX=true`, `android.nonTransitiveRClass=true`
+- `gradle.properties` — **for AGP ≥ 9.2.0** (the default for new scaffolds): include `android.builtInKotlin=true` (or omit; it's the default with `android.newDsl=true`). **For AGP 9.0.x–9.1.x**: include `android.builtInKotlin=false`. Always include `kotlin.code.style=official`, `org.gradle.parallel=true`, `org.gradle.caching=true`, `android.useAndroidX=true`, `android.nonTransitiveRClass=true`. See the conventions skill's "AGP version matters" note.
 - `settings.gradle.kts` — per conventions, `includeBuild("build-logic")`, `rootProject.name = "<project-name>"`, `include(":app-mobile")` and every core + feature module
 - Root `build.gradle.kts` — only `apply false` plugin declarations; Spotless + detekt configured in a `subprojects { }` block
-- `.editorconfig`, `local.properties` (placeholder), `.lint/config.xml` (minimal lint baseline)
+- `local.properties` (placeholder), `.lint/config.xml` (minimal lint baseline)
+- `.editorconfig` — must include the Compose-aware ktlint defaults below so the first lint pass after generation doesn't trip on Composable function naming or the MVI `_actions` backing-property pattern. Substitute `<Project>Previews` with the project's actual multi-preview annotation name (e.g. `AcmePreviews`):
+
+  ```ini
+  root = true
+
+  [*]
+  charset = utf-8
+  end_of_line = lf
+  insert_final_newline = true
+  trim_trailing_whitespace = true
+
+  [*.{kt,kts}]
+  indent_style = space
+  indent_size = 4
+  max_line_length = 140
+  ij_kotlin_allow_trailing_comma = true
+  ij_kotlin_allow_trailing_comma_on_call_site = true
+
+  # Compose @Composable functions are PascalCase; ktlint's standard rule expects camelCase.
+  ktlint_standard_function-naming = disabled
+  ktlint_function_naming_ignore_when_annotated_with = Composable, Preview, <Project>Previews
+
+  # BaseViewModel uses `_actions` / `_effects` as private buffers with no public mirror
+  # (actions are dispatched via setAction(), effects exposed as a Flow only).
+  ktlint_standard_backing-property-naming = disabled
+
+  [*.{xml,yml,yaml,json,md}]
+  indent_style = space
+  indent_size = 2
+  ```
 - `.gitignore` — comprehensive Android+Kotlin+Gradle ignore. Use this exact body (don't trim):
 
   ```gitignore
@@ -219,11 +289,48 @@ For each user-listed feature `<feature>`:
 - If TV: `app-tv/` analogous
 
 ### 10.7 — Tooling
-- `.detekt/config.yml`
-- Spotless block in root build.gradle.kts
-- If pre-commit: `.githooks/pre-commit` + setup note
-- If CI: `.github/workflows/ci.yml`
-- If Dependabot: `.github/dependabot.yml`
+
+- **`.detekt/config.yml`** — must include Compose-aware overrides so the first detekt pass doesn't trip on Preview composables and scaffold-injected fields. Substitute `<Project>Previews` with the actual project preview annotation:
+
+  ```yaml
+  build:
+    maxIssues: 0
+
+  style:
+    UnusedPrivateMember:
+      active: true
+      allowedNames: '(_|ignored|expected|serialVersionUID)'
+      # Preview functions and Composable helpers are tooling-only — detekt can't see the
+      # @Preview entry points so it'd flag every one of them as unused.
+      ignoreAnnotated: ['Preview', '<Project>Previews', 'Composable']
+    UnusedPrivateProperty:
+      active: true
+      # Repository / service / store fields are injected at scaffold time and used later
+      # by the implementer. Pre-allow the common names so detekt doesn't fail the build
+      # on a fresh scaffold.
+      allowedNames: '(_|ignored|expected|serialVersionUID|repository|service|store|client|dispatcher|context)'
+    MagicNumber:
+      active: false   # Compose/ Material uses sp/dp magic numbers; whole-file suppress isn't useful
+    LongMethod:
+      active: false   # ScreenContent composables can be long without being complex
+
+  naming:
+    MatchingDeclarationName:
+      active: true
+      # Allow Kind enums / Variant sealed classes to coexist with their parent composable in one file
+      # if you really want; we don't pre-disable, since the right move is usually to split files.
+
+  complexity:
+    LongParameterList:
+      active: true
+      functionThreshold: 8     # Composable parameter lists run long; raise from the default 6
+      constructorThreshold: 8
+  ```
+
+- **Spotless block in root build.gradle.kts** — target `**/*.kt` and `**/*.kts`, ktlint at the catalog-pinned version.
+- If pre-commit: `.githooks/pre-commit` + setup note.
+- If CI: `.github/workflows/ci.yml`.
+- If Dependabot: `.github/dependabot.yml`.
 
 ### 10.8 — Firebase (if any)
 
@@ -338,11 +445,44 @@ After all files are written, **verify the project builds before declaring done**
 
 ### 11.1 — Materialize the Gradle wrapper
 
-If `./gradlew` doesn't exist yet, generate it:
+If `./gradlew` doesn't exist yet, materialize it in this order — try each path and stop at the first success:
 
-1. Check if `gradle` is on PATH: `command -v gradle && gradle --version`.
-2. If yes, run `gradle wrapper --gradle-version <resolved-gradle-version>` in cwd to materialize `gradlew`, `gradlew.bat`, and `gradle/wrapper/gradle-wrapper.jar`.
-3. If no system gradle is available, tell the user and ask them to run it themselves, then continue.
+1. **System Gradle on PATH** — `command -v gradle && gradle --version`. If present, run `gradle wrapper --gradle-version <resolved-gradle-version> --distribution-type bin` in cwd. Done.
+
+2. **Reuse an existing wrapper jar from another local project.** Search common locations:
+   ```bash
+   find ~/Documents ~/Projects ~/code ~/workspace ~/IdeaProjects 2>/dev/null \
+     -maxdepth 5 -name "gradle-wrapper.jar" -not -path "*/build/*" \
+     -not -path "*/.gradle/*" 2>/dev/null | head -5
+   ```
+   If any are found, pick the most recently modified one. Copy it into `<project>/gradle/wrapper/gradle-wrapper.jar`. The wrapper jar is forward-compatible — any reasonably recent jar (Gradle 8.x+) can bootstrap any target version. Also copy the matching `gradlew` script and `gradlew.bat` from the same project. Then write `gradle/wrapper/gradle-wrapper.properties`:
+   ```properties
+   distributionBase=GRADLE_USER_HOME
+   distributionPath=wrapper/dists
+   distributionUrl=https\://services.gradle.org/distributions/gradle-<resolved-gradle-version>-bin.zip
+   networkTimeout=10000
+   validateDistributionUrl=true
+   zipStoreBase=GRADLE_USER_HOME
+   zipStorePath=wrapper/dists
+   ```
+   First `./gradlew` invocation will download the target distribution and the wrapper will then self-update on next run. Once the daemon is up, run `./gradlew wrapper --gradle-version <resolved-gradle-version>` to canonicalize the bootstrap.
+
+3. **Download from gradle.org as last resort.** Curl the wrapper jar directly:
+   ```bash
+   mkdir -p gradle/wrapper
+   curl -sSL -o gradle/wrapper/gradle-wrapper.jar \
+     "https://raw.githubusercontent.com/gradle/gradle/v<resolved-gradle-version>/gradle/wrapper/gradle-wrapper.jar"
+   curl -sSL -o gradlew \
+     "https://raw.githubusercontent.com/gradle/gradle/v<resolved-gradle-version>/gradlew"
+   curl -sSL -o gradlew.bat \
+     "https://raw.githubusercontent.com/gradle/gradle/v<resolved-gradle-version>/gradlew.bat"
+   chmod +x gradlew
+   ```
+   Then write `gradle-wrapper.properties` per (2).
+
+4. **If steps 1–3 all fail**, tell the user the wrapper couldn't be auto-materialized and they need to install Gradle (`brew install gradle` on macOS) and run `gradle wrapper --gradle-version <ver>` themselves. Don't hard-block — continue to Step 11.2 (structural self-check) so they have a partially-validated scaffold to work with.
+
+Verify the wrapper works: `./gradlew --version`. If that fails, retry (2) or (3) with a different source.
 
 ### 11.2 — Structural self-check (before running gradle)
 
@@ -358,12 +498,13 @@ If any of these are missing for any feature, add them before running gradle. If 
 
 ### 11.3 — Run the verification cycle
 
-Run each step. If a step fails, **read the error, fix the offending file(s), and re-run**. Iterate until all four pass. Use `--no-daemon` to avoid stale-daemon false negatives.
+Run each step. If a step fails, **read the error, fix the offending file(s), and re-run**. Iterate until all five pass. Use `--no-daemon` to avoid stale-daemon false negatives.
 
 1. `./gradlew help --no-daemon` — verifies `settings.gradle.kts` parses and `build-logic/` compiles. Most "convention plugin doesn't compile" errors surface here.
 2. `./gradlew :app-mobile:dependencies --no-daemon --configuration debugCompileClasspath` — verifies the version catalog resolves and module dependencies are reachable.
 3. `./gradlew :app-mobile:compileDebugKotlin --no-daemon` (and `:app-tv:compileDebugKotlin` if TV) — verifies Kotlin source compiles across all modules.
-4. `./gradlew spotlessCheck detekt lint test --no-daemon` — runs Spotless, detekt, Android Lint, and unit tests across the project. (If `spotlessCheck` fails, run `./gradlew spotlessApply` and re-run.)
+4. `./gradlew :feature:<first>:ui-mobile:compileDebugUnitTestKotlin --no-daemon` — **test-compile smoke check**. Pick any one feature module and compile its unit tests. Catches generated-test issues (wrong imports, stale type references in mocks, Compose test-class wiring) before the full test suite runs. A failure here usually means a generated test file references a symbol that doesn't exist (e.g. a Nav3 import the conventions skill once recommended but that isn't a real API) — fix the template, then re-run.
+5. `./gradlew spotlessCheck detekt lint test --no-daemon` — runs Spotless, detekt, Android Lint, and unit tests across the project. (If `spotlessCheck` fails, run `./gradlew spotlessApply` and re-run.)
 
 **Fix-loop policy:**
 - Read the full stdout AND stderr from a failure. Identify the file + line.
@@ -374,6 +515,11 @@ Run each step. If a step fails, **read the error, fix the offending file(s), and
   - Plugin class has a `package` declaration → remove it
   - `implementationClass` in `gradlePlugin.plugins` doesn't match a top-level class name → align them
   - Catalog alias unresolved → check spelling matches `libs.versions.toml`
+  - **`Unresolved reference 'entry'`** in an `<Feature>Entry.kt` file → remove the `import androidx.navigation3.runtime.entry` line; `entry<K>` is a member of `EntryProviderScope<T>`, not a top-level function (see conventions skill Nav3 section).
+  - **`Unresolved reference 'androidx'` / `'kotlinx'` / `'koin'` in module build scripts** → the type-safe catalog accessor isn't visible to the subproject classpath on Gradle 9.5.1 + AGP 9.2. Switch the affected module's `build.gradle.kts` to the `lib("alias")` helper form (see conventions skill).
+  - **Turbine `awaitItem()` times out at 3s** → `MainCoroutineRule` is using `StandardTestDispatcher`. The canonical rule defaults to `UnconfinedTestDispatcher` so `BaseViewModel.init { … }` action-collector launches synchronously. Fix the `MainCoroutineRule` template in `core/testing`.
+  - **`Unable to resolve activity for Intent { ... cmp=org.robolectric.default/androidx.activity.ComponentActivity }`** → the Compose convention plugins are missing `testOptions.unitTests.isIncludeAndroidResources = true`. Add it to `AndroidLibraryComposeConventionPlugin` and `AndroidApplicationComposeConventionPlugin`.
+  - **`The 'org.jetbrains.kotlin.android' plugin is not compatible with AGP's 9.0 new DSL`** → AGP 9.2+ auto-applies Kotlin. Remove the manual `apply("org.jetbrains.kotlin.android")` from `AndroidApplicationConventionPlugin` and `AndroidLibraryConventionPlugin`, and set `android.builtInKotlin=true` in `gradle.properties` (or omit — it's the default).
   - Version catalog version key referenced via `findVersion(...)` doesn't exist → add it to the catalog
 - After fixing, re-run the same gradle command. Cap at **5 iterations per step**. If you still can't make a step pass after 5 tries, stop and tell the user exactly what's failing — don't keep guessing.
 

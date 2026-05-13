@@ -37,7 +37,7 @@
       "name": "android-project-starter",
       "source": "./plugins/android-project-starter",
       "description": "Wizard-driven scaffolder for Android projects using a multi-module MVI + Compose + Koin architecture. Generates build-logic, core, feature modules, version catalog, navigation, DI, tooling (Spotless/detekt), CI, and project-local Claude skills.",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "author": {
         "name": "Denis Coman"
       },
