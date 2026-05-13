@@ -105,6 +105,15 @@ Common pitfalls:
 - **Always reference `MaterialTheme.colorScheme.*`, `MaterialTheme.typography.*`, `MaterialTheme.shapes.*`** — never hardcoded `Color(0xFF...)` or `12.sp`.
 - **Custom tokens** (project-specific gradients, brand-specific spacings beyond `Spacing.xs..xl`) live in `core/designsystem-base` and are surfaced via `MaterialTheme` extensions or `CompositionLocal`. Don't sprinkle them per-feature.
 - **Dark mode is on by default.** `@<Project>Previews` already generates both light and dark variants — make sure your components look correct in both. Test in the preview before reaching for `isSystemInDarkTheme()` in code.
+- **Use the custom multi-preview annotation alone — never stack `@Preview` on top.** `@<Project>Previews` already wraps `@Preview` once per configured variant (typically light + dark). Writing `@<Project>Previews` *and* `@Preview` produces a duplicate, unconfigured render — a third "default" preview that adds no signal and clutters the preview pane. The only correct shape is:
+  ```kotlin
+  @<Project>Previews
+  @Composable
+  private fun FeatureScreenContentPreview() {
+      FeatureScreenContent(state = FeatureState(/* sample */), onAction = {})
+  }
+  ```
+  Use a bare `@Preview` (with arguments like `widthDp = 320` or `locale = "ar"`) **only** for one-off configurations not in the multi-preview set, and on its own — not stacked with `@<Project>Previews`.
 
 ## Canvas & DrawScope safety
 
