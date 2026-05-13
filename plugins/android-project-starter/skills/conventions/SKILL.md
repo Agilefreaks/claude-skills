@@ -696,11 +696,27 @@ fun FeatureScreenContent(
 ) { /* pure UI */ }
 
 @<Project>Previews   // e.g. @AcmePreviews — generated in core/designsystem-mobile
-@Preview
 @Composable
 private fun FeatureScreenContentPreview() {
     FeatureScreenContent(state = FeatureState(/* sample */), onAction = {})
 }
+```
+
+**Never stack `@Preview` next to `@<Project>Previews`.** The custom multi-preview annotation already aggregates `@Preview` (typically one for light, one for dark, sometimes one per font scale). Adding `@Preview` on top produces a duplicate, unconfigured render and clutters the preview pane. Use exactly one of the two:
+- `@<Project>Previews` for ScreenContent and any reusable component that should render in light + dark — **this is the default**.
+- A bare `@Preview` (possibly with arguments like `widthDp = 320`) only when you genuinely need a one-off configuration not in the multi-preview set (e.g. a wide-screen smoke check, RTL preview).
+
+```kotlin
+// ✅ Right
+@<Project>Previews
+@Composable
+private fun FeatureScreenContentPreview() { … }
+
+// ❌ Wrong — duplicate render, no extra signal
+@<Project>Previews
+@Preview
+@Composable
+private fun FeatureScreenContentPreview() { … }
 ```
 
 **Modifier convention (project-wide):** `modifier: Modifier = Modifier` is the **first optional parameter** in every Composable signature. Required params first, then `modifier`, then other optionals.
@@ -710,7 +726,7 @@ private fun FeatureScreenContentPreview() {
 1. **Two files always.** `<Feature>Screen.kt` and `<Feature>ScreenContent.kt` are separate files in `components/`. Never inline ScreenContent into Screen.
 2. **ScreenContent signature is `(modifier, state, onAction)`** — modifier first optional, state required, onAction required. Never add bare callbacks (`onClick`, `onSubmit`, `onItemClick`). All clicks dispatch typed Actions; cross-feature navigation flows through Effects that the Screen's `HandleEffects` block translates into host callbacks.
 3. **ScreenContent has no Koin / Activity / host dependencies.** No `koinViewModel`, no `LocalContext.current`, no `rememberLauncherForActivityResult`. Those live in the Screen. This is what makes ScreenContent testable and previewable.
-4. **At least one `@<Project>Previews`-annotated composable** lives at the bottom of `<Feature>ScreenContent.kt`, constructs a sample `State`, and passes `onAction = {}`. Add **separate previews for each meaningfully different state** — at minimum, the content state; add loading, empty, and error previews when the screen renders them differently.
+4. **At least one `@<Project>Previews`-annotated composable** lives at the bottom of `<Feature>ScreenContent.kt`, constructs a sample `State`, and passes `onAction = {}`. Add **separate previews for each meaningfully different state** — at minimum, the content state; add loading, empty, and error previews when the screen renders them differently. **Use `@<Project>Previews` alone — never stack `@Preview` on top of it.** The custom annotation already aggregates `@Preview` for light + dark (and any other configured variants). Adding `@Preview` duplicates the render.
 5. **Compose UI tests target `<Feature>ScreenContent`, not `<Feature>Screen`.** Robolectric tests in `src/test/kotlin/` call `composeTestRule.setContent { <Feature>ScreenContent(state = …, onAction = { capturedActions.add(it) }) }`. Test action dispatch (clicks → captured actions) and state-driven conditional rendering. Don't try to test `<Feature>Screen` — it depends on Koin and won't instantiate in a unit test.
 6. **The Screen tests are: there are no Screen tests.** Tests run against ScreenContent for UI, against ViewModel for logic. The Screen is just wiring — covered by the integration on-device run.
 

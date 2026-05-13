@@ -490,7 +490,7 @@ Before invoking gradle, verify the generated structure is complete. For **every*
 
 1. `<Feature>Screen.kt` exists (wiring: `koinViewModel`, `HandleEffects`, no preview).
 2. `<Feature>ScreenContent.kt` exists as a separate file (pure UI with `(modifier, state, onAction)` signature, **no Koin/Activity deps**).
-3. `<Feature>ScreenContent.kt` contains **at least one** `@<Project>Previews`-annotated composable that constructs a sample `State` and `onAction = {}`. If the feature has meaningful loading/empty/error states, add a preview for each.
+3. `<Feature>ScreenContent.kt` contains **at least one** `@<Project>Previews`-annotated composable that constructs a sample `State` and `onAction = {}`. If the feature has meaningful loading/empty/error states, add a preview for each. **No preview function may have both `@<Project>Previews` and `@Preview` stacked** — the multi-preview annotation already wraps `@Preview` for each variant, and stacking duplicates the render. If you grep `@<Project>Previews` and the next non-blank line is `@Preview`, delete the `@Preview`.
 4. `<Feature>ScreenContentTest.kt` exists in `src/test/kotlin/` and contains Robolectric Compose tests that target **`<Feature>ScreenContent`** (not `<Feature>Screen`). Tests must cover at least: one action-dispatch assertion (click → captured action) and one state-driven rendering assertion. **Compose tests against `<Feature>Screen` are wrong — Screen depends on Koin and can't be instantiated in a unit test.**
 5. `<Feature>ViewModelTest.kt` exists with at least one action-handling test and one effect-emission test (use Turbine `effects.test { awaitItem() }`).
 
