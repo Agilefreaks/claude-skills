@@ -273,13 +273,16 @@ Follow the conventions skill for every file. Strict rules:
 
 For each user-listed feature `<feature>`:
 
-- `feature/<feature>/data/` — **shared between mobile and TV.** Build file applies `<prefix>.android.library` + `<prefix>.android.lint` (+ `ksp` if Moshi codegen / Room). Generates `<Feature>Repository.kt` (interface + stub impl) and `di/<Feature>DataModule.kt` exposing `val <feature>DataModule`.
+- `feature/<feature>/data/` — **shared between mobile and TV, but internal to the feature.** Build file applies `<prefix>.android.library` + `<prefix>.android.lint` (+ `ksp` if Moshi codegen / Room). Generates `<Feature>Repository.kt` (public interface), `<Feature>RepositoryImpl.kt` (**marked `internal class`** — not visible outside the data module), and `di/<Feature>DataModule.kt` exposing `val <feature>DataModule`. Public surface of this module is exactly two symbols: the `Repository` interface and the `<feature>DataModule` Koin value. Everything else stays `internal`. See *Data module template* in the conventions skill for the verbatim shape.
 - `feature/<feature>/ui-mobile/` — **owns its own MVI stack**: `build.gradle.kts` applying `<prefix>.android.feature`, Route + Entry in `<root-pkg>.feature.<feature>`, MVI trio, `<Feature>ViewModel`, Screen + ScreenContent + `@<Project>Previews` + Robolectric Compose tests, `Module.kt` with `val <feature>Module` registering the mobile VM, `<Feature>Modules.kt` aggregating `<feature>Module + <feature>DataModule`. Depends on `:core:designsystem-mobile` and `:core:ui-mobile`.
 - **If TV: `feature/<feature>/ui-tv/`** — **independent MVI stack, in the `.tv` sub-package**. Same shape as ui-mobile but under `<root-pkg>.feature.<feature>.tv` so class names (`<Feature>ViewModel`, `<Feature>Route`, `<Feature>Action/State/Effect`, `<Feature>Screen`, `<Feature>ScreenContent`) don't collide. Has its own `<Feature>ViewModel` whose state, actions, and effects can diverge from mobile (focus-driven nav, D-pad input, different layouts). Has its own Koin `Module.kt`, its own `<Feature>Modules.kt` aggregator (same identifier `<feature>Modules`, but in the `.tv` package — `app-tv` imports it from there). Depends on `:core:designsystem-tv` and `:core:ui-tv`, and reuses the **same** `:feature:<feature>:data` module. Has its own ViewModel tests and Compose UI tests under `src/test/kotlin/`.
 
 **Rule:** every ui module has its own ViewModel. Never share a ViewModel between mobile and TV. The data module is shared, the ui logic is not.
 
 ### 10.6 — app modules
+
+**Dependency rule:** for every feature `<feature>`, the app module declares `implementation(project(":feature:<feature>:ui-mobile"))` (and `:ui-tv` for `app-tv`). It **never** declares `implementation(project(":feature:<feature>:data"))` — the data layer is internal to the feature and reached only via the ui module's `<feature>Modules` Koin aggregator. See *App module dependencies* and *Feature module shape* in the conventions skill for the canonical shapes.
+
 - `app-mobile/build.gradle.kts` applying `<prefix>.android.application` + `<prefix>.android.application.compose` + `<prefix>.android.lint` (+ serialization, google-services, crashlytics as needed)
 - `AndroidManifest.xml`
 - `<Project>Application.kt` — `startKoin { ... modules(...) }`
@@ -493,8 +496,10 @@ Before invoking gradle, verify the generated structure is complete. For **every*
 3. `<Feature>ScreenContent.kt` contains **at least one** `@<Project>Previews`-annotated composable that constructs a sample `State` and `onAction = {}`. If the feature has meaningful loading/empty/error states, add a preview for each. **No preview function may have both `@<Project>Previews` and `@Preview` stacked** — the multi-preview annotation already wraps `@Preview` for each variant, and stacking duplicates the render. If you grep `@<Project>Previews` and the next non-blank line is `@Preview`, delete the `@Preview`.
 4. `<Feature>ScreenContentTest.kt` exists in `src/test/kotlin/` and contains Robolectric Compose tests that target **`<Feature>ScreenContent`** (not `<Feature>Screen`). Tests must cover at least: one action-dispatch assertion (click → captured action) and one state-driven rendering assertion. **Compose tests against `<Feature>Screen` are wrong — Screen depends on Koin and can't be instantiated in a unit test.**
 5. `<Feature>ViewModelTest.kt` exists with at least one action-handling test and one effect-emission test (use Turbine `effects.test { awaitItem() }`).
+6. **Data layer is internal to the feature.** For every feature `<x>`, grep `app-mobile/build.gradle.kts` (and `app-tv/build.gradle.kts` if TV) for `:feature:<x>:data` — this match must be **empty**. The app modules may only list `:feature:<x>:ui-mobile` / `:feature:<x>:ui-tv` per feature, never the data module. If the grep finds a hit, remove the `implementation(project(":feature:<x>:data"))` line — the feature is reachable through the ui module's `<feature>Modules` aggregator alone.
+7. **Repository implementations are `internal`.** For every feature `<x>`, grep `feature/<x>/data/src/main/kotlin/` for `class <Feature>RepositoryImpl` and confirm it's preceded by the `internal` modifier (`internal class <Feature>RepositoryImpl`). The interface `<Feature>Repository` stays public; only the impl is `internal`. The `<feature>DataModule` Koin value is public so the ui module can aggregate it.
 
-If any of these are missing for any feature, add them before running gradle. If TV is enabled, both `ui-mobile` and `ui-tv` must satisfy 1–5 independently (each ui module owns its own ScreenContent, previews, and tests).
+If any of these are missing for any feature, add them before running gradle. If TV is enabled, both `ui-mobile` and `ui-tv` must satisfy 1–5 independently (each ui module owns its own ScreenContent, previews, and tests). Items 6–7 are project-wide checks, not per-form-factor.
 
 ### 11.3 — Run the verification cycle
 

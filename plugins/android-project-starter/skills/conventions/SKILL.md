@@ -562,8 +562,9 @@ Each feature has **one shared data module** and **one ui module per form factor*
 ```
 feature/<feature>/
 ├── data/src/main/kotlin/<root-pkg>/feature/<feature>/data/
-│   ├── <Feature>Repository.kt
-│   └── di/<Feature>DataModule.kt            # val <feature>DataModule
+│   ├── <Feature>Repository.kt               # public interface (only)
+│   ├── <Feature>RepositoryImpl.kt           # internal class
+│   └── di/<Feature>DataModule.kt            # val <feature>DataModule (public)
 └── ui-mobile/src/main/kotlin/<root-pkg>/feature/<feature>/
     ├── <Feature>Route.kt                    # @Serializable data object/class : NavKey
     ├── <Feature>Entry.kt                    # fun EntryProviderScope<NavKey>.<feature>Entry(...)
@@ -579,8 +580,9 @@ feature/<feature>/
 ```
 feature/<feature>/
 ├── data/src/main/kotlin/<root-pkg>/feature/<feature>/data/
-│   ├── <Feature>Repository.kt               # shared between mobile and tv
-│   └── di/<Feature>DataModule.kt            # val <feature>DataModule — shared
+│   ├── <Feature>Repository.kt               # public interface — shared between mobile and tv
+│   ├── <Feature>RepositoryImpl.kt           # internal class
+│   └── di/<Feature>DataModule.kt            # val <feature>DataModule — public, shared
 ├── ui-mobile/src/main/kotlin/<root-pkg>/feature/<feature>/
 │   ├── <Feature>Route.kt                    # mobile route
 │   ├── <Feature>Entry.kt                    # mobile entry
@@ -602,7 +604,9 @@ feature/<feature>/
 **Key rules:**
 - TV classes live under the `.tv` sub-package so class names can stay the same as mobile (`<Feature>ViewModel`, `<Feature>Route`, etc.) without collision. `app-mobile` imports from `<root-pkg>.feature.<feature>.*`, `app-tv` imports from `<root-pkg>.feature.<feature>.tv.*`.
 - Both ui modules expose `val <feature>Modules: List<Module>` (same identifier, different packages). Each app's `Application` class imports the right one and aggregates them.
-- The data module is shared by both ui modules — never duplicated. Both ui modules depend on `:feature:<feature>:data`.
+- The data module is shared by both ui modules — never duplicated. Both ui modules depend on `:feature:<feature>:data` with **`implementation` scope only** (never `api`) so the data module's classes don't leak onto the app's compile classpath transitively.
+- The data module is **internal to the feature**. App modules (`app-mobile`, `app-tv`) never list `:feature:<feature>:data` as a dependency — they only depend on the feature's ui module(s). See *App module dependencies* below.
+- Inside the data module, only the `Repository` interface and the `<feature>DataModule` Koin value are `public`. Repository implementations and any other concrete data-layer classes are marked `internal` so they cannot be referenced from outside the data module — not even from ui modules, which work against the interface.
 - Each ui module has its own Koin `Module.kt` with its own `viewModel { <Feature>ViewModel(...) }` binding. The data module is included in both aggregators (Koin de-duplicates module registration if both apps were to load both — but they don't, since mobile and TV are separate APKs).
 - Tests live in each ui module's own `src/test/kotlin/` — the mobile ViewModel/Compose tests test the mobile shape, the TV ones test the TV shape.
 
@@ -613,6 +617,45 @@ feature/<feature>/
 - Entry function: `fun EntryProviderScope<NavKey>.<feature>Entry(...)` — kebab-camel of the feature. Same name in both packages; the import path tells them apart.
 - Modules aggregator (`<Feature>Modules.kt`) in each ui module: `val <feature>Modules: List<Module>` combining that module's `<feature>Module` + the shared `<feature>DataModule`.
 - Data module's Koin module: `<feature>DataModule`, lives in `feature/<feature>/data/.../<feature>/data/di/<Feature>DataModule.kt`. Singular — never split per form factor.
+
+### Data module template (visibility = encapsulation)
+
+```kotlin
+// feature/<feature>/data/.../<Feature>Repository.kt
+package <root-pkg>.feature.<feature>.data
+
+interface <Feature>Repository {
+    suspend fun get<Feature>(): <Result>
+}
+```
+
+```kotlin
+// feature/<feature>/data/.../<Feature>RepositoryImpl.kt
+package <root-pkg>.feature.<feature>.data
+
+internal class <Feature>RepositoryImpl(
+    // injected api client / dao / etc.
+) : <Feature>Repository {
+    override suspend fun get<Feature>(): <Result> = TODO("stub")
+}
+```
+
+```kotlin
+// feature/<feature>/data/.../di/<Feature>DataModule.kt
+package <root-pkg>.feature.<feature>.data.di
+
+import org.koin.core.module.dsl.singleOf
+import org.koin.dsl.bind
+import org.koin.dsl.module
+import <root-pkg>.feature.<feature>.data.<Feature>Repository
+import <root-pkg>.feature.<feature>.data.<Feature>RepositoryImpl
+
+val <feature>DataModule = module {
+    singleOf(::<Feature>RepositoryImpl) { bind<<Feature>Repository>() }
+}
+```
+
+The Koin DSL lambda can reference the `internal` impl because it lives inside the same Gradle (= Kotlin) module. Outside the data module, only the interface and the `<feature>DataModule` value are visible. The ui module injects `<Feature>Repository`, not the impl; the app never sees either.
 
 ### Required deps in `feature/<feature>/ui-mobile/build.gradle.kts`
 
@@ -659,6 +702,36 @@ dependencies {
 ```
 
 Note: both ui modules apply the same `<project>.android.feature` convention plugin — they share Compose, lifecycle, navigation3, and Koin Compose dependencies. Only the design-system / ui module references differ.
+
+### Required deps in `app-mobile/build.gradle.kts` (and `app-tv/build.gradle.kts` analogously)
+
+```kotlin
+dependencies {
+    // core
+    implementation(project(":core:common"))
+    implementation(project(":core:model"))
+    implementation(project(":core:data"))
+    implementation(project(":core:designsystem-base"))   // omit `-base` if mobile-only
+    implementation(project(":core:designsystem-mobile"))
+    implementation(project(":core:ui-mobile"))
+
+    // features — ONLY the ui module per feature, never `:feature:<x>:data`
+    implementation(project(":feature:home:ui-mobile"))
+    implementation(project(":feature:search:ui-mobile"))
+    // ... one ui module per feature
+
+    // library deps (compose BOM, koin-android, koin-compose, splash if picked, etc.)
+}
+```
+
+**Hard rule: the app module never depends on `:feature:<feature>:data`.** The feature's data layer is internal to the feature. The app reaches the data layer indirectly through the ui module's aggregated `<feature>Modules` list (which already bundles `<feature>DataModule` for Koin). This holds for both `app-mobile` and `app-tv`.
+
+Two reinforcing mechanisms keep the data layer encapsulated:
+
+1. **Gradle scope** — ui modules declare `implementation(project(":feature:<feature>:data"))`, never `api(...)`. The data module's classes are not on the app's compile classpath even transitively.
+2. **Kotlin visibility** — repository implementations (and any other data-module classes the app shouldn't reach) are marked `internal`. Only the `Repository` interface and the `<feature>DataModule` Koin value are `public`; everything else stays inside the data module. See *Data module template* above.
+
+If you find yourself adding `implementation(project(":feature:<x>:data"))` to an app module to fix a compile error, stop: you're reaching into a feature's internals from the wrong layer. The right fix is almost always to expose what you need through the ui module's `<feature>Modules` (Koin) or a public interface in `core/model`.
 
 ## Screen / ScreenContent contract
 
@@ -793,8 +866,8 @@ The back stack is `mutableStateListOf<NavKey>()`. Forward nav appends; back pops
 ## Koin conventions
 
 - One Koin `Module.kt` per feature ui module, named `<feature>Module`, contains `viewModel { ... }` for the feature's ViewModel(s) and any `single { }`/`factory { }` it needs.
-- One Koin `Module.kt` per feature data module (under `feature/<feature>/data/.../di/<Feature>DataModule.kt`), named `<feature>DataModule`.
-- `<Feature>Modules.kt` in the ui module aggregates: `val <feature>Modules = listOf(<feature>Module, <feature>DataModule)`.
+- One Koin `Module.kt` per feature data module (under `feature/<feature>/data/.../di/<Feature>DataModule.kt`), named `<feature>DataModule`. This is the **only** public symbol the data module exposes besides the `Repository` interface — everything else stays `internal`.
+- `<Feature>Modules.kt` in the ui module aggregates: `val <feature>Modules = listOf(<feature>Module, <feature>DataModule)`. The ui module imports `<feature>DataModule` from the data module (allowed: ui depends on data with `implementation`). The app does **not** import `<feature>DataModule` — it only imports `<feature>Modules` from the ui module.
 - `<Project>Application` wires all feature modules:
 
   ```kotlin
