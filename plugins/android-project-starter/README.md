@@ -51,11 +51,13 @@ After all files are generated, the wizard:
 
 1. Materializes the Gradle wrapper (uses your system `gradle` if available, otherwise asks you to run `gradle wrapper`).
 2. Runs `./gradlew help` (verifies `settings.gradle.kts` and `build-logic/` compile).
-3. Runs `./gradlew :app-mobile:dependencies` (verifies the version catalog resolves).
-4. Runs `./gradlew :app-mobile:compileDebugKotlin` (verifies all Kotlin compiles).
-5. Runs `./gradlew lint test` (verifies lint passes and tests pass).
+3. Runs `./gradlew :app-mobile:dependencies --configuration qaDebugCompileClasspath` (verifies the catalog resolves on the default `qa` flavor).
+4. Runs `./gradlew :app-mobile:compileQaDebugKotlin` (verifies the default-flavor Kotlin compiles across modules).
+5. Runs `./gradlew :app-mobile:compileProdDebugKotlin` (verifies the `prod` flavor also compiles, catching accidental `IS_QA` leakage).
+6. Runs `./gradlew :feature:<first>:ui-mobile:compileDebugUnitTestKotlin` (test-compile smoke check).
+7. Runs `./gradlew spotlessCheck detekt lint test` (formatting, static analysis, lint, and unit tests).
 
-If any step fails, the wizard reads the error, fixes the file, and retries (up to 5 times per step). It will only declare the project done after all four gradle commands have passed.
+If any step fails, the wizard reads the error, fixes the file, and retries (up to 5 times per step). It will only declare the project done after all six gradle commands have passed.
 
 ### 2. Use the generated planner skill — `/<project>-android-planner`
 
