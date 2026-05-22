@@ -25,7 +25,7 @@ You are running an interactive wizard that scaffolds a new Android project in th
    - If the directory is non-empty *and* contains files that suggest an existing project (`build.gradle`, `build.gradle.kts`, `settings.gradle*`, `gradle.properties`, `gradle/`, `app/`, `app-*/`, `core/`, `feature/`, `.git/` with content beyond a fresh init), **stop and ask the user** whether to (a) scaffold somewhere else, (b) cancel, or (c) proceed anyway (dangerous). Never overwrite a populated project without explicit confirmation.
    - An empty directory or one with only `.git/`, `.idea/`, `README.md`, or `.DS_Store` is fine — proceed.
 
-3. **Greeting:** tell the user briefly what's about to happen — "I'll ask 6 short rounds of questions (~20 total), resolve the latest stable versions in parallel, generate the project, then run `./gradlew help`, `assembleDebug`, `lint`, and `test` to verify. Total time ~5–10 minutes."
+3. **Greeting:** tell the user briefly what's about to happen — "I'll ask 6 short rounds of questions (~20 total), resolve the latest stable versions in parallel, generate the project, then run `./gradlew help`, `assembleDebug`, `lint`, and `test` to verify. Total time ~5–10 minutes. Every project gets `qa` (default) and `prod` product flavors and a shake/broadcast dev dialog for switching API base URL on qa builds."
 
 ## Step 1 — Identity round (plain-text)
 
@@ -60,12 +60,27 @@ Echo the derived values so the user can correct typos before proceeding.
 3. **Image loading** — Coil 3 (recommended) / Glide / None
 4. **Auth scaffolding** — Yes (feature/auth + session store + token interceptor) / No
 
-## Step 4 — Cross-cutting (AskUserQuestion, 4 questions)
+## Step 4 — Cross-cutting (AskUserQuestion, 3 questions)
 
 1. **Firebase bundle** (multiSelect) — Crashlytics / Analytics / Messaging / Remote Config / None of these
 2. **Analytics** (skip if Firebase Analytics already picked) — Mixpanel / Amplitude / None
 3. **Logging** — Timber (recommended) / kotlin-logging / println-only
-4. **Build variants** — debug + release only / dev/staging/prod × debug/release / dev/prod × debug/release
+
+Build variants are no longer a choice. Every project gets two product flavors — `qa` (default) and `prod` — on top of the standard `debug` + `release` build types, generating `qaDebug`, `qaRelease`, `prodDebug`, `prodRelease`. See the conventions skill's `<project>.android.flavors` plugin. The `prod` flavor gets `applicationIdSuffix = ".prod"` and `versionNameSuffix = "-prod"` so qa + prod can coexist on a single device; `qa` keeps the clean applicationId.
+
+## Step 4.5 — API base URLs (plain text)
+
+Ask in one chat message:
+
+```
+Two API base URLs are baked into the build (one per flavor). You can override either at
+runtime via the shake/broadcast dev dialog on qa builds.
+
+  1. QA / staging base URL (default `https://api-staging.example.com/`): ____
+  2. Prod base URL (default `https://api.example.com/`): ____
+```
+
+Write the answers verbatim into `gradle.properties` as `<project>.qaApiBaseUrl=...` and `<project>.prodApiBaseUrl=...` — the `AndroidFlavorsConventionPlugin` reads them at configuration time. Mirror the same two strings into `environmentModule`'s `stagingUrl`/`prodUrl` literals in `core/data/env/di/EnvironmentModule.kt` so the dialog's labels match the flavor defaults.
 
 ## Step 5 — UI defaults (AskUserQuestion, 4 questions)
 
@@ -148,12 +163,12 @@ If a check fails, propose a fix (downgrade or upgrade one specific library) and 
 
 Follow the conventions skill for every file. Strict rules:
 
-- **Reproduce the canonical plugin file contents in the conventions skill verbatim** for the 8 build-logic plugins and `ProjectExtensions.kt`. Do not refactor, do not extract helpers, do not add `package` declarations.
+- **Reproduce the canonical plugin file contents in the conventions skill verbatim** for the 9 build-logic plugins and `ProjectExtensions.kt`. Do not refactor, do not extract helpers, do not add `package` declarations.
 - **Use `ApplicationExtension` and `LibraryExtension` directly** — never `CommonExtension`. This is the AGP 9 trap that breaks projects.
 - **Skip `AndroidRoomConventionPlugin.kt`** entirely if Room was not picked (and remove its `register("androidRoom")` block from `build-logic/convention/build.gradle.kts`).
 
 ### 10.1 — Root scaffolding
-- `gradle.properties` — **for AGP ≥ 9.2.0** (the default for new scaffolds): include `android.builtInKotlin=true` (or omit; it's the default with `android.newDsl=true`). **For AGP 9.0.x–9.1.x**: include `android.builtInKotlin=false`. Always include `kotlin.code.style=official`, `org.gradle.parallel=true`, `org.gradle.caching=true`, `android.useAndroidX=true`, `android.nonTransitiveRClass=true`. See the conventions skill's "AGP version matters" note.
+- `gradle.properties` — **for AGP ≥ 9.2.0** (the default for new scaffolds): include `android.builtInKotlin=true` (or omit; it's the default with `android.newDsl=true`). **For AGP 9.0.x–9.1.x**: include `android.builtInKotlin=false`. Always include `kotlin.code.style=official`, `org.gradle.parallel=true`, `org.gradle.caching=true`, `android.useAndroidX=true`, `android.nonTransitiveRClass=true`. **Also include the two flavor URL keys** from Step 4.5: `<project>.qaApiBaseUrl=...` and `<project>.prodApiBaseUrl=...` — the `AndroidFlavorsConventionPlugin` reads them via `findProperty(...)` to set per-flavor `BuildConfig.API_BASE_URL`. See the conventions skill's "AGP version matters" note.
 - `settings.gradle.kts` — per conventions, `includeBuild("build-logic")`, `rootProject.name = "<project-name>"`, `include(":app-mobile")` and every core + feature module
 - Root `build.gradle.kts` — only `apply false` plugin declarations; Spotless + detekt configured in a `subprojects { }` block
 - `local.properties` (placeholder), `.lint/config.xml` (minimal lint baseline)
@@ -251,23 +266,23 @@ Follow the conventions skill for every file. Strict rules:
 - `gradle/wrapper/gradle-wrapper.properties` (pin Gradle to the latest stable that supports the chosen AGP)
 
 ### 10.2 — Version catalog
-- `gradle/libs.versions.toml` per conventions (with resolved versions from Step 9). Include the 8 convention plugin aliases with `version = "unspecified"`.
+- `gradle/libs.versions.toml` per conventions (with resolved versions from Step 9). Include the 9 convention plugin aliases with `version = "unspecified"`.
 
 ### 10.3 — build-logic
 - `build-logic/settings.gradle.kts` per conventions (reads `../gradle/libs.versions.toml`)
-- `build-logic/convention/build.gradle.kts` — exactly the shape shown in the conventions skill, registering all 8 plugins (or 7 if Room was skipped)
-- The 8 plugin Kotlin files (or 7) — verbatim shapes from the conventions skill, **no helper files**, **no package declarations**
+- `build-logic/convention/build.gradle.kts` — exactly the shape shown in the conventions skill, registering all 9 plugins (or 8 if Room was skipped)
+- The 9 plugin Kotlin files (or 8) — verbatim shapes from the conventions skill, **no helper files**, **no package declarations**. Includes `AndroidFlavorsConventionPlugin.kt`.
 - `ProjectExtensions.kt` — verbatim from conventions
 
 ### 10.4 — core modules
 - `core/common/` — `BaseViewModel`, `ViewAction`, `ViewState`, `ViewSideEffect`
 - `core/model/` — placeholder; uses `<project>.jvm.library`
-- `core/data/` — Koin Qualifiers, session store interface (if Auth), network interceptor scaffold (if Network)
+- `core/data/` — Koin Qualifiers, session store interface (if Auth), network interceptor scaffold (if Network), and the **env + dev-tools data layer** (see conventions §Environment + dev tools): `env/EnvironmentConfig.kt`, `env/EnvironmentConfigImpl.kt` (DataStore-backed), `env/di/EnvironmentModule.kt` (`val environmentModule`), and `network/EnvironmentBaseUrlInterceptor.kt`. **`core/data` applies `<project>.android.flavors`** so it gets `BuildConfig.IS_QA` and `BuildConfig.API_BASE_URL`. Add `androidx-datastore-preferences` to its `dependencies { }`.
 - `core/designsystem-base/` (or `core/designsystem/` if mobile-only) — color tokens, typography, Spacing
 - `core/designsystem-mobile/` — `<Project>Theme`, `@<Project>Previews`, `<Project>Loading`, `<Project>ErrorState`, `HandleEffects`
-- `core/ui-mobile/` — shared composables placeholder
+- `core/ui-mobile/` — shared composables + **dev-tools UI** under `dev/`: `ShakeDetector.kt` (`ShakeListener`), `DevToolsBroadcastListener.kt`, `EnvSelectorDialog.kt`, `DevToolsHost.kt`. Verbatim shapes from the conventions skill. Depends on `:core:data`. **Does NOT apply `<project>.android.flavors`.**
 - `core/testing/` — `MainCoroutineRule` + shared test helpers
-- If TV: `core/designsystem-tv/`, `core/ui-tv/`
+- If TV: `core/designsystem-tv/`, `core/ui-tv/` (with its own `dev/DevToolsHost.kt` — broadcast-only, no shake). When both mobile + TV are picked, lift `DevToolsBroadcastListener.kt` and `EnvSelectorDialog.kt` into a shared `core/ui-base/` module that both `ui-mobile` and `ui-tv` depend on. Mobile-only projects keep everything under `core/ui-mobile/dev/`.
 
 ### 10.5 — feature modules
 
@@ -280,13 +295,13 @@ For each user-listed feature `<feature>`:
 **Rule:** every ui module has its own ViewModel. Never share a ViewModel between mobile and TV. The data module is shared, the ui logic is not.
 
 ### 10.6 — app modules
-- `app-mobile/build.gradle.kts` applying `<prefix>.android.application` + `<prefix>.android.application.compose` + `<prefix>.android.lint` (+ serialization, google-services, crashlytics as needed)
+- `app-mobile/build.gradle.kts` applying `<prefix>.android.application` + `<prefix>.android.application.compose` + `<prefix>.android.lint` + **`<prefix>.android.flavors` (last in the `plugins { }` block)** (+ serialization, google-services, crashlytics as needed)
 - `AndroidManifest.xml`
-- `<Project>Application.kt` — `startKoin { ... modules(...) }`
-- `MainActivity.kt` — `enableEdgeToEdge()`, `setContent { <Project>Theme { <Project>NavHost() } }`
+- `<Project>Application.kt` — `startKoin { ... modules(... + environmentModule + ...) }`. Include `environmentModule` so `EnvSelectorDialog`'s `koinInject<EnvironmentConfig>()` resolves.
+- `MainActivity.kt` — `enableEdgeToEdge()`, `setContent { <Project>Theme { DevToolsHost(enabled = BuildConfig.IS_QA) { <Project>NavHost() } } }`. The `DevToolsHost` is a zero-cost passthrough on prod builds (where `IS_QA = false`).
 - `navigation/<Project>NavHost.kt`, `BottomNavTab.kt`, `<Project>BottomNav.kt`
 - splash/ if picked
-- If TV: `app-tv/` analogous
+- If TV: `app-tv/` analogous. Also applies `<prefix>.android.flavors`. TV `MainActivity` wraps content in the **TV variant** of `DevToolsHost` (`<root-pkg>.core.ui.tv.dev.DevToolsHost`) — broadcast-only, no shake.
 
 ### 10.7 — Tooling
 
@@ -370,7 +385,22 @@ A bare `{ "project_id": "X" }` placeholder is **not enough** — the google-serv
 }
 ```
 
-If the user picked build variants with different application IDs (e.g. `<appId>.dev`, `<appId>.staging`, `<appId>.prod`), add one `client` entry per variant — the google-services plugin matches `package_name` against the resolved applicationId per variant. The placeholder must match every variant or it'll fail one of them.
+Every scaffold has two product flavors with different application IDs (`<appId>` for `qa`, `<appId>.prod` for `prod`), so the placeholder needs two `client` entries — one per variant. The google-services plugin matches `package_name` against the resolved applicationId per variant; missing one fails the variant the placeholder doesn't list. Use this two-entry shape:
+
+```json
+"client": [
+  { "client_info": { "mobilesdk_app_id": "1:000000000000:android:0000000000000000",
+                     "android_client_info": { "package_name": "<applicationId>" } },
+    "oauth_client": [],
+    "api_key": [ { "current_key": "AIzaSyPLACEHOLDER_REPLACE_BEFORE_SHIPPING_PLACEHO" } ],
+    "services": { "appinvite_service": { "other_platform_oauth_client": [] } } },
+  { "client_info": { "mobilesdk_app_id": "1:000000000000:android:0000000000000001",
+                     "android_client_info": { "package_name": "<applicationId>.prod" } },
+    "oauth_client": [],
+    "api_key": [ { "current_key": "AIzaSyPLACEHOLDER_REPLACE_BEFORE_SHIPPING_PLACEHO" } ],
+    "services": { "appinvite_service": { "other_platform_oauth_client": [] } } }
+]
+```
 
 **After writing**, print a prominent warning to the user:
 
@@ -437,7 +467,66 @@ This split keeps the SKILL.md scannable while keeping the operational depth avai
 
 ### 10.10 — README
 
-Write `<project-root>/README.md` summarizing the project: stack (Kotlin + Compose + MVI + Koin), module layout, how to run, how to test, links to the two `.claude/skills/` for planning and implementation. Short — ~50 lines.
+Write `<project-root>/README.md` summarizing the project: stack (Kotlin + Compose + MVI + Koin), module layout, how to run, how to test, links to the two `.claude/skills/` for planning and implementation. Short — ~80 lines.
+
+**Must include a "Build variants" section:**
+
+```markdown
+## Build variants
+
+Two product flavors × two build types = four variants. `qa` is the default flavor, so
+`./gradlew assembleDebug` resolves to `assembleQaDebug`.
+
+| Variant         | Application ID            | Notes                                  |
+| --------------- | ------------------------- | -------------------------------------- |
+| `qaDebug`       | `<applicationId>`         | Default. Dev dialog enabled.           |
+| `qaRelease`     | `<applicationId>`         | Signed qa for distribution.            |
+| `prodDebug`     | `<applicationId>.prod`    | Debuggable prod build for triage.      |
+| `prodRelease`   | `<applicationId>.prod`    | Shipping build. Dev dialog disabled.   |
+
+Install commands:
+
+    ./gradlew installQaDebug          # default — shake/broadcast dev dialog enabled
+    ./gradlew installProdDebug        # prod-flavored debug build, dev dialog off
+    ./gradlew assembleProdRelease     # signed prod release
+```
+
+**Must include a "Development tools" section:**
+
+```markdown
+## Development tools (qa builds only)
+
+QA builds (`IS_QA = true`) include a runtime dialog for switching the API base URL between
+staging, prod, and an arbitrary custom URL. Prod builds compile the dialog out — the
+`DevToolsHost` becomes a zero-cost passthrough.
+
+### Open the dialog
+
+**On a phone (qa build only):** shake the device.
+
+**From CLI (phone or TV, qa build only):**
+
+    adb shell am broadcast -a <applicationId>.OPEN_DEV_TOOLS -p <applicationId>
+
+The `-p <applicationId>` scopes the broadcast to this app so it doesn't leak to other apps
+on the device.
+
+**On the Android emulator (mobile):** the broadcast command above is the reliable path —
+the emulator's virtual-sensor sliders for accelerometer are finicky and the gesture rarely
+clears the shake threshold. If you do want to use the sensors UI, click the `...` button on
+the emulator side panel → **Virtual sensors** → **Accelerometer** tab → snap the X axis to
+a high value, then back. Repeat 2–3× to clear the 1-second debounce.
+
+There is no keyboard shortcut for shake. `Ctrl/Cmd+M` opens the menu, not the shake.
+
+### TV
+
+TV remotes can't shake, so the broadcast command is the only trigger. The TV `DevToolsHost`
+mounts only the broadcast receiver — running the `adb shell am broadcast` command above on
+a connected (or networked) TV device opens the same dialog.
+```
+
+Substitute `<applicationId>` with the user's actual application id.
 
 ## Step 11 — Build-success gate (REQUIRED — do not skip)
 
@@ -498,13 +587,14 @@ If any of these are missing for any feature, add them before running gradle. If 
 
 ### 11.3 — Run the verification cycle
 
-Run each step. If a step fails, **read the error, fix the offending file(s), and re-run**. Iterate until all five pass. Use `--no-daemon` to avoid stale-daemon false negatives.
+Run each step. If a step fails, **read the error, fix the offending file(s), and re-run**. Iterate until all six pass. Use `--no-daemon` to avoid stale-daemon false negatives.
 
 1. `./gradlew help --no-daemon` — verifies `settings.gradle.kts` parses and `build-logic/` compiles. Most "convention plugin doesn't compile" errors surface here.
-2. `./gradlew :app-mobile:dependencies --no-daemon --configuration debugCompileClasspath` — verifies the version catalog resolves and module dependencies are reachable.
-3. `./gradlew :app-mobile:compileDebugKotlin --no-daemon` (and `:app-tv:compileDebugKotlin` if TV) — verifies Kotlin source compiles across all modules.
-4. `./gradlew :feature:<first>:ui-mobile:compileDebugUnitTestKotlin --no-daemon` — **test-compile smoke check**. Pick any one feature module and compile its unit tests. Catches generated-test issues (wrong imports, stale type references in mocks, Compose test-class wiring) before the full test suite runs. A failure here usually means a generated test file references a symbol that doesn't exist (e.g. a Nav3 import the conventions skill once recommended but that isn't a real API) — fix the template, then re-run.
-5. `./gradlew spotlessCheck detekt lint test --no-daemon` — runs Spotless, detekt, Android Lint, and unit tests across the project. (If `spotlessCheck` fails, run `./gradlew spotlessApply` and re-run.)
+2. `./gradlew :app-mobile:dependencies --no-daemon --configuration qaDebugCompileClasspath` — verifies the version catalog resolves and module dependencies are reachable on the **default (qa)** variant.
+3. `./gradlew :app-mobile:compileQaDebugKotlin --no-daemon` (and `:app-tv:compileQaDebugKotlin` if TV) — verifies Kotlin source compiles for the default flavor.
+4. `./gradlew :app-mobile:compileProdDebugKotlin --no-daemon` (and `:app-tv:compileProdDebugKotlin` if TV) — verifies the prod flavor also compiles. Catches accidental references to `IS_QA` outside dev-tools gating, or to flavor-specific code that isn't isolated.
+5. `./gradlew :feature:<first>:ui-mobile:compileDebugUnitTestKotlin --no-daemon` — **test-compile smoke check**. Pick any one feature module and compile its unit tests. Feature modules have no flavors, so the variant is `debug` (not `qaDebug`). Catches generated-test issues (wrong imports, stale type references in mocks, Compose test-class wiring) before the full test suite runs.
+6. `./gradlew spotlessCheck detekt lint test --no-daemon` — runs Spotless, detekt, Android Lint, and unit tests across the project. (If `spotlessCheck` fails, run `./gradlew spotlessApply` and re-run.)
 
 **Fix-loop policy:**
 - Read the full stdout AND stderr from a failure. Identify the file + line.
@@ -527,7 +617,7 @@ Run each step. If a step fails, **read the error, fix the offending file(s), and
 
 A clean compile/test run is not enough — **warnings must be addressed too**. After the four gradle commands pass, scan their output for warnings and fix them:
 
-1. **Kotlin compiler warnings** — re-run `./gradlew :app-mobile:compileDebugKotlin --warning-mode=all --no-daemon` (and `:app-tv:compileDebugKotlin` if TV). Look for lines starting with `w:` (warning) or containing `warning:`. Categories to expect and how to handle:
+1. **Kotlin compiler warnings** — re-run `./gradlew :app-mobile:compileQaDebugKotlin --warning-mode=all --no-daemon` (and `:app-tv:compileQaDebugKotlin` if TV). Look for lines starting with `w:` (warning) or containing `warning:`. Categories to expect and how to handle:
    - **Deprecation warnings** (`'X' is deprecated`) — switch to the recommended replacement. Don't suppress unless the replacement isn't available yet (then `@Suppress("DEPRECATION")` with a one-line comment explaining why).
    - **Unused parameters / variables** — remove them, or rename to `_` if required by an override.
    - **Unchecked casts** — narrow the type at the source, don't blanket-suppress.
@@ -541,7 +631,7 @@ A clean compile/test run is not enough — **warnings must be addressed too**. A
 3. **Detekt warnings** — `./gradlew detekt --no-daemon` and inspect `build/reports/detekt/detekt.html` per module. Fix style violations. For categories the user might disagree with (`MagicNumber`, `LongMethod`, `ComplexCondition`), suppress at the function level with a justification comment — don't disable globally.
 4. **Spotless** — `./gradlew spotlessApply --no-daemon` to auto-fix formatting; commit the changes.
 
-After fixing, re-run the full verification cycle (Step 11.3). It must pass with **zero new warnings introduced by your fixes**.
+After fixing, re-run the full verification cycle (Step 11.3) — both `qaDebug` and `prodDebug` compile must stay green. It must pass with **zero new warnings introduced by your fixes**.
 
 If you genuinely cannot fix a warning (e.g. it's in generated code, or it's a library bug not yours), suppress narrowly with a comment:
 
@@ -556,7 +646,7 @@ A blanket suppression without a comment is a regression — don't do it.
 You may only tell the user "done" after:
 
 1. The structural self-check (Step 11.2) passes for every feature.
-2. All four gradle commands in Step 11.3 have passed at least once.
+2. All six gradle commands in Step 11.3 have passed at least once.
 3. The warning sweep (Step 11.4) has been run and either the project is clean OR every remaining warning has a narrow `@Suppress` with a justification comment.
 
 If you skip any of these, the user lands on a project that compiles but is full of latent issues (deprecated APIs about to break, missing tests, ScreenContents that aren't actually tested). The verification cycle is the contract.
@@ -596,7 +686,7 @@ If the commit fails for any other reason (e.g. nothing to commit, missing user.e
 Print to the user:
 
 1. **What was committed** — file count, commit SHA (`git rev-parse --short HEAD`), commit message.
-2. **The four gradle commands and their results** (✓ help, ✓ deps, ✓ compile, ✓ spotless/detekt/lint/test).
+2. **The six gradle commands and their results** (✓ help, ✓ qa deps, ✓ qa compile, ✓ prod compile, ✓ test-compile smoke, ✓ spotless/detekt/lint/test).
 3. **The warning-sweep result** (e.g. "0 warnings remaining" or "3 suppressed with justification, 0 actionable").
 4. **Per-feature confirmation** — Screen + ScreenContent + ≥1 preview + ViewModel test + ScreenContent Compose test all present for every feature × form factor.
 5. **The two project-local skills** they now have: `<project>-android-planner` and `<project>-android-implementer`.

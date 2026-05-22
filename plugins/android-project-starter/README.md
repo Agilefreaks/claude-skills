@@ -13,7 +13,7 @@ The wizard asks ~20 questions across 6 short rounds, resolves the latest stable 
 │   └── <project>-android-implementer/SKILL.md
 ├── app-mobile/                                (always)
 ├── app-tv/                                    (if TV picked)
-├── build-logic/convention/                    (7 or 8 convention plugins)
+├── build-logic/convention/                    (8 or 9 convention plugins)
 ├── core/{common,data,designsystem-*,model,testing,ui-*}/
 ├── feature/<each-feature>/{data,ui-mobile,ui-tv?}/
 ├── gradle/libs.versions.toml                  (latest stable, freshly resolved)
@@ -163,7 +163,7 @@ For a manual one-off bump, edit `gradle/libs.versions.toml` directly, then run `
 - **Screen vs. ScreenContent**: every feature screen splits into `<Feature>Screen.kt` (wiring: `koinViewModel`, `HandleEffects`, navigation callbacks) and `<Feature>ScreenContent.kt` (pure UI with `(modifier, state, onAction)` signature + `@<Project>Previews`).
 - **Navigation**: Navigation 3 with `@Serializable data object` / `data class` routes implementing `NavKey`. Each feature exposes `fun EntryProviderScope<NavKey>.<feature>Entry(...)`. The app-level `NavDisplay` composes them.
 - **DI**: Koin. Each feature has `Module.kt` (ui ViewModels) + `di/<Feature>DataModule.kt` (data layer) aggregated into `<Feature>Modules.kt`. The Application class collects them all.
-- **Build-logic**: 8 convention plugins (7 if Room not picked), one per concern. Each module applies a single convention plugin instead of three.
+- **Build-logic**: 9 convention plugins (8 if Room not picked), one per concern. Each module applies a single convention plugin instead of three. `app-mobile`, `app-tv`, and `core/data` also apply the `android.flavors` plugin to get the `qa` (default) and `prod` product flavors.
 - **Testing**: TDD for ViewModels / repos / utilities (Turbine, Mockito-Kotlin, Truth). Test-after for Compose UI (Robolectric). Tests live in `src/test/kotlin/` — never `androidTest`.
 - **Resource ownership**: feature-only assets in the feature module's `res/`; cross-feature assets in `core/designsystem-mobile/res/`.
 

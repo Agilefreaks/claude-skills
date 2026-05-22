@@ -37,7 +37,7 @@ A scaffolded project always has this shape at the root:
 │   ├── settings.gradle.kts
 │   └── convention/
 │       ├── build.gradle.kts
-│       └── src/main/kotlin/                # the 8 convention plugins
+│       └── src/main/kotlin/                # the 9 convention plugins
 ├── core/
 │   ├── common/                             # BaseViewModel + ViewAction/State/Effect
 │   ├── data/                               # session, network, persistence wiring
@@ -66,7 +66,7 @@ A scaffolded project always has this shape at the root:
 - `core/designsystem-base` holds the parts shared between mobile and TV (color tokens, typography tokens, spacing). The `-mobile` and `-tv` variants hold form-factor-specific components.
 - If only mobile is picked, drop the `-base` suffix and put everything in `core/designsystem` + `core/ui`. The split adds noise when there's only one form factor.
 
-## The 8 convention plugins
+## The 9 convention plugins
 
 All build configuration lives in `build-logic/convention/`. Modules apply a **single** convention plugin instead of three. Every plugin reads versions and library coordinates from `libs.versions.toml` via the `libs` extension (`ProjectExtensions.kt`).
 
@@ -74,13 +74,14 @@ All build configuration lives in `build-logic/convention/`. Modules apply a **si
 
 These are non-negotiable. Diverging from them produces silent build failures on AGP 9+:
 
-1. **The ONLY files allowed in `build-logic/convention/src/main/kotlin/`** are exactly the 8 plugin classes plus `ProjectExtensions.kt`:
+1. **The ONLY files allowed in `build-logic/convention/src/main/kotlin/`** are exactly the 9 plugin classes plus `ProjectExtensions.kt`:
    ```
    AndroidApplicationConventionPlugin.kt
    AndroidApplicationComposeConventionPlugin.kt
    AndroidLibraryConventionPlugin.kt
    AndroidLibraryComposeConventionPlugin.kt
    AndroidFeatureConventionPlugin.kt
+   AndroidFlavorsConventionPlugin.kt
    AndroidLintConventionPlugin.kt
    AndroidRoomConventionPlugin.kt          # only if Room was picked
    JvmLibraryConventionPlugin.kt
@@ -94,7 +95,7 @@ These are non-negotiable. Diverging from them produces silent build failures on 
 
 4. **The build-logic Gradle plugin IDs use the project name prefix verbatim.** For project name `test`, plugin IDs are `test.android.application`, `test.android.library`, etc. The catalog plugin aliases and `gradlePlugin.plugins { ... }` block must use the same id, kebab/dot form.
 
-5. **`build-logic/convention/build.gradle.kts` must register all 8 plugins** (or 7 if Room was skipped) under `gradlePlugin { plugins { register("...") { id = "..."; implementationClass = "..." } } }`. Forgetting one means the catalog alias resolves to "unspecified" at apply time.
+5. **`build-logic/convention/build.gradle.kts` must register all 9 plugins** (or 8 if Room was skipped) under `gradlePlugin { plugins { register("...") { id = "..."; implementationClass = "..." } } }`. Forgetting one means the catalog alias resolves to "unspecified" at apply time.
 
 
 
@@ -105,6 +106,7 @@ These are non-negotiable. Diverging from them produces silent build failures on 
 | `<project>.android.library` | `AndroidLibraryConventionPlugin` | Applies `com.android.library` + `kotlin.android`, configures `compileSdk`/`minSdk`, Java 21, and adds the standard library deps (coroutines, serialization, koin-core) plus the test stack (junit, mockito-kotlin, truth, coroutines-test, turbine) and a `testImplementation(project(":core:testing"))` for every library except `:core:testing` itself. |
 | `<project>.android.library.compose` | `AndroidLibraryComposeConventionPlugin` | Applies the Compose compiler plugin, enables `buildFeatures.compose`, adds the Compose BOM + ui/tooling/test deps to a library module. |
 | `<project>.android.feature` | `AndroidFeatureConventionPlugin` | The aggregator for feature ui modules. Applies `<project>.android.library` + `<project>.android.library.compose` + `<project>.android.lint`, plus the feature-extra deps: `lifecycle-runtime-ktx`, `lifecycle-runtime-compose`, `lifecycle-viewmodel-compose`, `navigation3-runtime`, `kotlinx-collections-immutable`, `koin-androidx-compose`. Every `feature/<x>/ui-mobile` module applies just this one plugin. |
+| `<project>.android.flavors` | `AndroidFlavorsConventionPlugin` | Adds the `env` product-flavor dimension with `qa` (default) and `prod`. Applied **only** to `app-mobile`, `app-tv`, and `core/data` — feature modules and other core modules do not flavor. Detects whether the target is an Application or Library and configures the correct extension. Emits `BuildConfig.IS_QA` (boolean) and `BuildConfig.API_BASE_URL` (String) on every variant. |
 | `<project>.android.lint` | `AndroidLintConventionPlugin` | Sets `lint { abortOnError = true; checkDependencies = true; lintConfig = rootProject.file(".lint/config.xml") }` on whichever Android extension is present (Application or Library). |
 | `<project>.android.room` | `AndroidRoomConventionPlugin` | Applies `androidx.room` + `com.google.devtools.ksp`, sets `room { schemaDirectory("$projectDir/schemas") }`, adds `room-runtime`, `room-ktx`, and `ksp(room-compiler)`. Only generated if Room was picked. |
 | `<project>.jvm.library` | `JvmLibraryConventionPlugin` | Pure-Kotlin (JVM) library — used by modules with no Android dependency (e.g. `:core:model`). Java 21, jvmToolchain(21), standard test stack. |
@@ -268,6 +270,97 @@ The Application variant is identical except for `LibraryExtension` → `Applicat
 
 **`AndroidFeatureConventionPlugin.kt`** — applies `<project>.android.library`, `<project>.android.library.compose`, `<project>.android.lint`, then adds feature-specific deps (lifecycle, navigation3, koin-androidx-compose, kotlinx-collections-immutable). Does NOT configure any Android extension itself — that's the library plugin's job.
 
+**`AndroidFlavorsConventionPlugin.kt`** — adds the `env` product-flavor dimension with `qa` (default) and `prod`. **Only applied to `app-mobile`, `app-tv`, and `core/data`** — never to feature modules or other core modules. Uses `pluginManager.hasPlugin(...)` to branch between Application and Library configuration so the same plugin works on both module types. App modules also receive `applicationIdSuffix` and `versionNameSuffix` for `prod`; library modules only receive the `BuildConfig` fields.
+
+Both flavors emit two `BuildConfig` fields the runtime reads:
+- `IS_QA` (`boolean`) — gates the shake/broadcast dev tools at the app layer.
+- `API_BASE_URL` (`String`) — the default base URL the network layer uses unless the runtime `EnvironmentConfig` override is set.
+
+The actual URL values come from `gradle.properties` (`<project>.qaApiBaseUrl=...`, `<project>.prodApiBaseUrl=...`) so they aren't hard-coded into a Kotlin file. The wizard writes those entries during scaffolding.
+
+```kotlin
+import com.android.build.api.dsl.ApplicationExtension
+import com.android.build.api.dsl.LibraryExtension
+import com.android.build.api.dsl.ProductFlavor
+import org.gradle.api.Plugin
+import org.gradle.api.Project
+import org.gradle.kotlin.dsl.configure
+
+class AndroidFlavorsConventionPlugin : Plugin<Project> {
+    override fun apply(target: Project) {
+        with(target) {
+            val qaUrl = stringProperty("<project>.qaApiBaseUrl", "https://api-staging.example.com/")
+            val prodUrl = stringProperty("<project>.prodApiBaseUrl", "https://api.example.com/")
+
+            when {
+                pluginManager.hasPlugin("com.android.application") -> extensions.configure<ApplicationExtension> {
+                    buildFeatures { buildConfig = true }
+                    flavorDimensions += "env"
+                    productFlavors {
+                        create("qa") {
+                            dimension = "env"
+                            isDefault = true
+                            buildConfigField("boolean", "IS_QA", "true")
+                            buildConfigField("String", "API_BASE_URL", "\"$qaUrl\"")
+                        }
+                        create("prod") {
+                            dimension = "env"
+                            applicationIdSuffix = ".prod"
+                            versionNameSuffix = "-prod"
+                            buildConfigField("boolean", "IS_QA", "false")
+                            buildConfigField("String", "API_BASE_URL", "\"$prodUrl\"")
+                        }
+                    }
+                }
+                pluginManager.hasPlugin("com.android.library") -> extensions.configure<LibraryExtension> {
+                    buildFeatures { buildConfig = true }
+                    flavorDimensions += "env"
+                    productFlavors {
+                        create("qa") {
+                            dimension = "env"
+                            isDefault = true
+                            buildConfigField("boolean", "IS_QA", "true")
+                            buildConfigField("String", "API_BASE_URL", "\"$qaUrl\"")
+                        }
+                        create("prod") {
+                            dimension = "env"
+                            buildConfigField("boolean", "IS_QA", "false")
+                            buildConfigField("String", "API_BASE_URL", "\"$prodUrl\"")
+                        }
+                    }
+                }
+                else -> error(
+                    "<project>.android.flavors must be applied AFTER <project>.android.application " +
+                        "or <project>.android.library — apply it last in the plugins { } block of " +
+                        "app-mobile, app-tv, or core/data only."
+                )
+            }
+        }
+    }
+
+    private fun Project.stringProperty(key: String, default: String): String =
+        (findProperty(key) as? String)?.takeIf { it.isNotBlank() } ?: default
+}
+```
+
+**Apply order matters.** The plugin reads the `ApplicationExtension`/`LibraryExtension` configured by `<project>.android.application` (or `.library`), so it **must come after** it in the module's `plugins { }` block:
+
+```kotlin
+plugins {
+    alias(libs.plugins.<project>.android.application)
+    alias(libs.plugins.<project>.android.application.compose)
+    alias(libs.plugins.<project>.android.lint)
+    alias(libs.plugins.<project>.android.flavors)   // last
+}
+```
+
+**Where it is applied (and only here):**
+- `app-mobile/build.gradle.kts`
+- `app-tv/build.gradle.kts` (if TV was picked)
+- `core/data/build.gradle.kts`
+
+Feature modules and every other `core/*` module **do not** apply this plugin and therefore have no flavors. The Android Gradle Plugin handles flavor-aware dependency resolution automatically — when `app-mobile`'s `qaDebug` variant pulls in `:core:data`, AGP matches the `qa` flavor in `core/data` without any extra configuration. Modules without `env` flavors are treated as single-variant and matched to every flavor of consumers.
+
 **`AndroidLintConventionPlugin.kt`** — uses `pluginManager.hasPlugin(...)` to detect whether the target is an Application or Library module, then configures the correct extension's `lint { ... }` block.
 
 **`AndroidRoomConventionPlugin.kt`** — only generated if Room was picked; applies `androidx.room` + `com.google.devtools.ksp`, sets `schemaDirectory`, adds `room-runtime`, `room-ktx`, and `ksp(room-compiler)`.
@@ -317,6 +410,10 @@ gradlePlugin {
         register("androidFeature") {
             id = "<project>.android.feature"
             implementationClass = "AndroidFeatureConventionPlugin"
+        }
+        register("androidFlavors") {
+            id = "<project>.android.flavors"
+            implementationClass = "AndroidFlavorsConventionPlugin"
         }
         register("androidLint") {
             id = "<project>.android.lint"
@@ -821,13 +918,420 @@ The back stack is `mutableStateListOf<NavKey>()`. Forward nav appends; back pops
 
 **Hardcoded colors and text styles are forbidden.** Use `MaterialTheme.colorScheme.*`, `MaterialTheme.typography.*`, or resource references (`colorResource(R.color.*)`). If the design needs a color that doesn't exist, add it to the token set first.
 
+## Environment + dev tools (qa-only)
+
+Every scaffolded project has `qa` and `prod` product flavors (see `<project>.android.flavors`). On top of the compile-time `BuildConfig.API_BASE_URL` baked into each flavor, the runtime lets the qa user override the base URL via a shake-or-broadcast dialog — useful for pointing a single build at staging, prod, or an arbitrary URL (local mock server, teammate's tunnel, etc.) without rebuilding.
+
+### Where each piece lives
+
+| Concern | Module | Files |
+|---|---|---|
+| Runtime base URL override | `core/data` | `env/EnvironmentConfig.kt`, `env/EnvironmentConfigImpl.kt`, `env/EnvironmentConfigDataStore.kt` |
+| Koin module for env config | `core/data` | `env/di/EnvironmentModule.kt` (`val environmentModule`) |
+| OkHttp interceptor that rewrites the host | `core/data` | `network/EnvironmentBaseUrlInterceptor.kt` |
+| Shake detector composable | `core/ui-mobile` | `dev/ShakeDetector.kt` |
+| Env selector dialog | `core/ui-mobile` | `dev/EnvSelectorDialog.kt` |
+| Host that mounts the detector + receiver + dialog | `core/ui-mobile` | `dev/DevToolsHost.kt` |
+| TV-side dev tools wrapper (broadcast-only) | `core/ui-tv` (TV projects only) | `dev/DevToolsHost.kt` (same name, TV variant — no shake) |
+
+`core/ui-mobile` and `core/ui-tv` **do not** apply `<project>.android.flavors`. The dev-tools code compiles on every variant and the **app** decides whether to mount it via `BuildConfig.IS_QA`.
+
+### EnvironmentConfig (core/data)
+
+```kotlin
+package <root-pkg>.core.data.env
+
+import kotlinx.coroutines.flow.StateFlow
+
+interface EnvironmentConfig {
+    /** Live base URL — emits `BuildConfig.API_BASE_URL` until the user overrides it. */
+    val apiBaseUrl: StateFlow<String>
+
+    /** Pre-canned options the dialog uses for the Staging / Prod radio buttons. */
+    val stagingUrl: String
+    val prodUrl: String
+
+    suspend fun setApiBaseUrl(url: String)
+
+    /** Drop the override and fall back to `BuildConfig.API_BASE_URL`. */
+    suspend fun reset()
+}
+```
+
+```kotlin
+package <root-pkg>.core.data.env
+
+import android.content.Context
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.preferencesDataStore
+import <root-pkg>.core.data.BuildConfig
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.map
+
+private val Context.envDataStore by preferencesDataStore(name = "env_config")
+private val API_BASE_URL_KEY = stringPreferencesKey("api_base_url")
+
+class EnvironmentConfigImpl(
+    private val context: Context,
+    private val scope: CoroutineScope,
+    override val stagingUrl: String,
+    override val prodUrl: String,
+) : EnvironmentConfig {
+    private val _apiBaseUrl = MutableStateFlow(BuildConfig.API_BASE_URL)
+    override val apiBaseUrl: StateFlow<String> = _apiBaseUrl.asStateFlow()
+
+    init {
+        scope.launch {
+            val stored = context.envDataStore.data.map { it[API_BASE_URL_KEY] }.first()
+            if (!stored.isNullOrBlank()) _apiBaseUrl.value = stored
+        }
+    }
+
+    override suspend fun setApiBaseUrl(url: String) {
+        _apiBaseUrl.value = url
+        context.envDataStore.edit { it[API_BASE_URL_KEY] = url }
+    }
+
+    override suspend fun reset() {
+        _apiBaseUrl.value = BuildConfig.API_BASE_URL
+        context.envDataStore.edit { it.remove(API_BASE_URL_KEY) }
+    }
+}
+```
+
+```kotlin
+package <root-pkg>.core.data.env.di
+
+import <root-pkg>.core.data.BuildConfig
+import <root-pkg>.core.data.env.EnvironmentConfig
+import <root-pkg>.core.data.env.EnvironmentConfigImpl
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import org.koin.dsl.module
+
+val environmentModule = module {
+    single<EnvironmentConfig> {
+        EnvironmentConfigImpl(
+            context = get(),
+            scope = CoroutineScope(SupervisorJob()),
+            // The compile-time flavor URL is also the canonical "Staging" choice on qa builds.
+            // For prod builds, IS_QA is false and the dialog is never shown — these stay unused.
+            stagingUrl = "https://api-staging.example.com/",
+            prodUrl = "https://api.example.com/",
+        )
+    }
+}
+```
+
+The literal Staging/Prod URLs in `environmentModule` must match what the wizard wrote into `gradle.properties` (`<project>.qaApiBaseUrl`, `<project>.prodApiBaseUrl`) — write them once into the user's config and reuse the same values here so the dialog labels match the actual flavor defaults.
+
+### OkHttp interceptor (core/data)
+
+```kotlin
+package <root-pkg>.core.data.network
+
+import <root-pkg>.core.data.env.EnvironmentConfig
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
+import okhttp3.Interceptor
+import okhttp3.Response
+
+/**
+ * Rewrites every outgoing request's scheme/host/port to match the current EnvironmentConfig URL.
+ * The request path/query stays as the caller built it; only the origin is swapped. This lets the
+ * Retrofit base URL stay constant (the BuildConfig default) while runtime switches honor the dialog.
+ */
+class EnvironmentBaseUrlInterceptor(
+    private val environmentConfig: EnvironmentConfig,
+) : Interceptor {
+    override fun intercept(chain: Interceptor.Chain): Response {
+        val current = environmentConfig.apiBaseUrl.value.toHttpUrlOrNull() ?: return chain.proceed(chain.request())
+        val original = chain.request()
+        val newUrl = original.url.newBuilder()
+            .scheme(current.scheme)
+            .host(current.host)
+            .port(current.port)
+            .build()
+        return chain.proceed(original.newBuilder().url(newUrl).build())
+    }
+}
+```
+
+Register it as the **first** interceptor on the OkHttp client so subsequent auth/logging interceptors see the rewritten URL.
+
+### Shake detector + dev-tools host (core/ui-mobile)
+
+```kotlin
+package <root-pkg>.core.ui.mobile.dev
+
+import android.content.Context
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.platform.LocalContext
+import kotlin.math.sqrt
+
+private const val SHAKE_THRESHOLD_G = 2.7f       // ~2.7g spike, robust to walking
+private const val MIN_INTERVAL_MS = 1_000L       // debounce so one shake fires once
+
+@Composable
+fun ShakeListener(onShake: () -> Unit) {
+    val context = LocalContext.current
+    val latestOnShake by rememberUpdatedState(onShake)
+
+    DisposableEffect(context) {
+        val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as? SensorManager
+        val accelerometer = sensorManager?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+        if (sensorManager == null || accelerometer == null) {
+            return@DisposableEffect onDispose { }
+        }
+        var lastShakeAt = 0L
+        val listener = object : SensorEventListener {
+            override fun onSensorChanged(event: SensorEvent) {
+                val gX = event.values[0] / SensorManager.GRAVITY_EARTH
+                val gY = event.values[1] / SensorManager.GRAVITY_EARTH
+                val gZ = event.values[2] / SensorManager.GRAVITY_EARTH
+                val gForce = sqrt(gX * gX + gY * gY + gZ * gZ)
+                if (gForce >= SHAKE_THRESHOLD_G) {
+                    val now = System.currentTimeMillis()
+                    if (now - lastShakeAt >= MIN_INTERVAL_MS) {
+                        lastShakeAt = now
+                        latestOnShake()
+                    }
+                }
+            }
+            override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) = Unit
+        }
+        sensorManager.registerListener(listener, accelerometer, SensorManager.SENSOR_DELAY_UI)
+        onDispose { sensorManager.unregisterListener(listener) }
+    }
+}
+```
+
+```kotlin
+package <root-pkg>.core.ui.mobile.dev
+
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
+
+/**
+ * Listens for the dev-tools broadcast (`<applicationId>.OPEN_DEV_TOOLS`) and invokes [onTrigger].
+ * The action is namespaced with the app's packageName so receivers across apps don't collide.
+ */
+@Composable
+fun DevToolsBroadcastListener(onTrigger: () -> Unit) {
+    val context = LocalContext.current
+    val latestOnTrigger by rememberUpdatedState(onTrigger)
+
+    DisposableEffect(context) {
+        val action = "${context.packageName}.OPEN_DEV_TOOLS"
+        val receiver = object : BroadcastReceiver() {
+            override fun onReceive(c: Context?, intent: Intent?) {
+                if (intent?.action == action) latestOnTrigger()
+            }
+        }
+        ContextCompat.registerReceiver(
+            context,
+            receiver,
+            IntentFilter(action),
+            ContextCompat.RECEIVER_NOT_EXPORTED,
+        )
+        onDispose { context.unregisterReceiver(receiver) }
+    }
+}
+```
+
+```kotlin
+package <root-pkg>.core.ui.mobile.dev
+
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+
+/**
+ * Wraps the app content. When [enabled] is false this is a zero-cost passthrough — prod builds
+ * pay nothing. When true, mounts the shake listener + dev-tools broadcast receiver and shows
+ * [EnvSelectorDialog] on either trigger.
+ */
+@Composable
+fun DevToolsHost(
+    enabled: Boolean,
+    content: @Composable () -> Unit,
+) {
+    if (!enabled) {
+        content()
+        return
+    }
+    var showDialog by remember { mutableStateOf(false) }
+    ShakeListener(onShake = { showDialog = true })
+    DevToolsBroadcastListener(onTrigger = { showDialog = true })
+    content()
+    if (showDialog) {
+        EnvSelectorDialog(onDismiss = { showDialog = false })
+    }
+}
+```
+
+```kotlin
+package <root-pkg>.core.ui.mobile.dev
+
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import <root-pkg>.core.data.env.EnvironmentConfig
+import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
+
+@Composable
+fun EnvSelectorDialog(
+    modifier: Modifier = Modifier,
+    onDismiss: () -> Unit,
+    environmentConfig: EnvironmentConfig = koinInject(),
+) {
+    val current by environmentConfig.apiBaseUrl.collectAsState()
+    var selected by remember { mutableStateOf(current) }
+    var customUrl by remember { mutableStateOf(if (selected !in setOf(environmentConfig.stagingUrl, environmentConfig.prodUrl)) selected else "") }
+    val scope = rememberCoroutineScope()
+
+    AlertDialog(
+        modifier = modifier,
+        onDismissRequest = onDismiss,
+        title = { Text("Select API environment") },
+        text = {
+            Column {
+                EnvOption("Staging", environmentConfig.stagingUrl, selected) { selected = environmentConfig.stagingUrl }
+                EnvOption("Production", environmentConfig.prodUrl, selected) { selected = environmentConfig.prodUrl }
+                EnvOption("Custom URL", customUrl, selected) { selected = customUrl }
+                OutlinedTextField(
+                    value = customUrl,
+                    onValueChange = { customUrl = it; if (selected !in setOf(environmentConfig.stagingUrl, environmentConfig.prodUrl)) selected = it },
+                    label = { Text("Custom base URL") },
+                    modifier = Modifier.padding(top = 8.dp),
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                scope.launch { environmentConfig.setApiBaseUrl(selected) }
+                onDismiss()
+            }) { Text("Apply") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+    )
+}
+
+@Composable
+private fun EnvOption(label: String, value: String, selected: String, onSelect: () -> Unit) {
+    androidx.compose.foundation.layout.Row(
+        modifier = Modifier.selectable(selected = selected == value, onClick = onSelect).padding(vertical = 4.dp),
+    ) {
+        RadioButton(selected = selected == value, onClick = onSelect)
+        Text("$label  ($value)", modifier = Modifier.padding(start = 8.dp))
+    }
+}
+```
+
+### TV variant (core/ui-tv)
+
+TV remotes don't shake, so the TV `DevToolsHost` skips `ShakeListener` and keeps only the broadcast receiver:
+
+```kotlin
+package <root-pkg>.core.ui.tv.dev
+
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import <root-pkg>.core.ui.mobile.dev.DevToolsBroadcastListener   // reused — same code, broadcast is form-factor-agnostic
+import <root-pkg>.core.ui.mobile.dev.EnvSelectorDialog
+
+@Composable
+fun DevToolsHost(enabled: Boolean, content: @Composable () -> Unit) {
+    if (!enabled) { content(); return }
+    var showDialog by remember { mutableStateOf(false) }
+    DevToolsBroadcastListener(onTrigger = { showDialog = true })
+    content()
+    if (showDialog) EnvSelectorDialog(onDismiss = { showDialog = false })
+}
+```
+
+`core/ui-tv` depends on `core/ui-mobile`? No — that's wrong direction. The reusable bits (`DevToolsBroadcastListener`, `EnvSelectorDialog`) should live in `core/ui-mobile/dev/` **only if** the project is mobile-only. For mobile+TV projects, lift the shared pieces (`DevToolsBroadcastListener`, `EnvSelectorDialog`, `ShakeListener`) into a `core/ui-base` module (sibling to `core/designsystem-base`) that both `core/ui-mobile` and `core/ui-tv` can depend on. Mobile + TV `DevToolsHost.kt` files then live in their respective ui modules.
+
+For mobile-only projects, drop the `-base` split entirely and keep everything under `core/ui-mobile/dev/`.
+
+### Wiring at the app layer
+
+`MainActivity` (or the closest equivalent) wraps content in `DevToolsHost(enabled = BuildConfig.IS_QA)`:
+
+```kotlin
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        setContent {
+            <Project>Theme {
+                DevToolsHost(enabled = BuildConfig.IS_QA) {
+                    <Project>NavHost()
+                }
+            }
+        }
+    }
+}
+```
+
+Same shape in `app-tv` using the TV variant of `DevToolsHost`. `BuildConfig.IS_QA` is set by the flavors convention plugin and is `false` on prod — so the host renders `content()` directly with zero overhead on shipped builds.
+
+`<Project>Application` must include `environmentModule` in the Koin module list so `EnvSelectorDialog`'s `koinInject<EnvironmentConfig>()` resolves.
+
+### Triggering the dialog
+
+- **Phone**: shake the device. On the Android emulator, the simplest path is the broadcast command below — emulator virtual sensors are awkward to trigger reliably.
+- **Phone or TV (CLI)**: `adb shell am broadcast -a <applicationId>.OPEN_DEV_TOOLS -p <applicationId>` (the `-p` scopes the broadcast to this app so other listeners on the device don't see it).
+- **TV**: only the broadcast trigger works.
+
+The wizard writes both options into the generated project's README under a "Development tools" section so the user can find them on day one.
+
 ## libs.versions.toml structure
 
 Single catalog file at `gradle/libs.versions.toml`. Sections:
 
 1. `[versions]` — every version is named. SDK numbers (`compileSdk = "36"`, `minSdk = "24"`, `targetSdk = "36"`) and `jvmTarget = "21"` also live here so convention plugins can read them.
 2. `[libraries]` — alias keys are kebab-case scoped by ecosystem (`androidx-core-ktx`, `koin-android`, `retrofit-moshi`). Use `version.ref` for shared versions; omit `version` for BOM-managed deps.
-3. `[plugins]` — Gradle plugin aliases. The 8 convention plugins are listed here with `version = "unspecified"`:
+3. `[plugins]` — Gradle plugin aliases. The 9 convention plugins are listed here with `version = "unspecified"`:
 
    ```toml
    <project>-android-application = { id = "<project>.android.application", version = "unspecified" }
