@@ -42,7 +42,7 @@ The plugin is exposed via a local marketplace at `~/.claude/plugins/marketplaces
 ```
 mkdir my-new-app && cd my-new-app
 claude
-> /android-project-starter:init
+> /android-project-starter:init-android-project
 ```
 
 The wizard runs in your current working directory. Pre-flight checks ensure the directory is empty or contains only `.git/` / `.idea/` / `README.md` — never overwrites a populated project.
@@ -177,5 +177,5 @@ The single source of truth for *what good looks like* is `skills/conventions/SKI
 
 | Skill | Invocation | Purpose |
 |---|---|---|
-| `init` | `/android-project-starter:init` | The wizard. Scaffolds a new project end-to-end with the build-success gate. |
-| `conventions` | (auto-loaded by `init`) | Architectural conventions reference — canonical file shapes, MVI patterns, version-lookup sources. Not user-facing. |
+| `init-android-project` | `/android-project-starter:init-android-project` | The wizard. Scaffolds a new project end-to-end with the build-success gate. |
+| `conventions` | (auto-loaded by `init-android-project`) | Architectural conventions reference — canonical file shapes, MVI patterns, version-lookup sources. Not user-facing. |
