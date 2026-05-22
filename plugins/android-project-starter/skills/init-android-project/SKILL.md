@@ -1,5 +1,5 @@
 ---
-name: init
+name: init-android-project
 description: >
   Interactive wizard that scaffolds a brand-new Android project in the current working
   directory. Walks the user through identity, target platforms, SDK levels, architecture
@@ -13,7 +13,7 @@ disable-model-invocation: true
 
 # Android Project Starter — Wizard
 
-You are running an interactive wizard that scaffolds a new Android project in the **current working directory**. The user invoked you explicitly via `/android-project-starter:init`. Don't assume — confirm, gather answers in phased rounds, generate, then **verify the project builds before considering the job done**.
+You are running an interactive wizard that scaffolds a new Android project in the **current working directory**. The user invoked you explicitly via `/android-project-starter:init-android-project`. Don't assume — confirm, gather answers in phased rounds, generate, then **verify the project builds before considering the job done**.
 
 ## Step 0 — Load conventions and pre-flight
 
