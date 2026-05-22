@@ -172,97 +172,7 @@ Follow the conventions skill for every file. Strict rules:
 - `settings.gradle.kts` — per conventions, `includeBuild("build-logic")`, `rootProject.name = "<project-name>"`, `include(":app-mobile")` and every core + feature module
 - Root `build.gradle.kts` — only `apply false` plugin declarations; Spotless + detekt configured in a `subprojects { }` block
 - `local.properties` (placeholder), `.lint/config.xml` (minimal lint baseline)
-- `.editorconfig` — must include the Compose-aware ktlint defaults below so the first lint pass after generation doesn't trip on Composable function naming or the MVI `_actions` backing-property pattern. Substitute `<Project>Previews` with the project's actual multi-preview annotation name (e.g. `AcmePreviews`):
-
-  ```ini
-  root = true
-
-  [*]
-  charset = utf-8
-  end_of_line = lf
-  insert_final_newline = true
-  trim_trailing_whitespace = true
-
-  [*.{kt,kts}]
-  indent_style = space
-  indent_size = 4
-  max_line_length = 140
-  ij_kotlin_allow_trailing_comma = true
-  ij_kotlin_allow_trailing_comma_on_call_site = true
-
-  # Compose @Composable functions are PascalCase; ktlint's standard rule expects camelCase.
-  ktlint_standard_function-naming = disabled
-  ktlint_function_naming_ignore_when_annotated_with = Composable, Preview, <Project>Previews
-
-  # BaseViewModel uses `_actions` / `_effects` as private buffers with no public mirror
-  # (actions are dispatched via setAction(), effects exposed as a Flow only).
-  ktlint_standard_backing-property-naming = disabled
-
-  [*.{xml,yml,yaml,json,md}]
-  indent_style = space
-  indent_size = 2
-  ```
-- `.gitignore` — comprehensive Android+Kotlin+Gradle ignore. Use this exact body (don't trim):
-
-  ```gitignore
-  # Gradle
-  .gradle/
-  build/
-  **/build/
-  out/
-  
-  # Gradle wrapper — DO commit gradle-wrapper.jar and .properties; ignore only backups
-  gradle/wrapper/gradle-wrapper.jar.bak
-  
-  # Android Studio / IntelliJ
-  .idea/
-  *.iml
-  *.ipr
-  *.iws
-  captures/
-  .navigation/
-  
-  # Kotlin
-  .kotlin/
-  
-  # Android build outputs
-  *.apk
-  *.aab
-  *.ap_
-  *.dex
-  *.class
-  bin/
-  gen/
-  release/
-  
-  # Local config (per-developer, never commit)
-  local.properties
-  
-  # Logs / OS junk
-  *.log
-  .DS_Store
-  Thumbs.db
-  
-  # Lint cache
-  .lint/cache/
-  
-  # Test coverage
-  *.exec
-  
-  # Crashlytics
-  crashlytics.properties
-  crashlytics-build.properties
-  fabric.properties
-  
-  # Firebase — google-services.json is normally committed; leave the line below commented.
-  # Uncomment only if your project policy keeps it out of source control.
-  # app-mobile/google-services.json
-  # app-tv/google-services.json
-  
-  # Generated keystores (debug keystores are auto-generated; release keystores must never be in repo)
-  *.jks
-  *.keystore
-  ```
+- `.editorconfig` and `.gitignore` — verbatim bodies in `references/file-templates.md`. The `.editorconfig` disables ktlint's `function-naming` (Composables are PascalCase) and `backing-property-naming` (MVI buffers); substitute `<Project>Previews` with the project's actual multi-preview annotation. The `.gitignore` is the comprehensive Android + Kotlin + Gradle list — use it whole, don't trim.
 - `gradle/wrapper/gradle-wrapper.properties` (pin Gradle to the latest stable that supports the chosen AGP)
 
 ### 10.2 — Version catalog
@@ -305,42 +215,7 @@ For each user-listed feature `<feature>`:
 
 ### 10.7 — Tooling
 
-- **`.detekt/config.yml`** — must include Compose-aware overrides so the first detekt pass doesn't trip on Preview composables and scaffold-injected fields. Substitute `<Project>Previews` with the actual project preview annotation:
-
-  ```yaml
-  build:
-    maxIssues: 0
-
-  style:
-    UnusedPrivateMember:
-      active: true
-      allowedNames: '(_|ignored|expected|serialVersionUID)'
-      # Preview functions and Composable helpers are tooling-only — detekt can't see the
-      # @Preview entry points so it'd flag every one of them as unused.
-      ignoreAnnotated: ['Preview', '<Project>Previews', 'Composable']
-    UnusedPrivateProperty:
-      active: true
-      # Repository / service / store fields are injected at scaffold time and used later
-      # by the implementer. Pre-allow the common names so detekt doesn't fail the build
-      # on a fresh scaffold.
-      allowedNames: '(_|ignored|expected|serialVersionUID|repository|service|store|client|dispatcher|context)'
-    MagicNumber:
-      active: false   # Compose/ Material uses sp/dp magic numbers; whole-file suppress isn't useful
-    LongMethod:
-      active: false   # ScreenContent composables can be long without being complex
-
-  naming:
-    MatchingDeclarationName:
-      active: true
-      # Allow Kind enums / Variant sealed classes to coexist with their parent composable in one file
-      # if you really want; we don't pre-disable, since the right move is usually to split files.
-
-  complexity:
-    LongParameterList:
-      active: true
-      functionThreshold: 8     # Composable parameter lists run long; raise from the default 6
-      constructorThreshold: 8
-  ```
+- **`.detekt/config.yml`** — verbatim YAML in `references/file-templates.md`. Includes Compose-aware overrides: `UnusedPrivateMember.ignoreAnnotated: [Preview, <Project>Previews, Composable]`, scaffold-field allow-list (`repository|service|store|client|dispatcher|context`), `MagicNumber` and `LongMethod` disabled (Compose uses sp/dp magic numbers; ScreenContent composables are long without being complex), and a raised `LongParameterList` threshold (8) for Composable signatures.
 
 - **Spotless block in root build.gradle.kts** — target `**/*.kt` and `**/*.kts`, ktlint at the catalog-pinned version.
 - If pre-commit: `.githooks/pre-commit` + setup note.
@@ -353,62 +228,7 @@ For each user-listed feature `<feature>`:
 - Add the chosen Firebase libs (`firebase-crashlytics`, `firebase-analytics`, etc.) using the Firebase BOM.
 - Write `app-mobile/google-services.json` (and `app-tv/google-services.json` if TV) using the **schema-valid placeholder** below — a minimal-but-valid JSON the google-services plugin will accept so the project compiles. The values are dummies; Firebase calls won't work at runtime until the user replaces it.
 
-A bare `{ "project_id": "X" }` placeholder is **not enough** — the google-services plugin's schema check rejects it during `processDebugGoogleServices` with errors like `No matching client found for package name`. Use this exact shape, substituting `<applicationId>` with the user's actual `applicationId` (Step 1):
-
-```json
-{
-  "project_info": {
-    "project_number": "000000000000",
-    "project_id": "placeholder",
-    "storage_bucket": "placeholder.appspot.com"
-  },
-  "client": [
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:000000000000:android:0000000000000000",
-        "android_client_info": {
-          "package_name": "<applicationId>"
-        }
-      },
-      "oauth_client": [],
-      "api_key": [
-        { "current_key": "AIzaSyPLACEHOLDER_REPLACE_BEFORE_SHIPPING_PLACEHO" }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
-        }
-      }
-    }
-  ],
-  "configuration_version": "1"
-}
-```
-
-Every scaffold has two product flavors with different application IDs (`<appId>` for `qa`, `<appId>.prod` for `prod`), so the placeholder needs two `client` entries — one per variant. The google-services plugin matches `package_name` against the resolved applicationId per variant; missing one fails the variant the placeholder doesn't list. Use this two-entry shape:
-
-```json
-"client": [
-  { "client_info": { "mobilesdk_app_id": "1:000000000000:android:0000000000000000",
-                     "android_client_info": { "package_name": "<applicationId>" } },
-    "oauth_client": [],
-    "api_key": [ { "current_key": "AIzaSyPLACEHOLDER_REPLACE_BEFORE_SHIPPING_PLACEHO" } ],
-    "services": { "appinvite_service": { "other_platform_oauth_client": [] } } },
-  { "client_info": { "mobilesdk_app_id": "1:000000000000:android:0000000000000001",
-                     "android_client_info": { "package_name": "<applicationId>.prod" } },
-    "oauth_client": [],
-    "api_key": [ { "current_key": "AIzaSyPLACEHOLDER_REPLACE_BEFORE_SHIPPING_PLACEHO" } ],
-    "services": { "appinvite_service": { "other_platform_oauth_client": [] } } }
-]
-```
-
-**After writing**, print a prominent warning to the user:
-
-```
-⚠️  The google-services.json files are PLACEHOLDERS. Firebase/Crashlytics will compile
-    but not report at runtime. Replace app-mobile/google-services.json (and app-tv if TV)
-    with the real file from the Firebase Console before shipping.
-```
+The `google-services.json` placeholder body is in `references/file-templates.md` — use the two-`client` variant (one entry for `<applicationId>` / qa, one for `<applicationId>.prod` / prod) since every scaffold has both flavors. A bare `{ "project_id": "X" }` is not enough — the plugin's schema check rejects it during `processDebugGoogleServices` with `No matching client found for package name`. After writing, print the placeholder warning at the end of `references/file-templates.md` verbatim so the user knows to swap in real Firebase configs before shipping.
 
 ### 10.9 — Project-local skills
 
@@ -436,32 +256,7 @@ Generate the project-local planner and implementer skills with this layout:
   - Remove the TV-specific subsection if the project didn't pick TV. Keep it if TV was picked, and point at the actual TV-flavored feature module.
   - Replace the generic `LocalScrollFade` / design-system token examples with whatever this project actually generated (or strike the example if it doesn't apply).
 - **`references/project-architecture.md`** captures the module inventory, MVI base type signatures, navigation map, GraphQL/Retrofit operation list (if any), Koin module conventions, and theme tokens. The planner and implementer both load it at the start of every run. Generate one canonical copy and either symlink it from both skill directories or copy it; either is fine.
-- **The implementer's SKILL.md "Compose authoring rules" section is a pointer block**, not a content section. Use this exact shape, substituting project-specific names:
-
-  ```markdown
-  ## Compose authoring rules
-
-  **Read `references/compose-authoring.md` before touching any Compose file.** It is
-  the operational source of truth for Compose in this project. Re-read the relevant
-  section whenever you're about to:
-
-  - Decide where state lives (VM `StateFlow` vs `remember` vs `rememberSaveable`)
-  - Make a composable skippable (`@Immutable`, `@Stable`, `ImmutableList<T>`,
-    stable lambdas)
-  - Order modifiers (chain order = visual order; click handling near content;
-    size before background; lambda-form layout modifiers)
-  - Pick a side-effect API (`LaunchedEffect` vs `DisposableEffect` vs
-    `rememberUpdatedState` vs `produceState` vs `snapshotFlow` vs `SideEffect`)
-  - Build a list (`key`, `contentType`, `itemsIndexed`, `derivedStateOf` for
-    scroll thresholds)
-  - Add animation (`animate*AsState`, `AnimatedVisibility`, `AnimatedContent`,
-    `updateTransition`, M3 motion tokens)
-  - Introduce a `CompositionLocal`
-  - Use `Canvas`
-  - Address accessibility
-  - Diagnose a Compose crash (the table in §Crash patterns to avoid)
-  - Profile recomposition
-  ```
+- **The implementer's SKILL.md "Compose authoring rules" section must be a pointer block, not a content section.** Use the exact markdown template in `references/file-templates.md` (substitute project-specific names). It points the implementer at `references/compose-authoring.md` and enumerates the decisions that require re-reading the reference (state ownership, stability annotations, modifier ordering, side-effect API, lazy-list discipline, animation, composition locals, Canvas, accessibility, crash diagnosis, recomposition profiling).
 
 This split keeps the SKILL.md scannable while keeping the operational depth available on demand. The planner skill is shorter and doesn't ship `compose-authoring.md` — it ships `project-architecture.md` and trusts the implementer to load Compose rules when it actually writes code.
 
@@ -469,64 +264,12 @@ This split keeps the SKILL.md scannable while keeping the operational depth avai
 
 Write `<project-root>/README.md` summarizing the project: stack (Kotlin + Compose + MVI + Koin), module layout, how to run, how to test, links to the two `.claude/skills/` for planning and implementation. Short — ~80 lines.
 
-**Must include a "Build variants" section:**
+**Must include two sections lifted from `references/file-templates.md`:**
 
-```markdown
-## Build variants
+- A **"Build variants"** section with the qa/prod × debug/release variant table and the canonical install commands (`installQaDebug`, `installProdDebug`, `assembleProdRelease`). Make clear that `qa` is the default flavor — `./gradlew assembleDebug` resolves to `assembleQaDebug`.
+- A **"Development tools (qa builds only)"** section documenting the shake gesture, the `adb shell am broadcast -a <applicationId>.OPEN_DEV_TOOLS -p <applicationId>` fire command (the reliable path on emulators), the emulator virtual-sensor procedure, and the TV-only broadcast workflow.
 
-Two product flavors × two build types = four variants. `qa` is the default flavor, so
-`./gradlew assembleDebug` resolves to `assembleQaDebug`.
-
-| Variant         | Application ID            | Notes                                  |
-| --------------- | ------------------------- | -------------------------------------- |
-| `qaDebug`       | `<applicationId>`         | Default. Dev dialog enabled.           |
-| `qaRelease`     | `<applicationId>`         | Signed qa for distribution.            |
-| `prodDebug`     | `<applicationId>.prod`    | Debuggable prod build for triage.      |
-| `prodRelease`   | `<applicationId>.prod`    | Shipping build. Dev dialog disabled.   |
-
-Install commands:
-
-    ./gradlew installQaDebug          # default — shake/broadcast dev dialog enabled
-    ./gradlew installProdDebug        # prod-flavored debug build, dev dialog off
-    ./gradlew assembleProdRelease     # signed prod release
-```
-
-**Must include a "Development tools" section:**
-
-```markdown
-## Development tools (qa builds only)
-
-QA builds (`IS_QA = true`) include a runtime dialog for switching the API base URL between
-staging, prod, and an arbitrary custom URL. Prod builds compile the dialog out — the
-`DevToolsHost` becomes a zero-cost passthrough.
-
-### Open the dialog
-
-**On a phone (qa build only):** shake the device.
-
-**From CLI (phone or TV, qa build only):**
-
-    adb shell am broadcast -a <applicationId>.OPEN_DEV_TOOLS -p <applicationId>
-
-The `-p <applicationId>` scopes the broadcast to this app so it doesn't leak to other apps
-on the device.
-
-**On the Android emulator (mobile):** the broadcast command above is the reliable path —
-the emulator's virtual-sensor sliders for accelerometer are finicky and the gesture rarely
-clears the shake threshold. If you do want to use the sensors UI, click the `...` button on
-the emulator side panel → **Virtual sensors** → **Accelerometer** tab → snap the X axis to
-a high value, then back. Repeat 2–3× to clear the 1-second debounce.
-
-There is no keyboard shortcut for shake. `Ctrl/Cmd+M` opens the menu, not the shake.
-
-### TV
-
-TV remotes can't shake, so the broadcast command is the only trigger. The TV `DevToolsHost`
-mounts only the broadcast receiver — running the `adb shell am broadcast` command above on
-a connected (or networked) TV device opens the same dialog.
-```
-
-Substitute `<applicationId>` with the user's actual application id.
+Copy the markdown bodies verbatim from `references/file-templates.md` and substitute `<applicationId>` with the user's actual application id.
 
 ## Step 11 — Build-success gate (REQUIRED — do not skip)
 

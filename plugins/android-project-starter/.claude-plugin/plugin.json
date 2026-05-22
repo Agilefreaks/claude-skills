@@ -4,5 +4,6 @@
   "version": "0.3.0",
   "author": {
     "name": "Denis Coman"
-  }
+  },
+  "keywords": ["android", "kotlin", "compose", "mvi", "koin", "scaffolding", "wizard", "starter"]
 }
