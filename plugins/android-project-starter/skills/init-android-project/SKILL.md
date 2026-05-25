@@ -176,7 +176,7 @@ If a check fails, propose a fix (downgrade or upgrade one specific library) and 
 
 Follow the conventions skill for every file. Strict rules:
 
-- **Reproduce the canonical plugin file contents in the conventions skill verbatim** for the 9 build-logic plugins and `ProjectExtensions.kt`. Do not refactor, do not extract helpers, do not add `package` declarations.
+- **Reproduce the canonical plugin file contents in the conventions skill verbatim** for the 9 build-logic plugins and `ProjectExtensions.kt`. Do not refactor, do not extract helpers, do not add `package` declarations to the 9 plugin classes. `ProjectExtensions.kt` is the one exception — it lives in `package <project>.android.buildlogic` (file path `build-logic/convention/src/main/kotlin/<project>/android/buildlogic/ProjectExtensions.kt`) and every catalog-using plugin imports `<project>.android.buildlogic.libs` so its `libs` accessor doesn't collide with Gradle's auto-generated `Project.libs: LibrariesForLibs`.
 - **Use `ApplicationExtension` and `LibraryExtension` directly** — never `CommonExtension`. This is the AGP 9 trap that breaks projects.
 - **Skip `AndroidRoomConventionPlugin.kt`** entirely if Room was not picked (and remove its `register("androidRoom")` block from `build-logic/convention/build.gradle.kts`).
 
@@ -194,8 +194,8 @@ Follow the conventions skill for every file. Strict rules:
 ### 10.3 — build-logic
 - `build-logic/settings.gradle.kts` per conventions (reads `../gradle/libs.versions.toml`)
 - `build-logic/convention/build.gradle.kts` — exactly the shape shown in the conventions skill, registering all 9 plugins (or 8 if Room was skipped)
-- The 9 plugin Kotlin files (or 8) — verbatim shapes from the conventions skill, **no helper files**, **no package declarations**. Includes `AndroidFlavorsConventionPlugin.kt`.
-- `ProjectExtensions.kt` — verbatim from conventions
+- The 9 plugin Kotlin files (or 8) — verbatim shapes from the conventions skill, **no helper files**, **no `package` declarations on the plugin classes themselves** (Gradle resolves them by top-level class name). Includes `AndroidFlavorsConventionPlugin.kt`. Every plugin that calls `libs.findLibrary(...)` / `libs.findVersion(...)` adds `import <project>.android.buildlogic.libs` near the top of the file.
+- `ProjectExtensions.kt` — verbatim from `conventions/references/build-logic.md`. **In its own package** (`<project>.android.buildlogic`) and located at `build-logic/convention/src/main/kotlin/<project>/android/buildlogic/ProjectExtensions.kt`. This is the one carve-out from the "no package declarations" rule and exists specifically to disambiguate from Gradle's auto-generated `Project.libs: LibrariesForLibs`.
 
 ### 10.4 — core modules
 - `core/common/` — `BaseViewModel`, `ViewAction`, `ViewState`, `ViewSideEffect`
@@ -368,6 +368,7 @@ Run each step. If a step fails, **read the error, fix the offending file(s), and
   - Catalog alias unresolved → check spelling matches `libs.versions.toml`
   - **`Unresolved reference 'entry'`** in an `<Feature>Entry.kt` file → remove the `import androidx.navigation3.runtime.entry` line; `entry<K>` is a member of `EntryProviderScope<T>`, not a top-level function (see conventions skill Nav3 section).
   - **`Unresolved reference 'androidx'` / `'kotlinx'` / `'koin'` in module build scripts** → the type-safe catalog accessor isn't visible to the subproject classpath on Gradle 9.5.1 + AGP 9.2. Switch the affected module's `build.gradle.kts` to the `lib("alias")` helper form (see conventions skill).
+  - **`Overload resolution ambiguity: val Project.libs: VersionCatalog vs LibrariesForLibs`** (or `libs.findLibrary` silently failing inside a convention plugin) → the plugin file is missing `import <project>.android.buildlogic.libs`. Gradle auto-generates `Project.libs: LibrariesForLibs` alongside our extension; without an explicit import the compiler can't pick a side. Add the import at the top of the affected plugin file.
   - **Turbine `awaitItem()` times out at 3s** → `MainCoroutineRule` is using `StandardTestDispatcher`. The canonical rule defaults to `UnconfinedTestDispatcher` so `BaseViewModel.init { … }` action-collector launches synchronously. Fix the `MainCoroutineRule` template in `core/testing`.
   - **`Unable to resolve activity for Intent { ... cmp=org.robolectric.default/androidx.activity.ComponentActivity }`** → the Compose convention plugins are missing `testOptions.unitTests.isIncludeAndroidResources = true`. Add it to `AndroidLibraryComposeConventionPlugin` and `AndroidApplicationComposeConventionPlugin`.
   - **`The 'org.jetbrains.kotlin.android' plugin is not compatible with AGP's 9.0 new DSL`** → AGP 9.2+ auto-applies Kotlin. Remove the manual `apply("org.jetbrains.kotlin.android")` from `AndroidApplicationConventionPlugin` and `AndroidLibraryConventionPlugin`, and set `android.builtInKotlin=true` in `gradle.properties` (or omit — it's the default).
