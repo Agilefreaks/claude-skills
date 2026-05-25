@@ -25,71 +25,84 @@ You are running an interactive wizard that scaffolds a new Android project in th
    - If the directory is non-empty *and* contains files that suggest an existing project (`build.gradle`, `build.gradle.kts`, `settings.gradle*`, `gradle.properties`, `gradle/`, `app/`, `app-*/`, `core/`, `feature/`, `.git/` with content beyond a fresh init), **stop and ask the user** whether to (a) scaffold somewhere else, (b) cancel, or (c) proceed anyway (dangerous). Never overwrite a populated project without explicit confirmation.
    - An empty directory or one with only `.git/`, `.idea/`, `README.md`, or `.DS_Store` is fine — proceed.
 
-3. **Greeting:** tell the user briefly what's about to happen — "I'll ask 6 short rounds of questions (~20 total), resolve the latest stable versions in parallel, generate the project, then run `./gradlew help`, `assembleDebug`, `lint`, and `test` to verify. Total time ~5–10 minutes. Every project gets `qa` (default) and `prod` product flavors and a shake/broadcast dev dialog for switching API base URL on qa builds."
+3. **Greeting:** tell the user briefly what's about to happen — "I'll ask ~22 questions one at a time, resolve the latest stable versions in parallel, generate the project, then run `./gradlew help`, `assembleDebug`, `lint`, and `test` to verify. Total time ~10–15 minutes. Every project gets `qa` (default) and `prod` product flavors and a shake/broadcast dev dialog for switching API base URL on qa builds."
 
-## Step 1 — Identity round (plain-text)
+## Question rules — read before asking anything (applies to every step below)
 
-Ask in **one chat message**, asking the user to respond inline:
+**Ask exactly one question at a time. Wait for the answer before asking the next.** This rule is non-negotiable and applies in every mode, including Claude Code's auto-accept (Shift+Tab) mode where confirmations are bypassed — auto-accept does not mean "infer answers" or "batch questions."
 
-```
-Let's start with project identity. Please reply with:
+- **`AskUserQuestion` calls must contain exactly one item in the `questions` array.** Never pass 2, 3, or 4 questions to a single `AskUserQuestion` call. One call → one question → one answer. Then make the next call.
+- **Plain-text questions go in their own chat message** — one question per message. Do not enumerate multiple `1. … 2. … 3. …` prompts in a single message and ask the user to reply with all answers. Each item gets its own message; wait for the answer before sending the next.
+- **Do not infer or auto-fill answers from defaults**, even when a recommended value is obvious. The user has to confirm every choice explicitly. The phrase "(recommended)" on an option means "this is the option I expect you to pick most often" — not "I'll pick this if you don't answer."
+- **Echo the answer back briefly** before moving on (e.g. "Got it — Mobile + TV. Next:"). This makes the conversation legible when scrolled later.
 
-  1. Project name (kebab-case, e.g. `acme`): ____
-  2. Application ID (e.g. `com.acme.android`): ____
-  3. App display name (shown on the launcher, e.g. "Acme"): ____
-  4. Root Kotlin package (defaults to the applicationId if blank): ____
-```
+The step labels below (e.g. "Step 2 — Targets + SDK") are **rounds** in the sense of "stage of the wizard", not "one round = one prompt". Each numbered sub-item in a round is a separate `AskUserQuestion` call (or separate chat message for plain-text rounds).
 
-Derive:
+## Step 1 — Identity round (plain-text, one question per message)
+
+Four separate chat-message prompts. Send them one at a time, waiting for each answer before sending the next. Do **not** bundle them into a single message with `1. … 2. … 3. …`.
+
+1. **Project name** — "What's the project name? Kebab-case, e.g. `acme` or `super-app`."
+2. **Application ID** — "What's the Android applicationId? e.g. `com.acme.android`."
+3. **App display name** — "What's the app display name as it should appear on the launcher? e.g. `Acme`."
+4. **Root Kotlin package** — "What's the root Kotlin package? Press enter to default to the applicationId from question 2."
+
+After all four answers are in, derive and echo back:
+
 - **Project class prefix** = PascalCase of project name (`acme` → `Acme`, `super-app` → `SuperApp`). Used for `<Project>Theme`, `<Project>Previews`, `<Project>Application`, color tokens.
 - **Convention plugin id prefix** = lowercase project name with hyphens stripped (`super-app` → `superapp`). Plugin ids become `<prefix>.android.application`, etc.
 
-Echo the derived values so the user can correct typos before proceeding.
+Echo the derived values so the user can correct typos before proceeding to Step 2.
 
-## Step 2 — Targets + SDK (AskUserQuestion, 4 questions)
+## Step 2 — Targets + SDK (four separate AskUserQuestion calls)
+
+Send each as its own `AskUserQuestion` call with exactly one item in `questions`. Do not batch.
 
 1. **Platforms** — Mobile only (recommended) / Mobile + TV / TV only
 2. **minSdk** — 24 (Android 7) / 26 (Android 8) / 28 (Android 9) / 21 (Android 5)
 3. **compileSdk / targetSdk** — 36 (latest, recommended) / 35 / 34
 4. **JVM target** — 21 (recommended) / 17
 
-## Step 3 — Architecture (AskUserQuestion, 4 questions)
+## Step 3 — Architecture (four separate AskUserQuestion calls)
+
+One call per question, in order:
 
 1. **Network** — Retrofit + Moshi / Apollo (GraphQL) / Both / None
 2. **Persistence** — Room + DataStore / Room only / DataStore only / None
 3. **Image loading** — Coil 3 (recommended) / Glide / None
 4. **Auth scaffolding** — Yes (feature/auth + session store + token interceptor) / No
 
-## Step 4 — Cross-cutting (AskUserQuestion, 3 questions)
+## Step 4 — Cross-cutting (three separate AskUserQuestion calls)
+
+One call per question. Question 2 (Analytics) is skipped only when the user picked Firebase Analytics in question 1; if so, say so out loud ("Skipping analytics question — Firebase Analytics already picked.") rather than silently moving on.
 
 1. **Firebase bundle** (multiSelect) — Crashlytics / Analytics / Messaging / Remote Config / None of these
-2. **Analytics** (skip if Firebase Analytics already picked) — Mixpanel / Amplitude / None
+2. **Analytics** (skip if Firebase Analytics already picked above) — Mixpanel / Amplitude / None
 3. **Logging** — Timber (recommended) / kotlin-logging / println-only
 
 Build variants are no longer a choice. Every project gets two product flavors — `qa` (default) and `prod` — on top of the standard `debug` + `release` build types, generating `qaDebug`, `qaRelease`, `prodDebug`, `prodRelease`. See the conventions skill's `<project>.android.flavors` plugin. The `prod` flavor gets `applicationIdSuffix = ".prod"` and `versionNameSuffix = "-prod"` so qa + prod can coexist on a single device; `qa` keeps the clean applicationId.
 
-## Step 4.5 — API base URLs (plain text)
+## Step 4.5 — API base URLs (two separate chat messages)
 
-Ask in one chat message:
+These are free-text values, so they go in plain chat messages — one per message, waiting for each answer.
 
-```
-Two API base URLs are baked into the build (one per flavor). You can override either at
-runtime via the shake/broadcast dev dialog on qa builds.
-
-  1. QA / staging base URL (default `https://api-staging.example.com/`): ____
-  2. Prod base URL (default `https://api.example.com/`): ____
-```
+1. "What's the QA / staging API base URL? Default: `https://api-staging.example.com/`."
+2. "What's the Prod API base URL? Default: `https://api.example.com/`."
 
 Write the answers verbatim into `gradle.properties` as `<project>.qaApiBaseUrl=...` and `<project>.prodApiBaseUrl=...` — the `AndroidFlavorsConventionPlugin` reads them at configuration time. Mirror the same two strings into `environmentModule`'s `stagingUrl`/`prodUrl` literals in `core/data/env/di/EnvironmentModule.kt` so the dialog's labels match the flavor defaults.
 
-## Step 5 — UI defaults (AskUserQuestion, 4 questions)
+## Step 5 — UI defaults (four separate AskUserQuestion calls)
+
+One call per question, in order:
 
 1. **Theme** — Material 3 + dynamic color / Material 3 (custom colors only) / Material 2
 2. **Dark mode** — Follow system / Always on / Always off
 3. **Splash + onboarding** — Both / Splash only / Neither
 4. **Edge-to-edge** — Yes (recommended) / No
 
-## Step 6 — Tooling (AskUserQuestion, 4 questions)
+## Step 6 — Tooling (four separate AskUserQuestion calls)
+
+One call per question, in order:
 
 1. **Screenshot tests** — None (default) / Roborazzi / Paparazzi
 2. **CI** — GitHub Actions full (build + lint + spotless + detekt + test) / Build only / None
@@ -445,7 +458,8 @@ Never run `git push`, never set a remote, never `git push --set-upstream`. The u
 - **Commit only the scaffold, only after verification passes.** `git init` + `git add .` + `git commit -m "setup architecture"` runs in Step 12, after the build-success gate is green. Don't commit before verification. Don't push — never run `git push`, never set a remote.
 - **Never `--no-verify`.** If a pre-commit hook fails, fix the root cause (usually `spotlessApply`) and re-stage. Bypassing the hook lands a broken state in source control.
 - **Never modify files outside cwd.**
-- **Never invent helpers in build-logic.** Use exactly the 8 (or 7) plugin classes the conventions skill names. Inline duplication is the right call.
+- **Ask one question at a time, always.** Every `AskUserQuestion` call has exactly one item in `questions`; every plain-text question gets its own chat message. Wait for the answer before sending the next prompt. This rule applies in every mode — auto-accept (Shift+Tab) does NOT mean "infer answers" or "batch prompts." See "Question rules" near the top of this skill.
+- **Never invent helpers in build-logic.** Use exactly the 9 (or 8) plugin classes the conventions skill names. Inline duplication is the right call.
 - **Never use `CommonExtension`.** Each plugin configures its own `ApplicationExtension` or `LibraryExtension`.
 - **Never declare a `package`** on convention plugin classes — they live in the default package.
 - **Don't skip the build-success gate.** Step 11 is not optional. The user has been burned by half-broken scaffolds; the verification cycle is the contract.
