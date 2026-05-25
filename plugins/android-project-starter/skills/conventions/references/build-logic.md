@@ -4,9 +4,15 @@ This reference holds the verbatim source for every convention plugin generated b
 
 **Read this file before generating anything under `build-logic/`.** Substitute `<project>` with the project's plugin-id prefix (lowercase, hyphens stripped). Do not refactor, do not extract helpers, do not add `package` declarations.
 
-## `ProjectExtensions.kt` — shared `libs` accessor
+## `ProjectExtensions.kt` — shared `libs` accessor (lives in its own package)
+
+File path: `build-logic/convention/src/main/kotlin/<project>/android/buildlogic/ProjectExtensions.kt` (replace `<project>` with the project's plugin-id prefix — for `acme` the path is `…/acme/android/buildlogic/ProjectExtensions.kt`).
+
+**The package matters.** Gradle auto-generates a typed `val Project.libs: LibrariesForLibs` accessor from `libs.versions.toml`. If our extension lives in the default package, both `libs` symbols become visible on `Project` and the Kotlin compiler can't tell them apart — depending on classpath order you either get `Overload resolution ambiguity` or, worse, the wrong one is silently picked and `libs.findLibrary(...)` fails to resolve at apply time. Putting our accessor in `<project>.android.buildlogic` and **importing it explicitly** in every convention plugin pins which `libs` is used and lets the Gradle-generated one stay out of the way.
 
 ```kotlin
+package <project>.android.buildlogic
+
 import org.gradle.api.Project
 import org.gradle.api.artifacts.VersionCatalog
 import org.gradle.api.artifacts.VersionCatalogsExtension
@@ -16,11 +22,14 @@ val Project.libs: VersionCatalog
     get() = extensions.getByType<VersionCatalogsExtension>().named("libs")
 ```
 
+Every convention plugin below adds `import <project>.android.buildlogic.libs` near the top of the file so calls like `libs.findLibrary("…")` and `libs.findVersion("…")` resolve to this extension, not Gradle's `LibrariesForLibs`.
+
 ## `AndroidApplicationConventionPlugin.kt`
 
 Configures `ApplicationExtension` directly. **Must enable `buildConfig`** because the scaffolded `<Project>Application.kt` references `BuildConfig.DEBUG` (e.g. to gate `Timber.plant(DebugTree())`). In AGP 9 `buildConfig` defaults to `false` and the legacy escape hatch `android.defaults.buildfeatures.buildconfig=true` in `gradle.properties` was **removed** — adding it now hard-errors at configuration time. The only correct fix is to enable it in this plugin:
 
 ```kotlin
+import <project>.android.buildlogic.libs
 import com.android.build.api.dsl.ApplicationExtension
 import org.gradle.api.JavaVersion
 import org.gradle.api.Plugin
@@ -69,6 +78,7 @@ The convention plugin above is the only place to enable it.
 Configures `LibraryExtension` directly (yes, the duplication with the Application plugin is intentional — see Hard rule #3 in `SKILL.md` about `CommonExtension`):
 
 ```kotlin
+import <project>.android.buildlogic.libs
 import com.android.build.api.dsl.LibraryExtension
 import org.gradle.api.JavaVersion
 import org.gradle.api.Plugin
@@ -119,6 +129,7 @@ The `isIncludeAndroidResources = true` line is required for Robolectric Compose 
 Canonical shape (substitute `ApplicationExtension` or `LibraryExtension` per plugin):
 
 ```kotlin
+import <project>.android.buildlogic.libs
 import com.android.build.api.dsl.LibraryExtension   // or ApplicationExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -167,7 +178,7 @@ The Application variant is identical except for `LibraryExtension` → `Applicat
 
 ## `AndroidFeatureConventionPlugin.kt`
 
-Applies `<project>.android.library`, `<project>.android.library.compose`, `<project>.android.lint`, then adds feature-specific deps (lifecycle, navigation3, koin-androidx-compose, kotlinx-collections-immutable). Does NOT configure any Android extension itself — that's the library plugin's job.
+Applies `<project>.android.library`, `<project>.android.library.compose`, `<project>.android.lint`, then adds feature-specific deps (lifecycle, navigation3, koin-androidx-compose, kotlinx-collections-immutable). Does NOT configure any Android extension itself — that's the library plugin's job. Add `import <project>.android.buildlogic.libs` at the top of the file because the dependency-adding section calls `libs.findLibrary(...)`.
 
 ## `AndroidFlavorsConventionPlugin.kt`
 
@@ -186,6 +197,9 @@ import com.android.build.api.dsl.ProductFlavor
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
+
+// No `import <project>.android.buildlogic.libs` here — this plugin reads URL strings from
+// `gradle.properties` via `findProperty(...)`, not from the version catalog.
 
 class AndroidFlavorsConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
@@ -264,15 +278,15 @@ Feature modules and every other `core/*` module **do not** apply this plugin and
 
 ## `AndroidLintConventionPlugin.kt`
 
-Uses `pluginManager.hasPlugin(...)` to detect whether the target is an Application or Library module, then configures the correct extension's `lint { ... }` block.
+Uses `pluginManager.hasPlugin(...)` to detect whether the target is an Application or Library module, then configures the correct extension's `lint { ... }` block. No `libs` import needed — this plugin doesn't read from the catalog.
 
 ## `AndroidRoomConventionPlugin.kt`
 
-Only generated if Room was picked; applies `androidx.room` + `com.google.devtools.ksp`, sets `schemaDirectory`, adds `room-runtime`, `room-ktx`, and `ksp(room-compiler)`.
+Only generated if Room was picked; applies `androidx.room` + `com.google.devtools.ksp`, sets `schemaDirectory`, adds `room-runtime`, `room-ktx`, and `ksp(room-compiler)`. Add `import <project>.android.buildlogic.libs` at the top — the dependency-adding section calls `libs.findLibrary(...)`.
 
 ## `JvmLibraryConventionPlugin.kt`
 
-Applies `org.jetbrains.kotlin.jvm`, configures Java 21 + jvmToolchain(21), adds the standard test stack.
+Applies `org.jetbrains.kotlin.jvm`, configures Java 21 + jvmToolchain(21), adds the standard test stack. Add `import <project>.android.buildlogic.libs` at the top — the dependency-adding section calls `libs.findLibrary(...)`.
 
 ## `build-logic/convention/build.gradle.kts`
 

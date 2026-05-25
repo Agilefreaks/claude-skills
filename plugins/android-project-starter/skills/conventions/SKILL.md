@@ -74,30 +74,30 @@ All build configuration lives in `build-logic/convention/`. Modules apply a **si
 
 These are non-negotiable. Diverging from them produces silent build failures on AGP 9+:
 
-1. **The ONLY files allowed in `build-logic/convention/src/main/kotlin/`** are exactly the 9 plugin classes plus `ProjectExtensions.kt`:
+1. **The ONLY files allowed under `build-logic/convention/src/main/kotlin/`** are exactly the 9 plugin classes (in the default package) plus `ProjectExtensions.kt` (in its own package). Layout:
    ```
-   AndroidApplicationConventionPlugin.kt
-   AndroidApplicationComposeConventionPlugin.kt
-   AndroidLibraryConventionPlugin.kt
-   AndroidLibraryComposeConventionPlugin.kt
-   AndroidFeatureConventionPlugin.kt
-   AndroidFlavorsConventionPlugin.kt
-   AndroidLintConventionPlugin.kt
-   AndroidRoomConventionPlugin.kt          # only if Room was picked
-   JvmLibraryConventionPlugin.kt
-   ProjectExtensions.kt
+   build-logic/convention/src/main/kotlin/
+   ├── AndroidApplicationConventionPlugin.kt         # default package
+   ├── AndroidApplicationComposeConventionPlugin.kt  # default package
+   ├── AndroidLibraryConventionPlugin.kt             # default package
+   ├── AndroidLibraryComposeConventionPlugin.kt      # default package
+   ├── AndroidFeatureConventionPlugin.kt             # default package
+   ├── AndroidFlavorsConventionPlugin.kt             # default package
+   ├── AndroidLintConventionPlugin.kt                # default package
+   ├── AndroidRoomConventionPlugin.kt                # default package — only if Room was picked
+   ├── JvmLibraryConventionPlugin.kt                 # default package
+   └── <project>/android/buildlogic/
+       └── ProjectExtensions.kt                      # package <project>.android.buildlogic
    ```
    **DO NOT** invent helper files (`AndroidCommon.kt`, `AndroidConfig.kt`, `KotlinExtensions.kt`, etc.) to share code between plugins. Even when Application and Library plugins look like they share configuration, **inline the duplication**. The extraction has burned every project that tried it because of the AGP 9 type-system issue described below.
 
-2. **No `package` declaration** on plugin classes. Files in `build-logic/convention/src/main/kotlin/` go in the default (root) package. The plugin id resolution in Gradle relies on top-level class names.
+2. **No `package` declaration on the 9 plugin classes.** They go in the default (root) package — the plugin id resolution in Gradle relies on top-level class names. `ProjectExtensions.kt` is the **only exception**: it declares `package <project>.android.buildlogic` and lives in a matching subdirectory. Every plugin that uses the catalog adds `import <project>.android.buildlogic.libs` near the top so calls like `libs.findLibrary("…")` and `libs.findVersion("…")` resolve to our `VersionCatalog` accessor, not Gradle's auto-generated `Project.libs: LibrariesForLibs` (which would otherwise collide and cause "Overload resolution ambiguity" or silent wrong-symbol pick).
 
 3. **Use `ApplicationExtension` and `LibraryExtension` directly — never `CommonExtension`.** In AGP 9 `CommonExtension` is no longer parameterized (the `<*>` style fails: "No type arguments expected for 'interface CommonExtension : ExtensionAware'") and even when typed correctly, `apply { compileSdk = ... }` can't resolve properties like `compileSdk`, `defaultConfig`, `compileOptions` through `CommonExtension`. Configure each extension separately in its own plugin. Yes, this duplicates ~6 lines between `AndroidApplicationConventionPlugin` and `AndroidLibraryConventionPlugin` — that duplication is the conventional Now-In-Android pattern and is correct.
 
 4. **The build-logic Gradle plugin IDs use the project name prefix verbatim.** For project name `test`, plugin IDs are `test.android.application`, `test.android.library`, etc. The catalog plugin aliases and `gradlePlugin.plugins { ... }` block must use the same id, kebab/dot form.
 
 5. **`build-logic/convention/build.gradle.kts` must register all 9 plugins** (or 8 if Room was skipped) under `gradlePlugin { plugins { register("...") { id = "..."; implementationClass = "..." } } }`. Forgetting one means the catalog alias resolves to "unspecified" at apply time.
-
-
 
 | Plugin id | Class | What it does |
 |---|---|---|
@@ -113,7 +113,7 @@ These are non-negotiable. Diverging from them produces silent build failures on 
 
 ### Canonical plugin file contents
 
-**Read `references/build-logic.md`** for the verbatim source of every convention plugin, plus `ProjectExtensions.kt`, `build-logic/convention/build.gradle.kts`, `build-logic/settings.gradle.kts`, the root `settings.gradle.kts`, and the AGP-version-sensitive `gradle.properties` toggle. Generate exactly those shapes — substitute `<project>` with the plugin-id prefix, do not refactor, do not extract helpers, do not add `package` declarations.
+**Read `references/build-logic.md`** for the verbatim source of every convention plugin, plus `ProjectExtensions.kt`, `build-logic/convention/build.gradle.kts`, `build-logic/settings.gradle.kts`, the root `settings.gradle.kts`, and the AGP-version-sensitive `gradle.properties` toggle. Generate exactly those shapes — substitute `<project>` with the plugin-id prefix, do not refactor, do not extract helpers, and keep the package layout exactly as the reference shows (the 9 plugin classes in the default package; `ProjectExtensions.kt` alone in `package <project>.android.buildlogic` so its `libs` accessor doesn't collide with Gradle's auto-generated `Project.libs: LibrariesForLibs`).
 
 Key non-obvious rules from that reference (so the conventions skill can be linked safely without loading it):
 
@@ -307,7 +307,6 @@ Every scaffolded project has `qa` and `prod` product flavors (see `<project>.and
 | TV-side dev tools wrapper (broadcast-only) | `core/ui-tv` (TV projects only) | `dev/DevToolsHost.kt` (same name, TV variant — no shake) |
 
 `core/ui-mobile` and `core/ui-tv` **do not** apply `<project>.android.flavors`. The dev-tools code compiles on every variant and the **app** decides whether to mount it via `BuildConfig.IS_QA`.
-
 
 **Read `references/dev-tools.md`** for the verbatim Kotlin source of every file in this list — `EnvironmentConfig` interface and DataStore impl, `environmentModule` Koin module, `EnvironmentBaseUrlInterceptor`, `ShakeListener`, `DevToolsBroadcastListener`, `DevToolsHost` (mobile and TV variants), and `EnvSelectorDialog`. That reference also covers app-layer wiring (`DevToolsHost(enabled = BuildConfig.IS_QA)`) and how to trigger the dialog on phone, emulator, and TV. Read it before generating any file under `core/data/env/`, `core/data/network/`, `core/ui-mobile/dev/`, or `core/ui-tv/dev/`.
 
