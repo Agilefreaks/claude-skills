@@ -7,7 +7,7 @@
   },
   "metadata": {
     "description": "Internal AgileFreaks skills library for Claude Code and Claude.ai Cowork.",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "pluginRoot": "./plugins"
   },
   "plugins": [
@@ -43,6 +43,17 @@
       },
       "category": "productivity",
       "keywords": ["android", "kotlin", "compose", "mvi", "koin", "scaffolding", "wizard", "starter"]
+    },
+    {
+      "name": "android-project-aligner",
+      "source": "./plugins/android-project-aligner",
+      "description": "Audits an existing Android project against the android-project-starter conventions, produces a phased migration plan, and applies it on a fresh git branch with build verification at every step. Companion to android-project-starter for brownfield codebases. Also generates the project-local <project>-android-planner and <project>-android-implementer skills.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Denis Coman"
+      },
+      "category": "productivity",
+      "keywords": ["android", "kotlin", "compose", "mvi", "koin", "migration", "audit", "conventions", "refactor"]
     }
   ]
 }
