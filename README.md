@@ -6,8 +6,8 @@ Internal Claude skills library. Works across Claude.ai Cowork, Claude Code (term
 
 | Plugin | Description | Version | Category |
 |--------|-------------|---------|----------|
-| [code-review](plugins/code-review/) | Outside-in, risk-driven code review. Covers bug fixes, new features, add-ons, extensions, and refinements. | 1.0.0 | productivity |
-| [dep-update-merge](plugins/dep-update-merge/) | Bundles dependency-update PRs/MRs into one verified change with changelog analysis and breaking change triage. | 1.0.0 | productivity |
+| [code-review](plugins/code-review/) | Outside-in, risk-driven code review. Covers bug fixes, new features, add-ons, extensions, and refinements. | 1.1.0 | productivity |
+| [dep-update-merge](plugins/dep-update-merge/) | Bundles dependency-update PRs/MRs into one verified change with changelog analysis and breaking change triage. | 1.1.0 | productivity |
 
 ## Usage
 
@@ -37,9 +37,9 @@ Or add to your project's `.claude/settings.json` to install automatically:
 
 ### GitHub Actions
 
-Copy `.github/workflows/code-review.yml` from this repo into your project. It checks out this skills repo at `.skills/` and passes the relevant skill to `anthropics/claude-code-action@v1`.
+Run `set up code-review` in Claude Code or Claude.ai Cowork. The Setup wizard detects GitHub Actions usage, asks which model to use (Opus recommended), and generates `.github/workflows/code-review.yml` in your project.
 
-See the workflow file for required secrets and permissions.
+After the file is generated, add `CLAUDE_CODE_OAUTH_TOKEN` as a repository secret (generate it with `claude setup-token`, then add it under **GitHub repo → Settings → Secrets and variables → Actions**).
 
 ## Adding Plugins
 

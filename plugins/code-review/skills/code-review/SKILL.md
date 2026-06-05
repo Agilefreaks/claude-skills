@@ -23,7 +23,18 @@ When asked to set up, configure, onboard, or create a rules file for this skill:
    - **Coding Conventions** — project-specific checks beyond the skill's defaults (architecture rules, style rules already enforced by linters)
    - **Output Format** — custom structure for the review output, or use the built-in format
    - **Posting Mechanics** — how to post the review (GitHub PR comment, inline comments, stdout)
+   - **CI Integration** — offer to generate a GitHub Actions workflow that runs this review automatically on every PR. Always ask this, even if no `.github/workflows/` directory exists yet — this may be the project's first workflow. Present model choices: *Opus (recommended)* / *Sonnet* / *Skip*. Default: Opus.
 4. Write `.claude/rules/code-review.md` containing only the user's choices. Omit any decision where the user accepts the default — the skill's built-in behavior handles those.
+5. If the user opted in to CI Integration:
+   a. Read `assets/code-review.yml` (bundled with this skill) as the workflow template.
+   b. Substitute `--model opus` with `--model <chosen-model>` if the user chose a different model.
+   c. If `.github/workflows/code-review.yml` already exists in the project, show a diff and ask for confirmation before overwriting.
+   d. Write the workflow to `.github/workflows/code-review.yml` (create `.github/workflows/` if it doesn't exist).
+   e. Remind the user to add `CLAUDE_CODE_OAUTH_TOKEN` as a repository secret:
+      - Generate the token locally with: `claude setup-token`
+      - Add it at: **GitHub repo → Settings → Secrets and variables → Actions → New repository secret**
+
+**What to defer to a human (CI Integration):** The user must add the `CLAUDE_CODE_OAUTH_TOKEN` secret and verify that branch protection rules allow the action to post review comments. Setup cannot check or configure those.
 
 If the user accepts all defaults and no choices were made, confirm that no rules file is needed and stop.
 
