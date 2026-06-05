@@ -30,12 +30,12 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
       - name: Checkout AgileFreaks skills
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: agilefreaks/claude-skills
           path: .skills
@@ -44,17 +44,14 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          claude_args: >-
-            --allowedTools "Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr review:*),Bash(gh issue view:*),Bash(gh api:*),Bash(jq:*),Read,Glob,Grep"
+          plugin_marketplaces: "https://github.com/Agilefreaks/claude-skills.git"
+          plugins: "code-review@agilefreaks-skills"
           prompt: |
-            You are performing an automated code review for PR #${{ github.event.pull_request.number }}.
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.workflow_run.pull_requests[0].number }}
 
-            Review methodology is defined in .skills/plugins/code-review/skills/code-review/SKILL.md.
+            /code-review
 
-            Follow all six phases of the skill. For Phase 5 (Project-Specific Checks) and Phase 6
-            (output format and posting mechanics), follow the instructions in .claude/rules/code-review.md
-            if it exists in this repository. If it does not exist, use the generic output structure
-            from the skill and post via `gh pr review --comment`.
-
-            PR number: ${{ github.event.pull_request.number }}
-            Repository: ${{ github.repository }}
+          # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
+          # or https://docs.claude.com/en/docs/claude-code/sdk#command-line for available options
+          claude_args: '--allowed-tools "Bash(gh issue view:*),Bash(gh search:*),Bash(gh issue list:*),Bash(gh pr review:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr list:*),Bash(gh api:*),Bash(jq:*),Read,Glob,Grep"'
