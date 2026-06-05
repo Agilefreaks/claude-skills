@@ -1,0 +1,70 @@
+name: Release Notify
+
+# Posts a Slack message whenever a GitHub release is published.
+# Triggered when you publish a GitHub Release (tag + notes) as part of the
+# release flow — see .claude/rules/marketplace.md ("Publishing a release").
+#
+# Required secret:
+#   SLACK_RELEASE_WEBHOOK_URL — a Slack Incoming Webhook URL bound to the target
+#   channel. Accepts a JSON body of shape { "text": "..." }.
+#   Add it under: Settings > Secrets and variables > Actions > New repository secret.
+#   If the secret is absent, the workflow runs but skips silently.
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  notify:
+    name: Post release to Slack
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post release to Slack
+        env:
+          SLACK_RELEASE_WEBHOOK_URL: ${{ secrets.SLACK_RELEASE_WEBHOOK_URL }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          RELEASE_BODY: ${{ github.event.release.body }}
+          RELEASE_URL: ${{ github.event.release.html_url }}
+          IS_PRERELEASE: ${{ github.event.release.prerelease }}
+        run: |
+          if [ -z "$SLACK_RELEASE_WEBHOOK_URL" ]; then
+            echo "SLACK_RELEASE_WEBHOOK_URL not configured — skipping."
+            exit 0
+          fi
+
+          label="New release"
+          if [ "$IS_PRERELEASE" = "true" ]; then
+            label="New pre-release"
+          fi
+
+          # Convert GitHub release notes Markdown to Slack mrkdwn.
+          # Order matters: strip **bold** before the bullet rule touches `*`.
+          printf '%s' "$RELEASE_BODY" \
+            | sed -E '
+                s/\*\*([^*]+)\*\*/\1/g
+                s/^#{1,6} +(.*)$/\1:/
+                s/^\* +/- /
+                s|https://github\.com/[^/ ]+/[^/ ]+/pull/([0-9]+)|#\1|g
+              ' > /tmp/release_body.txt
+
+          {
+            printf '*%s: %s*\n' "$label" "$RELEASE_TAG"
+            cat -s /tmp/release_body.txt
+            printf '\n<%s|View release on GitHub>\n' "$RELEASE_URL"
+          } > /tmp/slack_msg.txt
+
+          # node reads the message verbatim; JSON.stringify handles all escaping.
+          payload="$(node -e 'const fs=require("fs");process.stdout.write(JSON.stringify({text:fs.readFileSync("/tmp/slack_msg.txt","utf8")}))')"
+
+          status="$(curl -sS -o /tmp/slack_resp -w '%{http_code}' \
+            -X POST -H 'Content-Type: application/json' \
+            --data "$payload" "$SLACK_RELEASE_WEBHOOK_URL")"
+
+          echo "Slack responded $status"
+          if [ "$status" != "200" ]; then
+            echo "Body: $(cat /tmp/slack_resp)"
+            exit 1
+          fi

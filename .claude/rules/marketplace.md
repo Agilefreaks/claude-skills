@@ -48,6 +48,22 @@ Follow [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) conventions:
 - Use `### Added`, `### Changed`, `### Fixed`, `### Removed` subsections as appropriate
 - One line per meaningful change; link to the relevant plugin or file where helpful
 
+## Publishing a release
+
+After bumping plugin versions and promoting the `[Unreleased]` heading in
+`CHANGELOG.md` to a dated version (e.g. `[1.1.0] - 2026-06-05`) and merging to
+`main`, create a **GitHub Release**:
+
+1. Tag: the new version prefixed with `v` (e.g. `v1.1.0`), pointing at the
+   merge commit on `main`.
+2. Release title: same as the tag (e.g. `v1.1.0`).
+3. Release notes: paste the content of that version's CHANGELOG section.
+
+Publishing the release fires `.github/workflows/release-notify.yml`, which posts
+the release notes to the Slack channel bound to the `SLACK_RELEASE_WEBHOOK_URL`
+repo secret. If the secret is not yet set, the workflow runs but skips silently —
+add it under **Settings → Secrets and variables → Actions** before publishing.
+
 ## Adding a new plugin
 
 1. Create `plugins/<name>/` with:

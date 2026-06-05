@@ -36,6 +36,7 @@ See `.claude/rules/skill-authoring.md` for the full authoring rules.
 
 - Plugin versions are semver, tracked in both `plugin.json` and the plugin's entry in `marketplace.json`
 - `CHANGELOG.md` follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) — new entries under `[Unreleased]`, promoted to a dated version on release
+- On release, cut a GitHub Release (tag + notes) to trigger Slack notification — see `.claude/rules/marketplace.md` ("Publishing a release")
 
 ## Guiding principles
 
