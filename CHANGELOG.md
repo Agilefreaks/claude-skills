@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **code-review** (1.1.0) — Setup wizard now detects GitHub Actions and offers to generate `.github/workflows/code-review.yml` (Opus by default). The workflow template is bundled as a plugin asset (`skills/code-review/assets/code-review.yml`), fixing two bugs in the previous standalone template: PR-number expression corrected from `github.event.workflow_run.pull_requests[0].number` (always empty under a `pull_request` trigger) to `github.event.pull_request.number`; dead `.skills` checkout step removed. Setup instructions now include `claude setup-token` for generating the required OAuth token.
 - **dep-update-merge** — Removed `onboarding.json` and `rules-template.md` (dead files — nothing in the consuming project reads them). Added interactive Setup section directly in SKILL.md. Removed build/test/lint extension points; those are project-level concerns sourced from existing CLAUDE.md or .claude/rules/. Simplified trigger to "set up dep-update-merge".
 - **dep-update-merge** — Phase 2 changelog discovery now falls back to a web search starting from the package's declared homepage before flagging "changelog unavailable". Catches packages whose release notes live on the author's website rather than in the source repo, forge, or registry. Bumped to 1.1.0.
 - **code-review** — Same cleanup: removed `onboarding.json` and `rules-template.md`, added interactive Setup section to SKILL.md.

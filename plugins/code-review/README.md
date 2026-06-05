@@ -136,4 +136,11 @@ Once the plugin is distributed to your org, use it from any Cowork project. See 
 
 ### GitHub Actions
 
-See `.github/workflows/code-review.yml` in this repo for a template workflow that checks out this plugin and runs the skill on every PR.
+Run `set up code-review` in Claude Code or Claude.ai Cowork to generate `.github/workflows/code-review.yml` in your project automatically. The Setup wizard asks which model to use (Opus recommended) and writes the workflow for you.
+
+After the file is generated, add `CLAUDE_CODE_OAUTH_TOKEN` as a repository secret:
+
+1. Generate the token: `claude setup-token`
+2. Add it at: **GitHub repo → Settings → Secrets and variables → Actions → New repository secret**
+
+Alternatively, copy the template from `skills/code-review/assets/code-review.yml` in this repo and add the secret manually.
