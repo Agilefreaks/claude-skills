@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **code-review** — Setup wizard not running for this repo: added `.claude/rules/code-review.md` with context gathering (linked GitHub issue → PR title/description fallback), build verification skipped (pure Markdown/JSON repo), and posting mechanics (inline comments via GitHub API for line-specific findings + summary via `gh pr review --comment`).
+
 ### Added
 
 - **dep-update-merge** plugin — 6-phase dependency update bundling skill. Discovers open dependency PRs/MRs, analyzes changelogs for breaking changes, offers to exclude breaking updates, creates a combined branch, runs build/test/lint verification with warning baseline comparison, and produces a verified bundle ready for human review.
