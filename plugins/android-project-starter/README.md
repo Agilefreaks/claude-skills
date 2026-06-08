@@ -27,11 +27,11 @@ Each feature module ships with a list+detail MVI screen, ViewModel, Routes, Entr
 
 ## Install
 
-The plugin is exposed via a local marketplace at `~/.claude/plugins/marketplaces/local-android/`. Once installed and enabled in `~/.claude/settings.json`, the command is available globally from any directory.
+The plugin is exposed via a local marketplace at `~/.claude/plugins/marketplaces/agilefreaks-skills/`. Once installed and enabled in `~/.claude/settings.json`, the command is available globally from any directory.
 
 ```
-/plugin marketplace list             # local-android should appear
-/plugin install android-project-starter@local-android --scope user
+/plugin marketplace list             # agilefreaks-skills should appear
+/plugin install android-project-starter@agilefreaks-skills --scope user
 /reload-plugins
 ```
 
@@ -133,7 +133,7 @@ In practice: when you start a new screen, paste the Figma URL into the planning 
 
 The plugin doesn't ship a dedicated bump command — version freshness is handled in two ways:
 
-**At project scaffold time:** The `init` wizard resolves the latest stable versions for every entry in `libs.versions.toml` via parallel `WebSearch` / `WebFetch` calls. So a freshly scaffolded project is always on the latest stable everything.
+**At project scaffold time:** The `init-android-project` wizard resolves the latest stable versions for every entry in `libs.versions.toml` via parallel `WebSearch` / `WebFetch` calls. So a freshly scaffolded project is always on the latest stable everything.
 
 **Over the project's lifetime:** Either let Dependabot raise PRs (the wizard wires it up if you opted in), then use the existing `dep-update-merge` plugin to bundle and verify them:
 
@@ -171,9 +171,9 @@ For a manual one-off bump, edit `gradle/libs.versions.toml` directly, then run `
 
 ## Iterating on the plugin itself
 
-The plugin source lives at `~/.claude/plugins/marketplaces/local-android/plugins/android-project-starter/`. Edit any `SKILL.md` file under `skills/` and run `/reload-plugins` to pick up the changes — no reinstall needed.
+The plugin source lives at `~/.claude/plugins/marketplaces/agilefreaks-skills/plugins/android-project-starter/`. Edit any `SKILL.md` file under `skills/` and run `/reload-plugins` to pick up the changes — no reinstall needed.
 
-The single source of truth for *what good looks like* is `skills/conventions/SKILL.md`. The `init` skill defers to it for every file shape. If you change a convention there, the wizard's next run picks it up automatically.
+The single source of truth for *what good looks like* is `skills/conventions/SKILL.md`. The `init-android-project` skill defers to it for every file shape. If you change a convention there, the wizard's next run picks it up automatically.
 
 ## Skills shipped by this plugin
 

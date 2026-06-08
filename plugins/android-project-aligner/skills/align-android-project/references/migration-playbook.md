@@ -61,7 +61,7 @@ This catches "convention plugin doesn't compile" / "implementationClass doesn't 
 
 **Steps:**
 
-1. **gradle.properties** — set / remove keys per the AGP table in `conventions §AGP version matters`:
+1. **gradle.properties** — set / remove keys per the AGP table in `conventions §The 9 convention plugins`:
    - AGP ≥ 9.2.0: `android.builtInKotlin=true` (or omit) + remove any legacy `android.defaults.buildfeatures.*` keys.
    - AGP 9.0.x–9.1.x: `android.builtInKotlin=false`.
    - AGP 8.x: no `builtInKotlin` setting.

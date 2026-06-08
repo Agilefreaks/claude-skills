@@ -30,7 +30,7 @@ Load `android-project-starter:conventions`. It is the **single source of truth**
 
 If the conventions skill is not available (the `android-project-starter` plugin isn't installed), stop and tell the user:
 
-> The aligner depends on `android-project-starter:conventions` as the source of truth. Install it with `/plugin install android-project-starter@local-android --scope user` and re-run.
+> The aligner depends on `android-project-starter:conventions` as the source of truth. Install it with `/plugin install android-project-starter@agilefreaks-skills --scope user` and re-run.
 
 Do not invent conventions to fill the gap — the whole point of this plugin is "apply the same rules" defined elsewhere.
 

@@ -33,7 +33,7 @@ The migration **never overwrites your existing code blindly**. For each gap it f
 - The `android-project-starter` plugin must be installed in the same Claude Code instance. The aligner reuses its `conventions` skill as the single source of truth for "what good looks like." If you don't have it:
 
   ```
-  /plugin install android-project-starter@local-android --scope user
+  /plugin install android-project-starter@agilefreaks-skills --scope user
   ```
 
 - Your project must be a git repository with a clean working tree (or one the aligner can stash). The skill will refuse to start with uncommitted unrelated changes.
@@ -42,8 +42,8 @@ The migration **never overwrites your existing code blindly**. For each gap it f
 ## Install
 
 ```
-/plugin marketplace list             # local-android should already appear
-/plugin install android-project-aligner@local-android --scope user
+/plugin marketplace list             # agilefreaks-skills should already appear
+/plugin install android-project-aligner@agilefreaks-skills --scope user
 /reload-plugins
 ```
 
@@ -132,7 +132,7 @@ The aligner:
 
 ## Iterating on this plugin
 
-The plugin source lives at `~/.claude/plugins/marketplaces/local-android/plugins/android-project-aligner/`. Edit any `SKILL.md` under `skills/` and run `/reload-plugins` to pick up the changes — no reinstall needed.
+The plugin source lives at `~/.claude/plugins/marketplaces/agilefreaks-skills/plugins/android-project-aligner/`. Edit any `SKILL.md` under `skills/` and run `/reload-plugins` to pick up the changes — no reinstall needed.
 
 The aligner's logic is intentionally thin — most of the "what shape should this file have" knowledge lives in `android-project-starter:conventions` and its reference files. If you change a convention there, the aligner picks it up automatically on the next run.
 
