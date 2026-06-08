@@ -25,7 +25,7 @@ Required fields:
 - `name` — kebab-case, max 64 characters
 - `description` — max 1024 characters. This is the **primary triggering mechanism**. Describe what the skill does AND the contexts or phrases that should activate it. Lean slightly "pushy" to ensure the skill triggers when useful.
 
-Optional fields: `license`, `allowed-tools`, `metadata`, `compatibility`. Do not add unrecognized keys — validation rejects them.
+Optional fields: `license`, `allowed-tools`, `metadata`, `compatibility`, `disable-model-invocation`. Do not add unrecognized keys — validation rejects them.
 
 ## Skill anatomy
 

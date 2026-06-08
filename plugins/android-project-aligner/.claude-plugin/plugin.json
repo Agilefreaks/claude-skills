@@ -1,0 +1,9 @@
+{
+  "name": "android-project-aligner",
+  "description": "Audits an existing Android project against the android-project-starter conventions (multi-module MVI + Compose + Koin), produces a phased migration plan, and applies it on a fresh git branch with build verification at every step. Also generates the project-local <project>-android-planner and <project>-android-implementer skills.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Denis Coman"
+  },
+  "keywords": ["android", "kotlin", "compose", "mvi", "koin", "migration", "audit", "conventions", "refactor"]
+}

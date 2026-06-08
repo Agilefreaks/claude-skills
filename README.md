@@ -6,6 +6,8 @@ Internal Claude skills library. Works across Claude.ai Cowork, Claude Code (term
 
 | Plugin | Description | Version | Category |
 |--------|-------------|---------|----------|
+| [android-project-starter](plugins/android-project-starter/) | Wizard-driven Android project scaffolder. Multi-module MVI + Compose + Koin + Navigation 3, with build-logic convention plugins (incl. qa/prod product flavors), shake/broadcast dev-tools dialog, tests, CI, and project-local planner/implementer skills. | 0.3.0 | productivity |
+| [android-project-aligner](plugins/android-project-aligner/) | Brownfield companion to android-project-starter. Audits an existing Android project against the starter's conventions, produces a phased migration plan, and applies it on a fresh git branch with build verification between phases. Also generates the project-local planner/implementer skills. | 0.1.0 | productivity |
 | [code-review](plugins/code-review/) | Outside-in, risk-driven code review. Covers bug fixes, new features, add-ons, extensions, and refinements. | 1.1.0 | productivity |
 | [dep-update-merge](plugins/dep-update-merge/) | Bundles dependency-update PRs/MRs into one verified change with changelog analysis and breaking change triage. | 1.1.0 | productivity |
 
