@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Release Notify** GitHub Actions workflow (`.github/workflows/release-notify.yml`) — posts published GitHub Releases to the Slack channel bound to `SLACK_RELEASE_WEBHOOK_URL`. See `.claude/rules/marketplace.md` ("Publishing a release").
 - **dep-update-merge** plugin — 6-phase dependency update bundling skill. Discovers open dependency PRs/MRs, analyzes changelogs for breaking changes, offers to exclude breaking updates, creates a combined branch, runs build/test/lint verification with warning baseline comparison, and produces a verified bundle ready for human review.
 
 ### Changed
