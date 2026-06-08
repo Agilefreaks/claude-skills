@@ -127,7 +127,7 @@ The aligner:
 |---|---|
 | Brand-new project, empty directory | `init-android-project` |
 | Existing project with no architecture (or a different one) | `align-android-project` |
-| Existing project that already follows the conventions but needs the project-local planner/implementer skills | `align-android-project` (audit finds zero gaps; only Phase 7 — skills — applies) |
+| Existing project that already follows the conventions but needs the project-local planner/implementer skills | `align-android-project` (audit finds zero gaps; only the final project-local-skills phase applies) |
 | Existing project where you only want to bump versions | `dep-update-merge` |
 
 ## Iterating on this plugin

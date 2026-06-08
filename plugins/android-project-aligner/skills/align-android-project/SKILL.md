@@ -208,7 +208,7 @@ Categories to walk, in this order (matches the phasing in Step 4):
 ### 2.13 — Project-local skills
 - `.claude/skills/<project>-android-planner/SKILL.md` present?
 - `.claude/skills/<project>-android-implementer/SKILL.md` present?
-- If present, do they reference the correct project class prefix + module inventory? (Re-generating them in Phase 7 is cheap; flag for refresh.)
+- If present, do they reference the correct project class prefix + module inventory? (Re-generating them in Phase 11 is cheap; flag for refresh.)
 
 ## Step 3 — Gap report
 
