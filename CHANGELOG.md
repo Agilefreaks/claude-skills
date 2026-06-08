@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-06-08
+
 ### Fixed
 
 - **code-review** — Setup wizard not running for this repo: added `.claude/rules/code-review.md` with context gathering (linked GitHub issue → PR title/description fallback), build verification skipped (pure Markdown/JSON repo), and posting mechanics (inline comments via GitHub API for line-specific findings + summary via `gh pr review --comment`).
