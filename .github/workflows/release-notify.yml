@@ -30,6 +30,8 @@ jobs:
           RELEASE_URL: ${{ github.event.release.html_url }}
           IS_PRERELEASE: ${{ github.event.release.prerelease }}
         run: |
+          set -euo pipefail
+
           if [ -z "$SLACK_RELEASE_WEBHOOK_URL" ]; then
             echo "SLACK_RELEASE_WEBHOOK_URL not configured — skipping."
             exit 0
@@ -41,13 +43,19 @@ jobs:
           fi
 
           # Convert GitHub release notes Markdown to Slack mrkdwn.
-          # Order matters: strip **bold** before the bullet rule touches `*`.
+          # Order matters: strip the trailing CR (release bodies are CRLF) before
+          # the heading rule's `$` anchor; strip **bold** before the bullet rule
+          # touches `*`; convert [text](url) links before the bare-PR-URL rule so
+          # a link wrapping a PR URL isn't clobbered (the PR-URL rule only fires at
+          # a line start or after whitespace, never inside an emitted <url|text>).
           printf '%s' "$RELEASE_BODY" \
             | sed -E '
+                s/\r$//
                 s/\*\*([^*]+)\*\*/\1/g
+                s/\[([^]]+)\]\(([^)]+)\)/<\2|\1>/g
                 s/^#{1,6} +(.*)$/\1:/
                 s/^\* +/- /
-                s|https://github\.com/[^/ ]+/[^/ ]+/pull/([0-9]+)|#\1|g
+                s@(^|[[:space:]])https://github\.com/[^/ ]+/[^/ ]+/pull/([0-9]+)@\1#\2@g
               ' > /tmp/release_body.txt
 
           {
