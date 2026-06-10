@@ -30,6 +30,13 @@ When asked to set up, configure, onboard, or create a rules file for this skill:
      describes where the spec lives (inline note, tracking issue, external doc) or how to
      handle a feature ticket before writing code
    - Any documented **branch naming convention** — in CI configs, CLAUDE.md, or rules files
+   - Any documented **testing strategy** — a rules file or CLAUDE.md section describing
+     which component types systematically require tests, required test patterns or idioms to
+     follow or avoid, test file locations, and where in the test pyramid different changes
+     should be covered. This is **not a setup question** — carry this information directly
+     into the implementation loop so every test written follows the project's strategy
+     automatically. Mention in the closing setup summary that a strategy was found and will
+     be followed.
 3. Present **skill-specific choices only** via interactive dialogs. **All questions must be
    phrased in plain, user-facing language — never expose the skill's internal phase numbers
    or names (e.g. "Phase 1", "Phase 3", "Frame", "Hand Off") in a question or option label.
@@ -59,6 +66,8 @@ When asked to set up, configure, onboard, or create a rules file for this skill:
        to green
      - *Ping-pong*: human writes failing test → agent greens it and writes next failing
        test → human greens it and writes next → …
+     - *Ask each feature*: no fixed mode; at the start of each feature's implementation
+       the skill asks which of the three modes to use for that feature only
    - **Review delegation** — detected automatically (check for `code-review.md` in
      `.claude/rules/`); ask only if ambiguous
    - **Commit granularity** — how commits are made while implementing and reshaped at
@@ -104,7 +113,10 @@ Launch parallel Explore subagents — each gets a fresh context window and does 
 top-level context:
 
 - One agent: locate existing patterns, utilities, and components relevant to the feature
-- One agent: find the test suite, understand test organization and the testing harness
+- One agent: find the test suite, understand test organization and the testing harness, and
+  surface any documented testing strategy from project rules or CLAUDE.md (which layers
+  require tests, required/forbidden patterns, test locations). Carry this summary into the
+  plan and implementation phases — every test written in this session follows it.
 - Add agents for specific unknowns (data layer, UI components, integration points) as needed
 
 Apply the *Hoard* principle: explicitly note "build this by combining X and Y" where existing
@@ -128,7 +140,14 @@ them; do not fix them as part of this feature.
 
 Produce an implementation plan:
 
-- Ordered steps, each small enough to implement and test in one red/green cycle
+- **Ordered steps, each written as a red/green pair:**
+  > Prove: *\<the behaviour the failing test demonstrates\>*
+  > Implement: *\<the minimal production change to make it pass\>*
+
+  A step with no "Prove" half is not an implementation step — it is setup or refactor
+  preparation, and must be labelled as such. This format is load-bearing: it ensures the
+  plan itself encodes test-first, so the intent survives into execution.
+
 - Alternatives considered and why they were rejected
 - Risk areas: dependencies, edge cases, integration points, known unknowns
 
@@ -148,8 +167,17 @@ implementation. Do not skip or abbreviate this step.
 
 ## Phase 4: Implement
 
-Drive the test-first loop using the test collaboration mode chosen in Setup. The full
-state machine for each mode is in `references/test-collaboration-modes.md`.
+**If the configured test collaboration mode is *Ask each feature* (or no mode was set),
+ask the human now** — before writing any code — which mode to use for this feature:
+Solo AI / Assert-in-the-loop / Ping-pong. Record the answer for the rest of this feature.
+Phrase the question in plain language; do not reference phase numbers or internal names.
+
+**Entry gate: the first file you create or edit in this phase must be a test file.**
+Before touching any production code, name the failing test that edit serves. If you cannot
+name it, stop — write the test first. Exception: the explicitly named escape hatch below.
+
+Drive the test-first loop using the chosen test collaboration mode. The full state machine
+for each mode is in `references/test-collaboration-modes.md`.
 
 **Invariant across all modes: exactly one test at a time.** Never generate 2–10 tests
 up front. One failing test → implement → green → commit → next test.
@@ -163,6 +191,12 @@ next test.
 
 **Ping-pong:** human writes a failing test; agent makes it pass and writes the next failing
 test; human makes it pass and writes the next failing test; repeat.
+
+**Testing strategy:** every test written in this phase follows the project's documented
+testing strategy surfaced in Explore — the appropriate level and kind of test for the layer
+being changed, required patterns, forbidden idioms, and correct file location. When no
+strategy is documented, default to the lowest-level (fastest, most isolated) test that can
+prove the behaviour.
 
 After each green: make a checkpoint commit. These are working checkpoints — cheap, reversible,
 and (under the default *Checkpoint + curate* granularity) reshaped into logical commits at

@@ -16,8 +16,8 @@ The skill encodes a complete feature development workflow:
 |-------|-------------|
 | **Frame** | Read the ticket/spec; write acceptance criteria before touching code |
 | **Explore & Baseline** | Parallel Explore subagents map the codebase; run the full suite to establish a green baseline |
-| **Plan** | Ordered implementation steps; git branch created; hard human checkpoint before any code |
-| **Implement** | Test-first loop (one test at a time); checkpoint commits while building |
+| **Plan** | Implementation steps as red/green pairs (Prove → Implement); branch created; hard human checkpoint |
+| **Implement** | Test-first entry gate; test-first loop (one test at a time); follows project testing strategy; checkpoint commits |
 | **Verify** | Full suite + agent drives the running app against acceptance criteria |
 | **Hand Off** | Curate checkpoints into logical commits; linear walkthrough; self-review before presenting |
 
@@ -49,6 +49,11 @@ next failing test → you make it pass and write the next failing test → repea
 
 Use this when you want to stay deeply involved in the implementation and enjoy the
 discipline of writing tests.
+
+### Ask each feature
+
+No fixed mode — at the start of each feature's implementation the skill asks which of the
+three modes to use. Good when you want a different strategy on different features.
 
 **Invariant across all modes:** exactly one test at a time. No batch-generating 2–10 tests
 up front.

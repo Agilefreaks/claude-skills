@@ -6,7 +6,7 @@ this file encodes the precise rules the skill enforces.
 
 ## Contents
 
-- [Universal invariants](#universal-invariants)
+- [Universal invariants](#universal-invariants) (5 rules)
 - [Mode 1: Solo AI (default)](#mode-1-solo-ai-default)
   - [State machine](#state-machine)
   - [Escape hatch](#escape-hatch)
@@ -50,6 +50,13 @@ These rules apply in every mode without exception:
 4. **Never fake a passing test.** If test-first genuinely cannot apply (see escape hatch
    below), switch to the Phase 5 agentic manual testing path. Do not write an empty test,
    a trivially-always-passing assertion, or a `assertTrue(true)` stand-in.
+
+5. **The test shape follows the project's testing strategy.** The one-test-at-a-time
+   invariant governs *cadence*; the project's documented testing strategy (surfaced in
+   Explore) governs *what kind* of test to write and *how* to write it — the appropriate
+   test level for the layer being changed, required patterns, and forbidden idioms. When no
+   strategy is documented, default to the lowest-level (fastest, most isolated) test that
+   can prove the behaviour.
 
 ---
 
@@ -463,6 +470,11 @@ All three modes produce the same intermediate output: a set of checkpoint commit
 representing one green test, covering the acceptance criteria from Phase 1. Under the default
 *Checkpoint + curate* granularity, those checkpoints are reshaped into a small set of logical,
 behaviour-level commits at Phase 6 hand-off before presenting the work for review.
+
+The mode can be fixed at setup (written to `.claude/rules/feature-development.md`) or
+configured as *Ask each feature*, in which case the skill asks which mode to use at the
+start of each feature's implementation. Once a mode is active for a feature, the
+"Switching modes mid-feature" rules apply if a change is needed mid-way.
 
 ---
 

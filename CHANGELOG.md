@@ -11,12 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **feature-development** plugin — end-to-end feature development methodology distilled from
   agentic engineering best practices. Six phases: frame the requirement, explore and baseline
-  (parallel Explore subagents + green baseline), plan and checkpoint, implement with a configurable
-  test-first loop (Solo AI / Assert-in-the-loop / Ping-pong), verify by driving the running app, and
-  hand off with a linear walkthrough for review. Configurable commit granularity: checkpoint while
-  building (the safety net), then curate into a few logical commits at hand-off by default — so a
-  reasonably big feature lands as several meaningful commits, not one. Never merges unreviewed code.
-  Initial v0.1.0 — the three test-collaboration modes are pending real-project validation.
+  (parallel Explore subagents + green baseline + project testing strategy surfaced automatically),
+  plan with red/green-shaped steps (Prove → Implement), implement with a test-first entry gate and
+  configurable test loop (Solo AI / Assert-in-the-loop / Ping-pong / Ask each feature), verify by
+  driving the running app, and hand off with a linear walkthrough for review. Every test follows the
+  project's documented testing strategy out of the box. Configurable commit granularity: checkpoint
+  while building (the safety net), then curate into a few logical commits at hand-off by default —
+  so a reasonably big feature lands as several meaningful commits, not one. Never merges unreviewed
+  code. Initial v0.1.0 — the test-collaboration modes are pending real-project validation.
 
 ## [1.2.0] - 2026-06-08
 
