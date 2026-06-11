@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **test-writing** plugin (0.1.0, skeleton) — test-writing methodology based on Robert C. Martin's testing discipline: the Three Laws of TDD and red-green-refactor (*Clean Craftsmanship*, 2021), the Test Automation Pyramid (*The Clean Coder*, 2011, ch. 8 "Testing Strategies"), and F.I.R.S.T. / clean tests (*Clean Code*, 2008, ch. 9 "Unit Tests"). Covers three modes: TDD, tests for new/changed code, and backfilling untested code. Plugin structure, six-phase skeleton, extension points, and Setup section stub are in place; methodology content is still TODO.
+
 ## [1.2.0] - 2026-06-08
 
 ### Fixed

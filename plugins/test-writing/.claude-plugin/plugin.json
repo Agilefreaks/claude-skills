@@ -1,0 +1,9 @@
+{
+  "name": "test-writing",
+  "description": "Test-writing methodology based on Robert C. Martin's testing discipline. Decides what to test, how many tests to write, and at which level — for TDD, new/changed code, and backfilling untested code. Test framework, commands, and project conventions are configured via a companion rules file in your project.",
+  "version": "0.1.0",
+  "author": {
+    "name": "AgileFreaks"
+  },
+  "keywords": ["testing", "tdd", "unit-tests", "test-coverage", "red-green-refactor", "test-pyramid"]
+}
