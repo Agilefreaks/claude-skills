@@ -1,19 +1,23 @@
 ---
 name: feature-development
-description: "End-to-end feature development methodology: frame the requirement, explore
-  the codebase and establish a green test baseline, plan, implement with a configurable
-  test-first loop, verify by driving the running app, and hand off for review. Use when
-  developing a new feature, working a ticket or issue, or implementing a spec from
-  scratch. Also use when asked to set up, configure, or onboard this skill."
+description: "End-to-end development methodology for features and bug fixes: frame the
+  requirement, explore the codebase and establish a green test baseline (plus root-cause
+  analysis for bugs), plan, implement with a configurable test-first loop, verify by
+  driving the running app, and hand off for review. Use when developing a new feature,
+  fixing a bug or regression, debugging broken behaviour, working a ticket or issue, or
+  implementing a spec from scratch. Also use when asked to set up, configure, or onboard
+  this skill."
 ---
 
 # Feature Development Skill
 
-> End-to-end feature development: frame → explore → plan → implement → verify → hand off.
+> End-to-end development for features and bug fixes: frame → explore → plan → implement → verify → hand off.
 >
 > Build/test/lint/run commands are not configured here — the skill uses whatever your
 > project already has in CLAUDE.md or .claude/rules/. Review hand-off, branch conventions,
 > and test collaboration mode are configured via Setup.
+
+Throughout, "feature" means the unit of work in flight — a new feature or a bug fix. The methodology is identical for both; bug-specific differences are called out as **For a bug fix** notes where the two diverge.
 
 ---
 
@@ -28,7 +32,7 @@ When asked to set up, configure, onboard, or create a rules file for this skill:
    - Existing skill rules (`code-review.md`, `run.md`, `verify.md` in `.claude/rules/`)
    - Any documented **spec or issue workflow** — a rules file or CLAUDE.md section that
      describes where the spec lives (inline note, tracking issue, external doc) or how to
-     handle a feature ticket before writing code
+     handle a feature ticket or bug report before writing code
    - Any documented **branch naming convention** — in CI configs, CLAUDE.md, or rules files
    - Any documented **testing strategy** — a rules file or CLAUDE.md section describing
      which component types systematically require tests, required test patterns or idioms to
@@ -102,6 +106,11 @@ savings in precise acceptance criteria here — they prevent rework later.*
 If your project defines where specs are tracked or what format they follow, use that.
 Otherwise, produce the spec inline as a numbered list before continuing.
 
+**For a bug fix:** the spec is a defect report — capture exact reproduction steps,
+expected behaviour, and the actual (wrong) behaviour observed. The first acceptance
+criterion becomes "the bug no longer reproduces", proven by a test that fails *because of
+the defect* and passes once fixed.
+
 **What to defer to a human:** any acceptance criterion you cannot derive from the ticket
 without making assumptions. Stop and ask rather than guess.
 
@@ -118,6 +127,9 @@ top-level context:
   require tests, required/forbidden patterns, test locations). Carry this summary into the
   plan and implementation phases — every test written in this session follows it.
 - Add agents for specific unknowns (data layer, UI components, integration points) as needed
+- **For a bug fix:** dedicate one Explore agent to root-cause analysis — starting from
+  the reproduction steps, trace the failure to the smallest code location responsible.
+  Distinguish symptom from cause; fixing only the symptom leaves the underlying defect alive.
 
 Apply the *Hoard* principle: explicitly note "build this by combining X and Y" where existing
 working examples in the codebase can be recombined. Build new things by combining known things
@@ -132,7 +144,9 @@ If your project defines how to run the tests, use that. Otherwise, look for the 
 CLAUDE.md, `.claude/rules/`, Makefile, or package.json scripts.
 
 **What to defer to a human:** pre-existing test failures that pre-date this work. Document
-them; do not fix them as part of this feature.
+them; do not fix them as part of this feature. For a bug fix: if the root cause remains
+unlocated after Explore, surface what is known and what is still unknown rather than
+guessing a fix.
 
 ---
 
@@ -147,6 +161,11 @@ Produce an implementation plan:
   A step with no "Prove" half is not an implementation step — it is setup or refactor
   preparation, and must be labelled as such. This format is load-bearing: it ensures the
   plan itself encodes test-first, so the intent survives into execution.
+
+  **For a bug fix:** the first pair is the regression test —
+  *Prove: a test that reproduces the reported defect (fails for the right reason) /
+  Implement: the root-cause fix that makes it pass.* Subsequent pairs cover related cases
+  the fix must also satisfy.
 
 - Alternatives considered and why they were rejected
 - Risk areas: dependencies, edge cases, integration points, known unknowns
@@ -204,7 +223,10 @@ Phase 6 hand-off. Don't agonize over the message mid-loop; a one-line descriptio
 behaviour just proved is enough. Every mistake is reversible; use that guarantee freely.
 
 Confirm each test *genuinely* fails before implementing. A test that already passes means
-you are about to build code that exercises nothing and verify nothing.
+you are about to build code that exercises nothing and verify nothing. **For a bug fix:**
+genuine red means the test reproduces the reported defect — the same wrong behaviour the
+report describes. If the first test already passes, the bug was not reproduced; revisit
+the reproduction steps before writing any fix.
 
 **What to defer to a human:**
 - Calling the escape hatch: if test-first genuinely doesn't fit (pure UI spike, throwaway

@@ -1,7 +1,8 @@
 # feature-development
 
-End-to-end feature development methodology for Claude Code. Six phases: frame the
-requirement, explore and establish a green baseline, plan, implement with a configurable
+End-to-end development methodology for Claude Code — covers new features and bug fixes.
+Six phases: frame the requirement (or document the defect), explore and establish a green
+baseline (plus root-cause analysis for bugs), plan, implement with a configurable
 test-first loop, verify by driving the running app, and hand off for review.
 
 > **Status:** v0.1.0 — initial release. The six-phase methodology is distilled from
@@ -14,9 +15,9 @@ The skill encodes a complete feature development workflow:
 
 | Phase | What happens |
 |-------|-------------|
-| **Frame** | Read the ticket/spec; write acceptance criteria before touching code |
-| **Explore & Baseline** | Parallel Explore subagents map the codebase; run the full suite to establish a green baseline |
-| **Plan** | Implementation steps as red/green pairs (Prove → Implement); branch created; hard human checkpoint |
+| **Frame** | Read the ticket/spec/bug report; write acceptance criteria (or defect report: reproduction + expected vs actual) before touching code |
+| **Explore & Baseline** | Parallel Explore subagents map the codebase; root-cause analysis for bugs; run the full suite to establish a green baseline |
+| **Plan** | Implementation steps as red/green pairs (Prove → Implement); for bugs, first pair is the regression test; branch created; hard human checkpoint |
 | **Implement** | Test-first entry gate; test-first loop (one test at a time); follows project testing strategy; checkpoint commits |
 | **Verify** | Full suite + agent drives the running app against acceptance criteria |
 | **Hand Off** | Curate checkpoints into logical commits; linear walkthrough; self-review before presenting |
@@ -73,10 +74,18 @@ If you accept all defaults, no rules file is needed.
 
 ## Usage
 
-Just describe what you want to build:
+Just describe what you want to build or fix:
 
 ```
 develop a feature: add email validation to the sign-up form
+```
+
+```
+fix bug: sign-up form accepts addresses without @
+```
+
+```
+there's a regression in the checkout flow after the latest deploy
 ```
 
 or reference a ticket:

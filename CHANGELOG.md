@@ -9,16 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **feature-development** plugin — end-to-end feature development methodology distilled from
-  agentic engineering best practices. Six phases: frame the requirement, explore and baseline
-  (parallel Explore subagents + green baseline + project testing strategy surfaced automatically),
-  plan with red/green-shaped steps (Prove → Implement), implement with a test-first entry gate and
-  configurable test loop (Solo AI / Assert-in-the-loop / Ping-pong / Ask each feature), verify by
-  driving the running app, and hand off with a linear walkthrough for review. Every test follows the
-  project's documented testing strategy out of the box. Configurable commit granularity: checkpoint
-  while building (the safety net), then curate into a few logical commits at hand-off by default —
-  so a reasonably big feature lands as several meaningful commits, not one. Never merges unreviewed
-  code. Initial v0.1.0 — the test-collaboration modes are pending real-project validation.
+- **feature-development** plugin — end-to-end development methodology for features and bug
+  fixes, distilled from agentic engineering best practices. Six phases: frame the requirement
+  (or capture a defect report with reproduction steps + expected-vs-actual for bugs), explore
+  and baseline (parallel Explore subagents + green baseline + project testing strategy surfaced
+  automatically; root-cause analysis agent for bugs), plan with red/green-shaped steps
+  (Prove → Implement; for bugs, first pair is the regression test), implement with a test-first
+  entry gate and configurable test loop (Solo AI / Assert-in-the-loop / Ping-pong / Ask each
+  feature), verify by driving the running app, and hand off with a linear walkthrough for
+  review. Triggers on feature, bug, and regression phrasing. Every test follows the project's
+  documented testing strategy out of the box. Configurable commit granularity: checkpoint while
+  building (the safety net), then curate into a few logical commits at hand-off by default.
+  Never merges unreviewed code. Initial v0.1.0 — the test-collaboration modes are pending
+  real-project validation.
 
 ## [1.2.0] - 2026-06-08
 

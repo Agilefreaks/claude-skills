@@ -39,7 +39,10 @@ These rules apply in every mode without exception:
    is not a failing test — it is a test that verifies nothing. Discovering this means
    either the test is wrong (fix the test) or the feature already exists (re-examine the
    acceptance criteria). Either way, do not proceed to implementation until the test
-   fails for the right reason.
+   fails for the right reason. For a bug fix: genuine red additionally means the test
+   reproduces the reported defect — the same wrong behaviour, not merely "feature not
+   built yet." If the first test passes, the bug was not reproduced; revisit the
+   reproduction steps.
 
 3. **Checkpoint after every green.** After each test passes, make a git checkpoint commit.
    This keeps every mistake reversible. These are *working* checkpoints — the published shape

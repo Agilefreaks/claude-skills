@@ -58,13 +58,13 @@
     {
       "name": "feature-development",
       "source": "./plugins/feature-development",
-      "description": "End-to-end feature development methodology: frame, explore, plan, implement with a configurable test-first loop, verify by driving the app, and hand off for review.",
+      "description": "End-to-end development methodology for features and bug fixes: frame, explore (with root-cause analysis for bugs), plan, implement with a configurable test-first loop, verify by driving the app, and hand off for review.",
       "version": "0.1.0",
       "author": {
         "name": "AgileFreaks"
       },
       "category": "productivity",
-      "keywords": ["feature-development", "tdd", "planning", "spec-driven", "verification", "agentic"]
+      "keywords": ["feature-development", "bug-fix", "debugging", "regression", "tdd", "planning", "spec-driven", "verification", "agentic"]
     }
   ]
 }
