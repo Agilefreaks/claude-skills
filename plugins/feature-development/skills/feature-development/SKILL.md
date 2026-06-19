@@ -276,15 +276,19 @@ commits that tell a clear story to a reviewer:
 2. Reshape using non-interactive git only (never rely on `git rebase -i` — it needs a TTY and
    editor):
    ```
-   git reset --soft <merge-base>    # un-commit all checkpoints, keep changes staged
-   git commit -m "…"                # recommit as first logical group
-   git commit -m "…"                # …and so on per group
+   git reset <merge-base>           # un-commit checkpoints; changes stay in working tree, unstaged
+   git add <paths-for-group-1>      # stage only the first logical group
+   git commit -m "…"
+   git add <paths-for-group-2>      # …then the next group
+   git commit -m "…"
    ```
    Path-level grouping (`git add <paths>` per commit) is reliable non-interactively. Hunk-level
    splitting (one file contributing to two logical commits) requires `git add -p` — defer that to
    the human if needed.
-3. **Never rewrite history that is already pushed or shared.** Reshape only local, un-pushed
-   checkpoints. If the branch was already pushed, do not force-push without explicit approval.
+3. **Curate before the first push.** Reshaping rewrites local history — it must happen before
+   the branch is pushed. If checkpoints were already pushed (e.g. to open a draft PR), the
+   rule below applies. **Never rewrite history that is already pushed or shared.** Reshape only
+   local, un-pushed checkpoints; do not force-push without explicit approval.
 4. Commit message format follows the project's convention — do not prescribe one here.
 
 **What to defer to a human (history curation):** approval of the final commit grouping and

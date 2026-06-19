@@ -435,8 +435,8 @@ drive it reliably.
 # 1. Find the merge-base (where the feature branch diverged from the base branch)
 git merge-base <base-branch> HEAD
 
-# 2. Un-commit all checkpoints but keep the changes staged
-git reset --soft <merge-base-hash>
+# 2. Un-commit all checkpoints and unstage them (changes preserved in the working tree)
+git reset <merge-base-hash>
 
 # 3. Re-commit as logical groups (one commit per behaviour cluster)
 git add <paths-for-group-1>
@@ -453,6 +453,8 @@ git commit -m "…"
   `git add -p`; defer to the human if needed.
 
 **Hard rules:**
+- **Curate before the first push.** Reshaping rewrites local history — run this recipe before
+  the branch is pushed. If checkpoints were already pushed, the rule below applies.
 - Never rewrite history that is already pushed or shared. Reshape only local, un-pushed
   checkpoints. If the branch was already pushed, do not force-push without explicit human
   approval.
