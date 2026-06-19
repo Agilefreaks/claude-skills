@@ -1,0 +1,9 @@
+{
+  "name": "feature-development",
+  "description": "End-to-end feature development methodology — frame, explore and baseline, plan, implement (test-first), verify by driving the app, and hand off. Build/test/run commands and review hand-off are configured via your project's existing rules.",
+  "version": "0.1.0",
+  "author": {
+    "name": "AgileFreaks"
+  },
+  "keywords": ["feature-development", "tdd", "planning", "spec-driven", "verification", "agentic"]
+}
