@@ -1,0 +1,9 @@
+{
+  "name": "web-frontend-tooling",
+  "description": "Blueprint for wiring up linting, formatting, type-checking, Git hooks, and dead-code detection in a Node/TypeScript project. Prefers the Oxc toolchain (oxlint + oxfmt) with husky + lint-staged, but adapts to existing ESLint/Prettier setups. Imposes no specific rules — supplies minimal starting configs and reconciles with the target codebase.",
+  "version": "0.1.0",
+  "author": {
+    "name": "AgileFreaks"
+  },
+  "keywords": ["code-quality", "linting", "formatting", "git-hooks", "oxlint", "oxfmt", "husky", "lint-staged", "knip", "typescript", "tooling"]
+}

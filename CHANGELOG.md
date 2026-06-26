@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **web-frontend-tooling** plugin — blueprint for wiring up linting, formatting,
+  type-checking, Git hooks, and dead-code detection in a Node/TypeScript project. Prefers
+  the Oxc toolchain (`oxlint` + `oxfmt`) with `husky` + `lint-staged`; adapts to an existing
+  ESLint/Prettier setup. Ships minimal starting configs but imposes no specific rules —
+  reconciles with the existing codebase rather than overwriting its style.
+
 ## [1.3.0] - 2026-06-19
 
 ### Added
