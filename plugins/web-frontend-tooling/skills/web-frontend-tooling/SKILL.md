@@ -16,7 +16,7 @@ description: "Set up code quality tooling — linting, formatting, type-checking
 When asked to set up, configure, onboard, or create a rules file for this skill:
 
 1. Read all existing project rules (`.claude/rules/`, `CLAUDE.md`) to understand what is already configured. Do not duplicate package-manager, build, or test commands — those are project-level concerns.
-2. Inspect the project for existing tooling: `package.json` (scripts + devDependencies), `.eslintrc*`, `.prettierrc*`, `.oxlintrc.json`, `.oxfmtrc.json`, `.husky/`, `.lintstagedrc*`, `tsconfig.json`, `knip.json`.
+2. Inspect the project for existing tooling: `package.json` (scripts + devDependencies + `packageManager` field), lockfiles (`package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`, `bun.lockb`), `.eslintrc*`, `.prettierrc*`, `.oxlintrc.json`, `.oxfmtrc.json`, `.husky/`, `.lintstagedrc*`, `tsconfig.json`, `knip.json`. Detect the package manager from the lockfile / `packageManager` field (see Step 0) and use it for every command — do not assume npm.
 3. Present interactive choices for each skill-specific decision:
    - **Linter** — oxlint (preferred) or keep/adopt ESLint. Detect which is present.
    - **Formatter** — oxfmt (preferred) or keep/adopt Prettier. Detect which is present.
@@ -49,7 +49,33 @@ git push    ──► husky pre-push    ──► tsc --noEmit && oxlint
 
 ---
 
-## Step 0 — Choosing Linter & Formatter
+## Step 0 — Detect the package manager
+
+Do **not** assume npm. Detect the project's package manager and use it for every
+install/run/dlx command below. Detect from, in order of precedence:
+
+1. Lockfile: `pnpm-lock.yaml` → pnpm, `yarn.lock` → yarn, `bun.lockb`/`bun.lock` → bun,
+   `package-lock.json` → npm.
+2. `package.json` `"packageManager"` field (Corepack), e.g. `"pnpm@9.x"`.
+3. If none found, ask the user; default to npm only if they have no preference.
+
+Command equivalents — substitute `<install>`, `<run>`, and `<dlx>` everywhere in this
+guide with the row matching the detected manager:
+
+| Manager | `<install>` (add dev dep) | `<run>` (run script) | `<dlx>` (run binary)  |
+| ------- | ------------------------- | -------------------- | --------------------- |
+| npm     | `npm install --save-dev`  | `npm run`            | `npx`                 |
+| pnpm    | `pnpm add --save-dev`     | `pnpm run`           | `pnpm dlx`            |
+| yarn    | `yarn add --dev`          | `yarn run`           | `yarn dlx`            |
+| bun     | `bun add --dev`           | `bun run`            | `bunx`                |
+
+**Extension point:** The package manager. The skill follows whatever the codebase
+already uses. The examples below are written with the npm form for readability —
+translate them via the table above.
+
+---
+
+## Step 1 — Choosing Linter & Formatter
 
 This skill **prefers the Oxc toolchain** (`oxlint` + `oxfmt`) — Rust-based, fast,
 zero-config-friendly. But it does not force it. Decide before installing:
@@ -79,10 +105,10 @@ removing any existing tool.
 
 ---
 
-## Step 1 — Install
+## Step 2 — Install
 
 ```bash
-npm install --save-dev oxlint oxfmt husky lint-staged knip
+<install> oxlint oxfmt husky lint-staged knip
 ```
 
 Pin versions for reproducibility (pin exact versions for tooling deps — no `^`).
@@ -101,7 +127,7 @@ reference snapshot:
 
 ---
 
-## Step 2 — package.json scripts
+## Step 3 — package.json scripts
 
 ```jsonc
 "scripts": {
@@ -114,13 +140,13 @@ reference snapshot:
 }
 ```
 
-- `prepare` runs automatically on `npm install` → installs husky hooks.
+- `prepare` runs automatically on install (`<install>` / `npm install`) → installs husky hooks.
 - `--max-warnings 0` makes any warning fail CI / the pre-push hook.
-- `unused-code` runs knip → reports unused files, exports, deps (see Step 7).
+- `unused-code` runs knip → reports unused files, exports, deps (see Step 8).
 
 ---
 
-## Step 3 — Formatter config (`.oxfmtrc.json`)
+## Step 4 — Formatter config (`.oxfmtrc.json`)
 
 Bare-minimum, opinion-light starting point:
 
@@ -149,7 +175,7 @@ churn-vs-consistency trade-off is a project call.
 
 ---
 
-## Step 4 — Linter config (`.oxlintrc.json`)
+## Step 5 — Linter config (`.oxlintrc.json`)
 
 Bare-minimum starting point. Enable the `correctness` category as errors, wire up
 plugins for your framework, ignore generated/vendored paths:
@@ -218,15 +244,16 @@ the companion rules file.
 
 ---
 
-## Step 5 — Husky hooks
+## Step 6 — Husky hooks
 
 Initialize once:
 
 ```bash
-npx husky init
+<dlx> husky init
 ```
 
-This creates `.husky/` and adds the `prepare` script. Then write the two hooks:
+This creates `.husky/` and adds the `prepare` script. Then write the two hooks
+(use the detected manager's `<dlx>` / `<run>` form):
 
 **`.husky/pre-commit`**
 
@@ -239,6 +266,9 @@ npx lint-staged
 ```sh
 npm run type-check && npm run lint
 ```
+
+> Hook bodies run whatever you write. Match them to the project manager — e.g. for
+> pnpm: `pnpm dlx lint-staged` and `pnpm run type-check && pnpm run lint`.
 
 Make them executable (husky usually handles this):
 
@@ -254,11 +284,11 @@ Rationale for the split:
   reach the remote, but doesn't slow down every commit.
 
 **Extension point:** The hook split. The default is format-on-commit + typecheck/lint-on-push.
-A project may move linting into pre-commit (see Step 6) — follow the project rules if set.
+A project may move linting into pre-commit (see Step 7) — follow the project rules if set.
 
 ---
 
-## Step 6 — lint-staged config (`.lintstagedrc.json`)
+## Step 7 — lint-staged config (`.lintstagedrc.json`)
 
 ```json
 {
@@ -287,13 +317,13 @@ To also lint staged files at commit time (optional — heavier pre-commit):
 
 ---
 
-## Step 7 — Unused-code finder (knip)
+## Step 8 — Unused-code finder (knip)
 
 [knip](https://knip.dev) finds dead code: unused files, exports, types, and
 dependencies. Catches what the linter can't — cross-file dead code and stale
 `package.json` deps. Recommended for keeping a codebase lean.
 
-Script (added in Step 2):
+Script (added in Step 3):
 
 ```jsonc
 "scripts": {
@@ -304,7 +334,7 @@ Script (added in Step 2):
 Run on demand:
 
 ```bash
-npm run unused-code
+<run> unused-code
 ```
 
 Config is optional — knip auto-detects most setups. Add `knip.json` only to tune
@@ -337,15 +367,16 @@ word alone — review the diff.
 
 ## Replication Checklist
 
+- [ ] Detect package manager (lockfile / `packageManager` field; ask if none)
 - [ ] Decide linter (oxlint preferred; ask if eslint present)
 - [ ] Decide formatter (oxfmt preferred; ask if prettier present)
-- [ ] `npm i -D oxlint oxfmt husky lint-staged knip`
+- [ ] `<install> oxlint oxfmt husky lint-staged knip`
 - [ ] Add `lint` / `format` / `format:check` / `type-check` / `unused-code` / `prepare` scripts
 - [ ] Add `.oxfmtrc.json` (reconcile with existing code style)
 - [ ] Add `.oxlintrc.json` (reconcile rules + ignore paths with project)
-- [ ] `npx husky init`
-- [ ] Write `.husky/pre-commit` → `npx lint-staged`
-- [ ] Write `.husky/pre-push` → `npm run type-check && npm run lint`
+- [ ] `<dlx> husky init`
+- [ ] Write `.husky/pre-commit` → `<dlx> lint-staged`
+- [ ] Write `.husky/pre-push` → `<run> type-check && <run> lint`
 - [ ] Add `.lintstagedrc.json`
-- [ ] (optional) Add `knip.json`; run `npm run unused-code` to find dead code
+- [ ] (optional) Add `knip.json`; run `<run> unused-code` to find dead code
 - [ ] Verify: stage a file → commit (formats) → push (type-checks + lints)
