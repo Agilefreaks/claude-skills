@@ -31,14 +31,14 @@ When asked to set up, configure, onboard, or create a rules file for this skill:
 
 ## Tool Stack Overview
 
-| Concern              | Tool          | Reference version  | Config file          |
-| -------------------- | ------------- | ------------------ | -------------------- |
-| Linter               | oxlint        | `1.67.0`           | `.oxlintrc.json`     |
-| Formatter            | oxfmt         | `0.52.0`           | `.oxfmtrc.json`      |
-| Git hook manager     | husky         | `9.1.7`            | `.husky/`            |
-| Staged-file runner   | lint-staged   | `17.0.6`           | `.lintstagedrc.json` |
-| Type checker         | tsc           | `typescript 6.0.3` | `tsconfig.json`      |
-| Unused-code finder   | knip          | latest             | `knip.json` (opt.)   |
+| Concern              | Tool          | Config file          |
+| -------------------- | ------------- | -------------------- |
+| Linter               | oxlint        | `.oxlintrc.json`     |
+| Formatter            | oxfmt         | `.oxfmtrc.json`      |
+| Git hook manager     | husky         | `.husky/`            |
+| Staged-file runner   | lint-staged   | `.lintstagedrc.json` |
+| Type checker         | tsc           | `tsconfig.json`      |
+| Unused-code finder   | knip          | `knip.json` (opt.)   |
 
 Flow:
 
@@ -160,6 +160,12 @@ Bare-minimum, opinion-light starting point:
   "printWidth": 110
 }
 ```
+
+These are oxfmt's Prettier-compatible keys (a subset — oxfmt does not yet support
+every Prettier option). The bundled `$schema` validates the file against the
+installed oxfmt version. If a key is rejected, check the
+[oxfmt config reference](https://oxc.rs/docs/guide/usage/formatter/config) for the
+options the installed version supports.
 
 **If the target codebase deviates** from these defaults (e.g. it uses single
 quotes, no semicolons, 80-col width), present both choices — do not pick silently:
