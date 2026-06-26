@@ -11,6 +11,7 @@ Internal Claude skills library. Works across Claude.ai Cowork, Claude Code (term
 | [code-review](plugins/code-review/) | Outside-in, risk-driven code review. Covers bug fixes, new features, add-ons, extensions, and refinements. | 1.1.0 | productivity |
 | [dep-update-merge](plugins/dep-update-merge/) | Bundles dependency-update PRs/MRs into one verified change with changelog analysis and breaking change triage. | 1.1.0 | productivity |
 | [feature-development](plugins/feature-development/) | End-to-end feature development: frame → explore → plan → implement (TDD) → verify → hand off. Initial v0.1.0, pending real-project validation. | 0.1.0 | productivity |
+| [web-frontend-tooling](plugins/web-frontend-tooling/) | Blueprint for wiring up linting, formatting, type-checking, Git hooks, and dead-code detection in a Node/TypeScript project. Prefers the Oxc toolchain (oxlint + oxfmt) with husky + lint-staged; adapts to existing ESLint/Prettier. | 0.1.0 | productivity |
 
 ## Usage
 
