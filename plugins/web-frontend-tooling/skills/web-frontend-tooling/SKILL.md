@@ -108,8 +108,10 @@ removing any existing tool.
 ## Step 2 — Install
 
 ```bash
-<install> oxlint oxfmt husky lint-staged knip
+<install> oxlint oxfmt husky lint-staged knip typescript
 ```
+
+Drop `typescript` if the project already depends on it (most do).
 
 Pin versions for reproducibility (pin exact versions for tooling deps — no `^`).
 Resolve the latest stable version of each at install time; the numbers below are a
@@ -189,18 +191,14 @@ plugins for your framework, ignore generated/vendored paths:
 ```json
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["typescript", "react", "nextjs", "import"],
+  "plugins": ["typescript", "import"],
   "categories": {
     "correctness": "error"
   },
   "ignorePatterns": [
     "node_modules/**",
-    ".next/**",
-    "data/**",
-    "seed/**",
-    "scripts/**",
-    "next-env.d.ts",
-    "public/**",
+    "dist/**",
+    "build/**",
     "coverage/**",
     "*.min.js"
   ],
@@ -234,19 +232,28 @@ plugins for your framework, ignore generated/vendored paths:
 }
 ```
 
-Adjust per project:
+The config above is framework-agnostic — `typescript` + `import` is the floor, and
+the ignore paths cover only the common build/vendor dirs. **Detect the project's
+framework / build system and adapt** before writing the file:
 
-- **`plugins`** — drop `react`/`nextjs` for non-React projects. Keep `typescript`
-  + `import` as the floor.
-- **`ignorePatterns`** — match your generated/vendored dirs.
+- **Next.js** (`next.config.*`) → add the `nextjs` + `react` plugins; ignore `.next/**`
+  and `next-env.d.ts`.
+- **Vite** (`vite.config.*`) → ignore `dist/**` (already listed); add `react` if a
+  React plugin is present, or the relevant framework plugin (Vue, Solid, etc.).
+- **React without a meta-framework** → add the `react` plugin.
+- **Plain Node / library** → keep just `typescript` + `import`.
+
+Then adjust:
+
+- **`ignorePatterns`** — match the detected build output and any generated/vendored dirs.
 - **`overrides`** — loosen rules for tests, generated code, etc.
 - The specific `rules` above are a suggestion. This guide does not impose them.
   **If the codebase deviates**, present the same two options as the formatter:
   relax the rule, or fix the codebase.
 
-**Extension point:** Framework plugins, ignore paths, and rule set. Defaults work
-for a React/Next.js project out of the box; record project-specific deviations in
-the companion rules file.
+**Extension point:** Framework plugins, ignore paths, and rule set. Detect the build
+system from its config file and adapt; record project-specific deviations in the
+companion rules file.
 
 ---
 
@@ -258,23 +265,26 @@ Initialize once:
 <dlx> husky init
 ```
 
-This creates `.husky/` and adds the `prepare` script. Then write the two hooks
-(use the detected manager's `<dlx>` / `<run>` form):
+This creates `.husky/` and adds the `prepare` script. Then write the two hooks,
+substituting the detected manager's `<dlx>` / `<run>` form (Step 0) — do not
+hardcode npm into a project that uses another manager:
 
 **`.husky/pre-commit`**
 
 ```sh
-npx lint-staged
+<dlx> lint-staged
 ```
 
 **`.husky/pre-push`**
 
 ```sh
-npm run type-check && npm run lint
+<run> type-check && <run> lint
 ```
 
-> Hook bodies run whatever you write. Match them to the project manager — e.g. for
-> pnpm: `pnpm dlx lint-staged` and `pnpm run type-check && pnpm run lint`.
+> Hook bodies run literal commands — there is no placeholder resolution at runtime,
+> so write the resolved form. For pnpm: `pnpm dlx lint-staged`, then
+> `pnpm run type-check && pnpm run lint`. For npm: `npx lint-staged`, then
+> `npm run type-check && npm run lint`.
 
 Make them executable (husky usually handles this):
 
