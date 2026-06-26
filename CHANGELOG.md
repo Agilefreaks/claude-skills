@@ -9,18 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **web-frontend-tooling** plugin — a blueprint for wiring up code quality
-  tooling in a Node/TypeScript project: linting, formatting, type-checking, Git hooks,
-  and dead-code detection. Prefers the Oxc toolchain (`oxlint` + `oxfmt` — Rust-based,
-  fast) with `husky` + `lint-staged`, and the format-on-commit / typecheck-lint-on-push
-  hook split, but adapts to an existing ESLint/Prettier setup (identical wiring, only
-  command names change). Ships minimal, opinion-light starting configs for `.oxfmtrc.json`,
-  `.oxlintrc.json`, and `.lintstagedrc.json`, plus optional `knip` for cross-file dead-code
-  detection. Imposes no specific lint/format rules: when the target codebase deviates from
-  the starting config, it presents two reconciliation options (change the config to match
-  the code, or reformat the code to match the config) and never silently imposes a style.
-  Includes a Setup wizard that detects existing tooling and records only skill-specific
-  deviations in a companion rules file.
+- **web-frontend-tooling** plugin — blueprint for wiring up linting, formatting,
+  type-checking, Git hooks, and dead-code detection in a Node/TypeScript project. Prefers
+  the Oxc toolchain (`oxlint` + `oxfmt`) with `husky` + `lint-staged`; adapts to an existing
+  ESLint/Prettier setup. Ships minimal starting configs but imposes no specific rules —
+  reconciles with the existing codebase rather than overwriting its style.
 
 ## [1.3.0] - 2026-06-19
 
