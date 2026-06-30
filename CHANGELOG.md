@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **test-writing** plugin (0.1.0) — methodology for writing the right tests when required during a development workflow. Combines Robert C. Martin's testing discipline (the Three Laws of TDD and red-green-refactor — *Clean Craftsmanship*, 2021; the Test Automation Pyramid — *The Clean Coder*, 2011, ch. 8; F.I.R.S.T. / clean tests — *Clean Code*, 2008, ch. 9) with Simon Willison's agentic testing patterns (first run the tests, confirm red before green, never trust unexecuted code). Five phases: learn the project & triage what's worth testing; decide level and test boundary (owned persistence tested for real, vendor services mocked at the HTTP layer); write the tests (TDD/new/backfill, sequenced within a feature with swappable setup seams); refactor & quality gate (dedup, front-door arrangement, F.I.R.S.T.); verify by executing & report. Includes extension points and a Setup section for project-specific configuration.
+
 ## [1.5.0] - 2026-06-30
 
 ### Changed

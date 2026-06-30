@@ -12,6 +12,17 @@
   },
   "plugins": [
     {
+      "name": "test-writing",
+      "source": "./plugins/test-writing",
+      "description": "Test-writing methodology based on Robert C. Martin's testing discipline: decides what to test, how many tests to write, and at which pyramid level — for TDD, new/changed code, and backfilling untested code.",
+      "version": "0.1.0",
+      "author": {
+        "name": "AgileFreaks"
+      },
+      "category": "productivity",
+      "keywords": ["testing", "tdd", "unit-tests", "test-coverage", "red-green-refactor", "test-pyramid"]
+    },
+    {
       "name": "dep-update-merge",
       "source": "./plugins/dep-update-merge",
       "description": "Bundles open dependency-update PRs/MRs into a single verified change with changelog analysis, breaking change triage, and build/test verification.",
