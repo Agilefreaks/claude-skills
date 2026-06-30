@@ -1,7 +1,7 @@
 {
   "name": "feature-development",
-  "description": "End-to-end feature development methodology — frame, explore and baseline, plan, implement (test-first), verify by driving the app, and hand off. Build/test/run commands and review hand-off are configured via your project's existing rules.",
-  "version": "0.1.0",
+  "description": "End-to-end feature and bug development methodology — frame, explore and baseline, plan, implement (test-first), verify by driving the app, and hand off. First phases (frame, explore, plan) run inside plan mode; implementation runs after plan approval. Build/test/run commands and review hand-off configured via your project's existing rules.",
+  "version": "0.2.0",
   "author": {
     "name": "AgileFreaks"
   },

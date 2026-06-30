@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **feature-development** (0.1.0 → 0.2.0) — improved plan-mode triggering and compatibility.
+  Added a "Works with plan mode" section to the SKILL.md body mapping the skill's phases to
+  plan mode: Phases 1–3 (frame, explore, plan) run during plan mode; Phase 3's hard checkpoint
+  is ExitPlanMode; Phases 4–6 run after approval. Reworded the `description` frontmatter to
+  lead with planning-phase framing so the skill is invoked at the first turn even when plan
+  mode is active, not only when implementation is being requested. Added an opt-in
+  trigger-enforcement step to Setup: teams that have seen the skill under-trigger can install a
+  `UserPromptSubmit` hook in their project via `/update-config`; no hook is bundled with the
+  plugin.
+
 ## [1.4.0] - 2026-06-26
 
 ### Added

@@ -5,8 +5,10 @@ description: "End-to-end development methodology for features and bug fixes: fra
   analysis for bugs), plan, implement with a configurable test-first loop, verify by
   driving the running app, and hand off for review. Use when developing a new feature,
   fixing a bug or regression, debugging broken behaviour, working a ticket or issue, or
-  implementing a spec from scratch. Also use when asked to set up, configure, or onboard
-  this skill."
+  implementing a spec from scratch. Invoke it at the very first turn the work is identified —
+  including during plan mode, because its first phases (framing, codebase exploration, and
+  planning) are themselves planning work, not code-writing — rather than waiting until you
+  start implementing. Also use when asked to set up, configure, or onboard this skill."
 ---
 
 # Feature Development Skill
@@ -18,6 +20,24 @@ description: "End-to-end development methodology for features and bug fixes: fra
 > and test collaboration mode are configured via Setup.
 
 Throughout, "feature" means the unit of work in flight — a new feature or a bug fix. The methodology is identical for both; bug-specific differences are called out as **For a bug fix** notes where the two diverge.
+
+---
+
+## Works with plan mode
+
+This skill and plan mode are complementary, not competing — plan mode is never a reason to
+skip or defer it. The mapping is direct:
+
+- **Plan mode ⇒ Phases 1–3.** Framing the requirement (1), exploring the codebase and
+  establishing the green baseline (2), and producing the red/green plan (3) are all
+  read-only planning work — they run *inside* plan mode.
+- **Phase 3's hard checkpoint *is* ExitPlanMode.** Presenting the plan and waiting for
+  explicit approval is exactly plan mode's approval gate. The user's approval is the
+  authorization to implement.
+- **Approval ⇒ Phases 4–6.** Implement, Verify, and Hand Off run after plan mode is exited.
+
+If you are invoked while planning a feature, a bug fix, or a ticket, this is the skill for
+that work from the first turn — begin at Phase 1.
 
 ---
 
@@ -82,6 +102,13 @@ When asked to set up, configure, onboard, or create a rules file for this skill:
        no reshape step needed
      - *Keep every checkpoint*: commit per green, never reshape (maximum bisect granularity,
        noisiest published history)
+   - **Trigger enforcement (optional, off by default)** — install a `UserPromptSubmit` hook
+     in this project so the harness nudges Claude to invoke `feature-development` whenever it
+     detects feature, bug, or ticket intent. This is the only enforcement-level trigger; the
+     skill's description and body notes are advisory (the model still chooses). Recommend it
+     only for teams that have seen the skill under-trigger — particularly when plan mode is
+     active at the first turn. If opted in, run `/update-config` in this project: it will
+     write the hook into the project's `settings.json`. No hook is bundled with this plugin.
 4. Write `.claude/rules/feature-development.md` containing only the non-default choices.
    If the user accepts all defaults (or the detected workflow covers everything), confirm no
    rules file is needed and stop.
