@@ -10,7 +10,7 @@ Internal Claude skills library. Works across Claude.ai Cowork, Claude Code (term
 | [android-project-aligner](plugins/android-project-aligner/) | Brownfield companion to android-project-starter. Audits an existing Android project against the starter's conventions, produces a phased migration plan, and applies it on a fresh git branch with build verification between phases. Also generates the project-local planner/implementer skills. | 0.1.0 | productivity |
 | [code-review](plugins/code-review/) | Outside-in, risk-driven code review. Covers bug fixes, new features, add-ons, extensions, and refinements. | 1.1.0 | productivity |
 | [dep-update-merge](plugins/dep-update-merge/) | Bundles dependency-update PRs/MRs into one verified change with changelog analysis and breaking change triage. | 1.1.0 | productivity |
-| [feature-development](plugins/feature-development/) | End-to-end feature development: frame → explore → plan → implement (TDD) → verify → hand off. Initial v0.1.0, pending real-project validation. | 0.1.0 | productivity |
+| [feature-development](plugins/feature-development/) | End-to-end feature development: frame → explore → plan → implement (TDD) → verify → hand off. Works with plan mode. | 0.2.0 | productivity |
 | [web-frontend-tooling](plugins/web-frontend-tooling/) | Blueprint for wiring up linting, formatting, type-checking, Git hooks, and dead-code detection in a Node/TypeScript project. Prefers the Oxc toolchain (oxlint + oxfmt) with husky + lint-staged; adapts to existing ESLint/Prettier. | 0.1.0 | productivity |
 
 ## Usage
