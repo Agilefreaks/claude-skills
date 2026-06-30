@@ -5,9 +5,9 @@ Six phases: frame the requirement (or document the defect), explore and establis
 baseline (plus root-cause analysis for bugs), plan, implement with a configurable
 test-first loop, verify by driving the running app, and hand off for review.
 
-> **Status:** v0.1.0 — initial release. The six-phase methodology is distilled from
-> established agentic engineering practice. The three test-collaboration modes are new
-> and pending validation across real projects. Feedback welcome.
+> **Status:** v0.2.0. The six-phase methodology is distilled from established agentic
+> engineering practice. The three test-collaboration modes are pending real-project
+> validation. Feedback welcome.
 
 ## What it does
 
@@ -21,6 +21,19 @@ The skill encodes a complete feature development workflow:
 | **Implement** | Test-first entry gate; test-first loop (one test at a time); follows project testing strategy; checkpoint commits |
 | **Verify** | Full suite + agent drives the running app against acceptance criteria |
 | **Hand Off** | Curate checkpoints into logical commits; linear walkthrough; self-review before presenting |
+
+## Works with plan mode
+
+This skill and plan mode are complementary. The phase-to-mode mapping is direct:
+
+| Plan mode state | Skill phases |
+|---|---|
+| **Plan mode active** | Phase 1 (Frame), Phase 2 (Explore & Baseline), Phase 3 (Plan) |
+| **Phase 3 checkpoint** | ExitPlanMode — the plan is presented; user approval is the authorization gate |
+| **After approval** | Phase 4 (Implement), Phase 5 (Verify), Phase 6 (Hand Off) |
+
+If you're in plan mode and a user says "implement this feature" or drops a ticket link,
+invoke the skill immediately — don't wait until plan mode exits.
 
 ## Test collaboration modes
 
@@ -107,6 +120,10 @@ consuming project (written by Setup). Configurable:
 - Branch naming convention
 - Spec artifact location
 - Review delegation (auto-detected from existing rules)
+- Trigger enforcement (opt-in, off by default) — install a `UserPromptSubmit` hook in your
+  project via `/update-config` so the harness nudges Claude to invoke the skill on
+  feature/bug/ticket intent. Useful for teams that have seen the skill under-trigger. No
+  hook is bundled with the plugin itself.
 
 Build, test, lint, and run commands are **not** configured here — the skill uses whatever
 your project already has in `CLAUDE.md` or `.claude/rules/`.
