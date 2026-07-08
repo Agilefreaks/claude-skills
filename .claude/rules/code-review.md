@@ -10,9 +10,37 @@ This repo has no build system (pure Markdown and JSON). Skip build verification 
 
 ## Posting Mechanics
 
-Post the review in two parts:
+**0. Prior review state (re-reviews)** — before reviewing, fetch existing threads and your own previous summary:
 
-**1. Inline comments** — for any finding that is specific to a line in the diff, post it as an inline PR review comment using the GitHub API:
+```
+gh api graphql -f query='
+  query($owner:String!, $repo:String!, $pr:Int!) {
+    repository(owner:$owner, name:$repo) {
+      pullRequest(number:$pr) {
+        reviewThreads(first:100) {
+          nodes { id isResolved
+            comments(first:50) { nodes { databaseId author { login } body path line } } } } } } }' \
+  -f owner={owner} -f repo={repo} -F pr={pr_number}
+
+gh api repos/{owner}/{repo}/issues/{pr_number}/comments --paginate \
+  --jq '.[] | select(.body | startswith("<!-- code-review-summary -->")) | .id'
+```
+
+Own inline threads = root comment body starts with `<!-- code-review-finding -->`. For threads predating the marker, fall back to matching `author.login` against the account previous automated reviews were posted from — note GraphQL reports the bot's login without the `[bot]` suffix REST uses (`claude` vs `claude[bot]`). Never raise a concern already raised in a human reviewer's thread, answered or not.
+
+**1. Thread replies and resolution (re-reviews)** — for each of your own prior findings: fix verified in the diff or author response accepted → reply in the thread, then resolve it; still open with no response → leave the thread untouched, don't re-post:
+
+```
+gh api repos/{owner}/{repo}/pulls/{pr_number}/comments/{comment_id}/replies \
+  --method POST --field body="Verified fixed in {sha}."
+
+gh api graphql -f query='
+  mutation($thread:ID!) {
+    resolveReviewThread(input:{threadId:$thread}) { thread { isResolved } } }' \
+  -f thread={thread_id}
+```
+
+**2. Inline comments** — for genuinely new findings specific to a line in the diff, post an inline PR review comment using the GitHub API, with the body prefixed by the finding marker:
 
 ```
 gh api repos/{owner}/{repo}/pulls/{pr_number}/reviews \
@@ -22,15 +50,23 @@ gh api repos/{owner}/{repo}/pulls/{pr_number}/reviews \
   --field body="" \
   --field "comments[][path]"="path/to/file" \
   --field "comments[][line]"={line_number} \
-  --field "comments[][body]"="Finding description"
+  --field "comments[][body]"="<!-- code-review-finding -->
+Finding description"
 ```
 
-Use a single review API call with all inline comments grouped together. Only use line-level comments when the finding is genuinely tied to a specific line in the diff.
+Use a single review API call with all inline comments grouped together. Only use line-level comments when the finding is genuinely tied to a specific line in the diff. Never post a new inline comment for a finding that already has a thread — reply in it instead (step 1).
 
-**2. Summary comment** — post the overall review (context, what looks good, risk level, human checklist) as a PR review body:
+**3. Summary comment** — maintain exactly one summary per PR, as an issue comment (not a PR review — reviews can't be deleted via the API):
 
 ```
-gh pr review {pr_number} --comment --body "{review summary}"
+# Delete every previous summary found in step 0
+gh api repos/{owner}/{repo}/issues/comments/{comment_id} --method DELETE
+
+gh api repos/{owner}/{repo}/issues/{pr_number}/comments --method POST \
+  --field body="<!-- code-review-summary -->
+{review summary}"
 ```
 
-If there are no line-specific findings, skip step 1 and post only the summary comment.
+On a re-review, the summary includes a "Previous findings" section (resolved / answered / still open) ahead of new concerns. If there are no line-specific findings, skip step 2 and post only the summary.
+
+**Migration note:** summaries posted before this rule existed were PR reviews (via `gh pr review --comment`) and cannot be deleted through the API — leave them; a human may minimize them manually.
