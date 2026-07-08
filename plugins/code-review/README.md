@@ -4,8 +4,9 @@ Outside-in, risk-driven code review skill based on Gregory Brown's *Effective Co
 
 ## What it does
 
-Reviews pull requests in six phases:
+Reviews pull requests in six phases, with a re-review pass when the PR was reviewed before:
 
+0. **Prior Review State** *(re-reviews)* — reads all existing threads, verifies/acknowledges its own prior findings in-thread, never duplicates a concern already raised, and keeps a single summary comment per PR
 1. **Problem Validation** — does the code solve the right problem?
 2. **Build & Runability** — is the build passing, is it running somewhere real?
 3. **Test Audit** — are modified/deleted tests a red flag?
@@ -76,6 +77,11 @@ _General concerns:_
 
 (If none: "No issues found")
 
+**Previous Findings** _(re-reviews only)_
+- Resolved: [finding] — verified fixed in <sha>
+- Answered: [finding] — author response accepted
+- Still open: [finding] — no response yet
+
 **Risk Assessment**
 - **Risk Level:** [Low / Medium / High]
 - **Reasoning:** [Why]
@@ -86,16 +92,41 @@ _General concerns:_
 
 ## Posting Mechanics
 
-### Part 1: Summary
+### Part 0: Prior review state (re-reviews)
 
 \`\`\`bash
-gh pr review <PR_NUMBER> --comment --body "$(cat <<'EOF'
-...output format above...
-EOF
-)"
+# Inline review threads with resolution state; databaseId joins GraphQL to REST ids
+gh api graphql -f query='
+  query($owner:String!, $repo:String!, $pr:Int!) {
+    repository(owner:$owner, name:$repo) {
+      pullRequest(number:$pr) {
+        reviewThreads(first:100) {
+          nodes { id isResolved
+            comments(first:50) { nodes { databaseId author { login } body path line } } } } } } }' \
+  -f owner=${OWNER} -f repo=${REPO} -F pr=${PR_NUMBER}
+
+# Own previous summary: the issue comment starting with the marker
+gh api repos/${OWNER}/${REPO}/issues/${PR_NUMBER}/comments --paginate \
+  --jq '.[] | select(.body | startswith("<!-- code-review-summary -->")) | .id'
 \`\`\`
 
-### Part 2: Inline Comments
+Own inline threads = threads whose root comment body starts with `<!-- code-review-finding -->`. For threads that predate the marker, fall back to matching `author.login` against the account your previous automated reviews were posted from. Note GitHub's GraphQL API reports a bot's login without the `[bot]` suffix that REST uses (e.g. a REST login of `claude[bot]` appears as `claude` via GraphQL) — compare against whichever form the query you're using actually returns, don't hardcode one.
+
+### Part 1: Thread replies and resolution (re-reviews)
+
+\`\`\`bash
+# Reply in an existing thread (COMMENT_ID = databaseId of the thread's root comment, from Part 0)
+gh api repos/${OWNER}/${REPO}/pulls/${PR_NUMBER}/comments/${COMMENT_ID}/replies \
+  --method POST --field body="Verified fixed in ${SHA}."
+
+# Resolve a thread (THREAD_ID = GraphQL thread id from Part 0)
+gh api graphql -f query='
+  mutation($thread:ID!) {
+    resolveReviewThread(input:{threadId:$thread}) { thread { isResolved } } }' \
+  -f thread=${THREAD_ID}
+\`\`\`
+
+### Part 2: Inline comments (new findings only)
 
 \`\`\`bash
 COMMIT_SHA=$(gh pr view <PR_NUMBER> --json headRefOid --jq '.headRefOid')
@@ -106,13 +137,32 @@ gh pr diff <PR_NUMBER>
 jq -n \
   --arg commit_id "$COMMIT_SHA" \
   --arg path "relative/path/to/file.rb" \
-  --arg body "**Concern:** Description and suggestion" \
+  --arg body "<!-- code-review-finding -->
+**Concern:** Description and suggestion" \
   --argjson line 42 \
   '{commit_id: $commit_id, event: "COMMENT", body: "", comments: [{path: $path, line: $line, side: "RIGHT", body: $body}]}' \
 | gh api repos/${REPO}/pulls/${PR_NUMBER}/reviews --method POST --input -
 \`\`\`
 
+### Part 3: Summary — single issue comment per PR
+
+\`\`\`bash
+# Delete every previous summary found in Part 0 (normally just one; a race could leave two)
+gh api repos/${OWNER}/${REPO}/issues/comments/${COMMENT_ID} --method DELETE
+
+# Post the fresh summary as an ISSUE comment — submitted PR reviews cannot be deleted via the API,
+# which is why the summary lives here instead of in a `gh pr review` comment.
+gh api repos/${OWNER}/${REPO}/issues/${PR_NUMBER}/comments --method POST \
+  --field body="$(cat <<'EOF'
+<!-- code-review-summary -->
+...output format above...
+EOF
+)"
+\`\`\`
+
 **Rules:**
+- Never post a new inline comment for a finding that already has a thread — reply in the thread instead (Part 1)
+- Only reply to / resolve threads carrying the `code-review-finding` marker (or matched by the author-login fallback)
 - `event`: Always `"COMMENT"` — never approve or request changes
 - `line`: Must be present in the diff or the API rejects it
 - `side`: Always `"RIGHT"`
@@ -128,6 +178,10 @@ After installing via `/plugin install code-review@agilefreaks-skills`:
 
 ```
 Use the code-review skill to review PR #42
+```
+
+```
+Use the code-review skill to re-review PR #42
 ```
 
 ### Claude.ai Cowork

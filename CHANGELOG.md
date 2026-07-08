@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **code-review** (1.1.0 → 1.2.0) — re-review support. New Phase 0 gathers prior review
+  state before reviewing: all inline threads (human reviewers' included — never duplicates
+  a concern a human already raised) plus the previous automated summary. Own prior findings
+  are classified: fix pushed → verified in the diff, confirmed in-thread and resolved (or
+  left open with what's missing); answered/disputed → acknowledged and resolved (author
+  response is authoritative); still open → never re-posted, reported as "still open". Single
+  summary per PR: the summary is now an issue comment starting with a hidden
+  `<!-- code-review-summary -->` marker; on re-review the previous one is found by marker,
+  deleted, and a fresh summary with a "Previous findings" status section is posted. Inline
+  findings carry a `<!-- code-review-finding -->` marker so own threads are recognized
+  regardless of posting identity (CI bot vs local user). New Setup choice: Re-review Thread
+  Handling (reply + resolve default / reply only / summary only). README posting-mechanics
+  templates and this repo's `.claude/rules/code-review.md` updated with the GitHub mechanics
+  (GraphQL `reviewThreads` + `resolveReviewThread`, in-thread replies, issue-comment summary
+  lifecycle). CI workflow template gains a `concurrency` group to prevent overlapping runs
+  from racing the summary delete-then-post sequence.
+
 ## [1.5.0] - 2026-06-30
 
 ### Changed

@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: "Outside-in, risk-driven code review methodology. Use when reviewing pull requests, evaluating code changes, or conducting code reviews for any change type: bug fixes, new features, add-ons, extensions, and refinements. Also use when asked to assess code quality, review a diff, or provide feedback on proposed changes. Also use when asked to set up, configure, or onboard this skill."
+description: "Outside-in, risk-driven code review methodology. Use when reviewing pull requests, evaluating code changes, or conducting code reviews for any change type: bug fixes, new features, add-ons, extensions, and refinements. Also use when asked to assess code quality, review a diff, or provide feedback on proposed changes. Also use when asked to re-review a pull request or follow up on a previous review. Also use when asked to set up, configure, or onboard this skill."
 ---
 
 # Code Review Skill
@@ -23,6 +23,7 @@ When asked to set up, configure, onboard, or create a rules file for this skill:
    - **Coding Conventions** — project-specific checks beyond the skill's defaults (architecture rules, style rules already enforced by linters)
    - **Output Format** — custom structure for the review output, or use the built-in format
    - **Posting Mechanics** — how to post the review (GitHub PR comment, inline comments, stdout)
+   - **Re-review Thread Handling** — on a re-review, what to do with your own prior finding threads: *Reply and resolve* (default — reply in-thread and resolve threads that are fixed or answered), *Reply only* (reply in-thread but leave resolution to humans), or *Summary only* (never touch prior threads; report their status only in the summary)
    - **CI Integration** — offer to generate a GitHub Actions workflow that runs this review automatically on every PR. Always ask this, even if no `.github/workflows/` directory exists yet — this may be the project's first workflow. Present model choices: *Opus (recommended)* / *Sonnet* / *Skip*. Default: Opus.
 4. Write `.claude/rules/code-review.md` containing only the user's choices. Omit any decision where the user accepts the default — the skill's built-in behavior handles those.
 5. If the user opted in to CI Integration:
@@ -37,6 +38,34 @@ When asked to set up, configure, onboard, or create a rules file for this skill:
 **What to defer to a human (CI Integration):** The user must add the `CLAUDE_CODE_OAUTH_TOKEN` secret and verify that branch protection rules allow the action to post review comments. Setup cannot check or configure those.
 
 If the user accepts all defaults and no choices were made, confirm that no rules file is needed and stop.
+
+---
+
+## Phase 0: Prior Review State (re-reviews)
+
+**Before reviewing, find out what has already been said.**
+
+Gather the existing review conversation on this change:
+- All inline discussion threads, including replies and their resolved/unresolved state — yours and human reviewers' alike.
+- Your own previous review summary, if one exists (identified by its hidden marker — see Phase 6).
+
+If your project defines platform posting mechanics, use them to fetch this state. If no platform mechanics are configured (for example, the review goes to stdout), treat this as a first review and note in the summary that prior review state could not be checked.
+
+If no prior review state exists, this is a first review — proceed to Phase 1 and skip the re-review steps in Phase 6.
+
+**Read every thread; act only on your own.** Human reviewers' threads inform the review — never raise a concern a human reviewer has already raised, whether or not it was answered. Identify your own threads by the hidden marker embedded in each finding you post (see Phase 6), never by the posting account — the account differs between CI and local runs.
+
+For each of your own prior findings, classify it and carry the disposition into the rest of the review:
+
+1. **Fix pushed** — the author changed code in response. Verify the fix in the current diff during the review. Actually fixed: reply in the thread confirming it (for example, "Verified fixed in <revision>") and resolve the thread. Claimed but not fixed: reply explaining what is still missing and leave the thread open.
+2. **Answered** — the author explained or disputed the finding. Their response is authoritative; do not re-raise. Reply acknowledging it and resolve the thread.
+3. **Still open** — no response, no fix. Do not post a duplicate comment. Leave the thread untouched and list it under "Previous findings" in the new summary.
+
+Genuinely new findings from this review are posted as usual in Phase 6.
+
+If your project configures a re-review thread handling mode (see Setup), follow it — some teams reserve thread resolution for humans. The default is reply-and-resolve.
+
+**What to defer to a human:** Adjudicating disputes — when an author pushes back, this skill stands down; if the disputed point still matters, a human reviewer must make the call. Whether an automated reviewer may resolve threads at all is a team convention — humans own it (configure via Setup).
 
 ---
 
@@ -157,6 +186,7 @@ If your project has defined platform-specific posting mechanics (how to post a r
 - Context: what the PR does, what problem it solves
 - What looks good
 - Concerns found (both general and line-level where applicable)
+- On a re-review: a **Previous findings** section listing each of your prior findings with its status — *resolved* (verified fixed), *answered* (author response accepted), or *still open* — before the new concerns. First-time reviews omit this section.
 - Risk level and reasoning
 
 **Produce a human reviewer checklist** that includes only relevant items:
@@ -167,7 +197,9 @@ If your project has defined platform-specific posting mechanics (how to post a r
 
 Omit checklist sections that don't apply to this specific change. A config-only change doesn't need event sourcing verification. A documentation update doesn't need performance testing.
 
-If a project output format is defined, follow it. Otherwise, structure the output clearly with the sections above.
+**Maintain exactly one summary per change.** Post the summary as a standalone comment that begins with a hidden marker (default: `<!-- code-review-summary -->`) and that your platform allows you to later delete. On a re-review: find your previous summary by its marker, delete it, and post the fresh summary — never accumulate summaries. Mark each inline finding the same way (default: `<!-- code-review-finding -->` as the first line of the comment body) so a future re-review can recognize its own threads. On a re-review, also execute the thread dispositions from Phase 0 (in-thread replies and resolutions, per the configured thread handling mode) when posting.
+
+If your project defines posting mechanics, follow them for how to fetch, reply to, resolve, delete, and post comments on your platform. Otherwise, structure the output clearly with the sections above.
 
 ---
 
@@ -182,3 +214,5 @@ If a project output format is defined, follow it. Otherwise, structure the outpu
 4. **Stop on blockers.** A broken build, a change that solves the wrong problem, or a fundamental design concern is a reason to stop and flag, not continue reviewing code that may not survive.
 
 5. **Ask when uncertain.** Pausing a review to ask the author a question is always the right move when something is unclear. These conversations build shared understanding and catch mistaken assumptions before they cause damage.
+
+6. **One conversation per finding.** A finding that already has a thread is continued in that thread — verified, acknowledged, or left open — never re-posted. Accumulating duplicate comments erodes trust in the review.
