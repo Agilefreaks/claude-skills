@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-07-08
+
 ### Changed
 
 - **code-review** (1.1.0 → 1.2.0) — re-review support. New Phase 0 gathers prior review
