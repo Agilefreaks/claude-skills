@@ -47,27 +47,25 @@ Two things matter:
 
 ## Setup
 
-When asked to set up, configure, onboard, or create a rules file for this skill:
+**Setup runs on first use.** If `.claude/rules/memorize-it.md` does not exist yet, the skill is not configured — run Setup **before** doing anything else, including when the user invokes the skill bare (`/memorize-it`) or asks to capture/recall/audit. Do not silently fall back to defaults on an unconfigured project; walk the user through Setup first, then continue with what they asked. Setup also runs on request ("set up", "configure", "onboard").
 
 1. **Read existing project rules first** (`.claude/rules/`, `CLAUDE.md`). Do not duplicate a commit convention, trunk branch name, or issue-linking rule that already exists. If the project already defines a commit format, adapt to it rather than imposing this skill's default.
-2. **Inspect the project** for signals:
+2. **Inspect the project** for signals to *pre-fill* the questions — never to answer them silently:
    - Recent commit history (`git log --oneline -30`) — is there a prevailing subject style? Do subjects already carry an issue key? Do any bodies already carry structured context?
    - Branch naming (`git branch -a`) — does it encode an issue key (e.g. `feat/PROJ-123-...`)?
    - The remote host (`git remote -v`) — GitHub, GitLab, or other — which determines available PR/MR mechanics.
    - A conventional-commits config (`commitlint`, `.commitlintrc*`) or a PR/MR template.
-3. **Present interactive choices** (use a choice dialog per decision, pre-filled from what you detected). **Phrase every question in plain, user-facing language — never expose this skill's internal mode names (e.g. "Capture", "Preserve on merge", "Recall", "Audit") in a question or option label.** Those names orient the agent, not the user.
-   - **Commit convention** — if the history already shows a prevailing style, **summarize what you found in plain language and ask to confirm or adjust**, rather than presenting a bare either/or. For example: *"Your commits already look like `PROJ-123: summary` and carry the ticket key from the branch name — I'll follow that and add the why/what block below the subject. Use it, or adjust?"* If nothing is detected, offer: bracket-key `[key] summary` (default), conventional-commits `type(scope): summary`, or a custom subject rule. The context block is kept either way.
+3. **Confirm every decision with the user — one at a time, no assumptions.** Present each aspect below as its own plain-language choice, pre-filled with what you detected (or the default), and wait for the user to confirm or change it. **Detection is a suggestion, not an answer:** even when a detected value matches the default, still surface it and get an explicit confirmation — never adopt a value silently because it "matches the default." **Phrase every question in plain, user-facing language — never expose this skill's internal mode names (e.g. "Capture", "Preserve on merge", "Recall", "Audit") in a question or option label.**
+   - **Commit convention** — if the history shows a prevailing style, summarize it in plain language and ask to confirm or adjust (e.g. *"Your commits look like `[WEB-123] Summary (#PR)` — keep that subject and add the why/what block below it?"*). If nothing is detected, offer: bracket-key `[key] summary` (default), conventional-commits `type(scope): summary`, or a custom rule. The context block is kept either way.
    - **Issue-key derivation** — from branch name, PR/MR title, a task-management integration, or none.
    - **Required fields** — default `why` + `what` required; `tried`/`next`/`concerns` optional. Offer to add project-specific fields.
-   - **Context block style** — labeled `key: value` lines (default, handles multi-line prose) or native git trailers (`git interpret-trailers`-parseable; unknown keys ignored). See `references/commit-format.md`.
-   - **Squash-message source** — how your host composes a squash commit message: *commit details* (concatenates commit messages — blocks survive automatically) or *PR/MR title + description* (blocks must live in the PR/MR body). This determines the [Preserve on merge](#preserve-on-merge) path. Default: commit details.
-   - **PR/MR mirroring** — off by default. If on (recommended when the squash source is the PR/MR description), record the platform mechanics for reading and updating the PR/MR description (a marker-delimited managed section).
-   - **Audit scope** — the default range to scan (e.g. `<trunk>..HEAD`) and whether the developer wants to be prompted about non-compliant commits proactively.
-4. **Write `.claude/rules/memorize-it.md`** containing only the choices that differ from the defaults. Omit anything left at default — the skill's built-in behavior covers it. Record platform mechanics (PR/MR read/update commands) here when mirroring is enabled, so the skill stays generic.
+   - **Context block style** — labeled `key: value` lines (default) or native git trailers (`git interpret-trailers`-parseable). See `references/commit-format.md`.
+   - **Squash-message source** — how the host composes a squash commit message: *commit details* (concatenates commit messages — blocks survive automatically) or *PR/MR title + description* (blocks must live in the PR/MR body). Determines the [Preserve on merge](#preserve-on-merge) path. Default: commit details.
+   - **PR/MR mirroring** — off by default. If on (recommended when the squash source is the PR/MR description), record the platform mechanics for reading and updating the PR/MR description.
+   - **Audit scope** — the default range to scan (e.g. `<trunk>..HEAD`) and whether to prompt about non-compliant commits proactively.
+4. **Always write `.claude/rules/memorize-it.md`** at the end — even when every decision was left at its default. The file records the confirmed choices (and platform mechanics, when mirroring is on) and, crucially, marks the skill as configured so it is not treated as first-run again. When all defaults were accepted, write a minimal file that says so (e.g. a note that Setup ran and all defaults were confirmed) rather than leaving no file behind.
 
 **What to defer to a human (Setup):** verifying that the chosen squash-message source matches the host's actual repository setting (e.g. GitHub's "Default commit message" for squash merges). The skill records the intended behavior; a human must confirm the host is configured to match.
-
-If the user accepts every default and nothing needs recording, say so and skip writing a rules file.
 
 ---
 

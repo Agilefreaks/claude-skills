@@ -59,11 +59,18 @@ Every decision has a working default, so the skill is useful out of the box and 
 
 ### Setup
 
+Setup runs automatically the first time you use the skill in a project (when no
+`.claude/rules/memorize-it.md` exists yet) — or on request:
+
 ```
 set up memorize-it
 ```
 
-Reads your existing rules, inspects commit history / branch naming / remote host, asks the skill-specific questions, and writes `.claude/rules/memorize-it.md` with only your non-default choices.
+It reads your existing rules, inspects commit history / branch naming / remote host to
+*pre-fill* the questions, then **confirms every decision with you one at a time — no silent
+assumptions, even when a detected value matches the default**. It always writes
+`.claude/rules/memorize-it.md` at the end (recording your confirmed choices, and marking the
+skill as configured so Setup doesn't re-trigger on the next run).
 
 ### Claude Code (terminal)
 
