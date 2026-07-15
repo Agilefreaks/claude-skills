@@ -81,6 +81,8 @@ If the user accepts every default and nothing needs recording, say so and skip w
 4. **Create the commit** with the subject and block as its message.
 5. **Optionally mirror to the PR/MR** — if PR/MR mirroring is enabled, update the marker-delimited managed section of the PR/MR description with a consolidated conclusion for the change as a whole. Follow the platform mechanics from the project rules.
 
+**Authorship stays with the developer.** The commit is the developer's work. Do **not** add AI co-authorship — no `Co-Authored-By:` trailer for Claude, no "Generated with" line, no assistant attribution anywhere in the message. The block records the reasoning behind the change, not the tool that helped write it.
+
 **Where the block belongs when commits get reshaped.** Under a checkpoint-then-curate flow (e.g. `feature-development`'s hand-off, which reshapes many working checkpoints into a few logical commits), do not spend effort memorizing on throwaway checkpoints — write the conclusion on the **final, reshaped commits**. And because most branches squash-merge, the message that ultimately matters is the one that lands on the trunk: ensure the branch's blocks (or the PR/MR description) are compliant *before* the merge, per [Preserve on merge](#preserve-on-merge).
 
 **What to defer to a human:** the factual accuracy of the conclusion. You can record what was decided this session; a human confirms it reflects reality — especially `concerns` and `next`, which commit the team to follow-ups.

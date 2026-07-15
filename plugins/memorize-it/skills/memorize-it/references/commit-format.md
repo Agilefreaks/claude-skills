@@ -72,6 +72,7 @@ Keep required fields minimal; optional fields should be filled only when they ca
 - **`tried` is where the value is.** A diff shows the chosen path; only the commit can record the paths not taken and why.
 - **Be concrete in `concerns`.** "Might have edge cases" helps no one. "Assumes UTC; breaks for non-UTC tenants" is a gift to the next person.
 - **Don't pad.** Leave an optional field out rather than filling it with filler.
+- **No AI attribution.** The commit is the developer's — never add a `Co-Authored-By:` trailer for Claude or a "Generated with" line. The block captures the reasoning, not the tool.
 
 ## Variant: native git trailers
 
