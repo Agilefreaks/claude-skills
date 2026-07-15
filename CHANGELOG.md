@@ -19,9 +19,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   → PR/MR description → individual PR/MR commits. Includes an audit mode that flags commits
   not following the standard and offers to fix unpushed ones (never rewrites published
   history). Generic and companion-rules-driven (`.claude/rules/memorize-it.md`); commit
-  convention, issue-key derivation, block style (delimited block or native git trailers),
-  squash-message source, PR/MR mirroring, and platform mechanics are all configurable with
-  working defaults. Integrates with the `code-review` (recall feeds problem validation) and
+  convention, issue-key derivation, block style (labeled `key: value` lines or native git
+  trailers), squash-message source, PR/MR mirroring, and platform mechanics are all
+  configurable with working defaults. Setup runs on first use, confirms every decision with
+  the user (no silent defaults), and can optionally add a `CLAUDE.md` auto-use nudge and/or
+  generate an enforcement-only `.githooks/commit-msg` hook (off by default) adapted to the
+  chosen convention. Integrates with the `code-review` (recall feeds problem validation) and
   `feature-development` (capture at hand-off) skills. Commits stay authored by the developer —
   the skill adds no AI co-authorship (`Co-Authored-By`/"Generated with") to captured commits.
   Bumps marketplace `metadata.version` 1.6.0 → 1.7.0 (new plugin).

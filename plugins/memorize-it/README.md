@@ -72,10 +72,18 @@ assumptions, even when a detected value matches the default**. It always writes
 `.claude/rules/memorize-it.md` at the end (recording your confirmed choices, and marking the
 skill as configured so Setup doesn't re-trigger on the next run).
 
-Because the skill installs **no git hooks**, Setup also offers (recommended) to add a one-line
+By default the skill installs **no git hooks**, so Setup offers (recommended) to add a one-line
 nudge to your project's `CLAUDE.md` so the convention is in front of Claude every session and
 it reaches for the skill automatically when you commit — without a hard hook that could block
 commits. Decline it and the skill still works whenever you invoke it explicitly.
+
+If you *do* want a hard local gate, Setup can also generate an **enforcement hook** (off by
+default): a `.githooks/commit-msg` script that rejects a local commit whose subject doesn't
+match your convention or whose body is missing a required field (`why`/`what`). It's
+enforcement-only — it never rewrites messages — and it guards local commits only (a web-UI
+squash-merge composes the message server-side, where the hook can't run). Setup adapts the
+bundled `assets/commit-msg` template to your confirmed convention and sets `core.hooksPath`,
+integrating with any existing hook manager rather than overwriting it.
 
 ### Claude Code (terminal)
 

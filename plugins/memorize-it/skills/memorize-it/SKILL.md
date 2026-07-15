@@ -63,17 +63,22 @@ Two things matter:
    - **Squash-message source** — how the host composes a squash commit message: *commit details* (concatenates commit messages — blocks survive automatically) or *PR/MR title + description* (blocks must live in the PR/MR body). Determines the [Preserve on merge](#preserve-on-merge) path. Default: commit details.
    - **PR/MR mirroring** — off by default. If on (recommended when the squash source is the PR/MR description), record the platform mechanics for reading and updating the PR/MR description.
    - **Audit scope** — the default range to scan (e.g. `<trunk>..HEAD`) and whether to prompt about non-compliant commits proactively.
-   - **Auto-use nudge** — this skill installs no hooks, so on its own it only fires when the model recognizes a trigger. Offer (recommended, default yes) to add a one-line nudge to the project's `CLAUDE.md` so the convention is in front of Claude every session and it reaches for the skill when committing. Ask before writing to `CLAUDE.md`; if the user declines, the skill still works when invoked explicitly ("memorize it").
-4. **Write the config, and the nudge if accepted:**
+   - **Auto-use nudge** — this skill installs no hooks by default, so on its own it only fires when the model recognizes a trigger. Offer (recommended, default yes) to add a one-line nudge to the project's `CLAUDE.md` so the convention is in front of Claude every session and it reaches for the skill when committing. Ask before writing to `CLAUDE.md`; if the user declines, the skill still works when invoked explicitly ("memorize it").
+   - **Enforcement hook** *(optional, off by default)* — offer to generate a `commit-msg` git hook under `.githooks/` that **enforces** the standard on local commits (rejects a commit whose subject doesn't match the convention or whose body is missing a required field). Enforcement only — it never rewrites messages. Off by default because it can interrupt flow; recommend it only to teams that want a hard local gate. Be clear about its limitation before the user opts in (see the deferral note).
+4. **Write the config, then the nudge and hook if accepted:**
    a. **Always write `.claude/rules/memorize-it.md`** — even when every decision was left at its default. The file records the confirmed choices (and platform mechanics, when mirroring is on) and, crucially, marks the skill as configured so it is not treated as first-run again. When all defaults were accepted, write a minimal file that says so (e.g. a note that Setup ran and all defaults were confirmed) rather than leaving no file behind.
    b. **If the auto-use nudge was accepted,** add a concise line to the project's `CLAUDE.md` (create the file if absent), for example:
       > When making a commit, use the `memorize-it` skill to record the session conclusion (why / what, plus tried / next / concerns where relevant) in the commit message, following `.claude/rules/memorize-it.md`.
 
       Be idempotent — check for an existing memorize-it nudge first and don't duplicate it.
+   c. **If the enforcement hook was accepted:**
+      - Copy `assets/commit-msg` (bundled with this skill) to `.githooks/commit-msg`, adapting its CONFIG block to the confirmed choices — set `SUBJECT_REGEX` to match the chosen commit convention and `REQUIRED_FIELDS` to the chosen required fields. Make it executable (`chmod +x .githooks/commit-msg`).
+      - Point git at the directory: `git config core.hooksPath .githooks`. **First check whether the project already manages hooks** (an existing `core.hooksPath`, a `.husky/` directory, or existing `.githooks/` scripts). If so, do **not** overwrite or repoint — integrate the `commit-msg` check into the existing setup, or hand the integration to the user. Never clobber another tool's hook wiring.
 
 **What to defer to a human (Setup):**
 - Verifying that the chosen squash-message source matches the host's actual repository setting (e.g. GitHub's "Default commit message" for squash merges). The skill records the intended behavior; a human must confirm the host is configured to match.
-- The nudge is advisory, not enforcement: it raises the odds Claude uses the skill but does not guarantee it on every commit (only a git hook would, and this skill installs none by design). Editing `CLAUDE.md` requires the user's go-ahead.
+- The nudge is advisory, not enforcement: it raises the odds Claude uses the skill but does not guarantee it on every commit. Editing `CLAUDE.md` requires the user's go-ahead.
+- The enforcement hook guards **local** commits only. A squash-merge performed in a host's web UI composes the message server-side, where the hook does not run — so it cannot guarantee the message that lands on the trunk. Also, `core.hooksPath` is repo-wide: if the project already uses a hook manager, integrating (not overwriting) is a human decision.
 
 ---
 
@@ -177,6 +182,7 @@ Every one has a working default, so the skill is useful out of the box and riche
 | Trunk branch | the repository's default branch |
 | Audit scope | `<trunk>..HEAD`, on request |
 | Auto-use nudge in `CLAUDE.md` | offered during Setup (recommended on) |
+| Enforcement hook (`.githooks/commit-msg`) | offered during Setup (off by default) |
 
 ---
 
