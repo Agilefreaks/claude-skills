@@ -7,7 +7,7 @@
   },
   "metadata": {
     "description": "Internal AgileFreaks skills library for Claude Code and Claude.ai Cowork.",
-    "version": "1.6.0",
+    "version": "1.7.0",
     "pluginRoot": "./plugins"
   },
   "plugins": [
@@ -76,6 +76,17 @@
       },
       "category": "productivity",
       "keywords": ["code-quality", "linting", "formatting", "git-hooks", "oxlint", "oxfmt", "husky", "lint-staged", "knip", "typescript", "tooling"]
+    },
+    {
+      "name": "memorize-it",
+      "source": "./plugins/memorize-it",
+      "description": "Captures the conclusion of prompting/working sessions as structured context in git commits (why, what, tried, next, concerns) and recalls it later so future sessions and reviewers understand why decisions were made. Squash-and-merge aware, with tiered recall across the commit body, PR/MR description, and individual PR commits. Integrates with the code-review and feature-development skills.",
+      "version": "0.1.0",
+      "author": {
+        "name": "AgileFreaks"
+      },
+      "category": "productivity",
+      "keywords": ["commit-context", "decision-log", "prompt-journal", "recall", "git", "squash-and-merge", "code-review", "memory"]
     }
   ]
 }

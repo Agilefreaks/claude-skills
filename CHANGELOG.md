@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **memorize-it** (0.1.0) — new plugin. Captures the conclusion of a prompting/working
+  session as structured context in git commits — an issue-keyed subject plus a block of
+  labeled `key: value` lines with `why`/`what` (required) and `tried`/`next`/`concerns`
+  (optional, extensible) — and recalls it later so future sessions and reviewers understand
+  why decisions were made. Squash-and-merge aware: per-commit blocks survive onto the trunk
+  (via commit-message concatenation or a mirrored PR/MR description, depending on the host's
+  squash-message source), and recall is tiered with a guaranteed fallback — local commit body
+  → PR/MR description → individual PR/MR commits. Includes an audit mode that flags commits
+  not following the standard and offers to fix unpushed ones (never rewrites published
+  history). Generic and companion-rules-driven (`.claude/rules/memorize-it.md`); commit
+  convention, issue-key derivation, block style (delimited block or native git trailers),
+  squash-message source, PR/MR mirroring, and platform mechanics are all configurable with
+  working defaults. Integrates with the `code-review` (recall feeds problem validation) and
+  `feature-development` (capture at hand-off) skills. Bumps marketplace `metadata.version`
+  1.6.0 → 1.7.0 (new plugin).
+
 ## [1.6.0] - 2026-07-08
 
 ### Changed

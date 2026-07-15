@@ -1,0 +1,9 @@
+{
+  "name": "memorize-it",
+  "description": "Capture the conclusion of a prompting/working session as structured context in git commits (why, what, tried, next, concerns) and recall it later so future sessions and reviewers understand why decisions were made. Squash-and-merge aware, with tiered recall (commit body → PR/MR description → individual PR commits). Commit convention, issue-key derivation, and platform mechanics are configured via a companion rules file in your project.",
+  "version": "0.1.0",
+  "author": {
+    "name": "AgileFreaks"
+  },
+  "keywords": ["commit-context", "decision-log", "prompt-journal", "recall", "git", "squash-and-merge", "code-review", "memory"]
+}
