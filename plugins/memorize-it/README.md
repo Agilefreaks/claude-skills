@@ -85,6 +85,15 @@ squash-merge composes the message server-side, where the hook can't run). Setup 
 bundled `assets/commit-msg` template to your confirmed convention and sets `core.hooksPath`,
 integrating with any existing hook manager rather than overwriting it.
 
+To guard **everything that reaches the trunk** — including on cloud hosts where local hooks
+can't help — Setup can generate a **CI enforcement** workflow (off by default): a deterministic
+PR check (no Claude token needed) that validates either every commit the PR adds or the PR
+title + description (matching your squash-message source). Made a **required status check** in
+branch protection, it blocks non-compliant PRs from merging. Setup adapts the bundled
+`assets/commit-lint.yml` for GitHub Actions and describes the GitLab CI equivalent. For an
+absolute server-side gate on every push, pair it with a GitHub Enterprise pre-receive hook or
+a GitLab push rule where available.
+
 ### Claude Code (terminal)
 
 After installing via `/plugin install memorize-it@agilefreaks-skills`:

@@ -65,6 +65,7 @@ Two things matter:
    - **Audit scope** — the default range to scan (e.g. `<trunk>..HEAD`) and whether to prompt about non-compliant commits proactively.
    - **Auto-use nudge** — this skill installs no hooks by default, so on its own it only fires when the model recognizes a trigger. Offer (recommended, default yes) to add a one-line nudge to the project's `CLAUDE.md` so the convention is in front of Claude every session and it reaches for the skill when committing. Ask before writing to `CLAUDE.md`; if the user declines, the skill still works when invoked explicitly ("memorize it").
    - **Enforcement hook** *(optional, off by default)* — offer to generate a `commit-msg` git hook under `.githooks/` that **enforces** the standard on local commits (rejects a commit whose subject doesn't match the convention or whose body is missing a required field). Enforcement only — it never rewrites messages. Off by default because it can interrupt flow; recommend it only to teams that want a hard local gate. Be clear about its limitation before the user opts in (see the deferral note).
+   - **CI enforcement** *(optional, off by default)* — a local hook only guards the clone it's in; the trunk's squash message is composed server-side. Offer to generate a CI workflow that validates messages on every PR so that, made a **required status check**, a non-compliant PR cannot merge — the way to guard everything reaching the trunk on any host, cloud included. Off by default. Only meaningful if the project uses CI.
 4. **Write the config, then the nudge and hook if accepted:**
    a. **Always write `.claude/rules/memorize-it.md`** — even when every decision was left at its default. The file records the confirmed choices (and platform mechanics, when mirroring is on) and, crucially, marks the skill as configured so it is not treated as first-run again. When all defaults were accepted, write a minimal file that says so (e.g. a note that Setup ran and all defaults were confirmed) rather than leaving no file behind.
    b. **If the auto-use nudge was accepted,** add a concise line to the project's `CLAUDE.md` (create the file if absent), for example:
@@ -74,11 +75,16 @@ Two things matter:
    c. **If the enforcement hook was accepted:**
       - Copy `assets/commit-msg` (bundled with this skill) to `.githooks/commit-msg`, adapting its CONFIG block to the confirmed choices — set `SUBJECT_REGEX` to match the chosen commit convention and `REQUIRED_FIELDS` to the chosen required fields. Make it executable (`chmod +x .githooks/commit-msg`).
       - Point git at the directory: `git config core.hooksPath .githooks`. **First check whether the project already manages hooks** (an existing `core.hooksPath`, a `.husky/` directory, or existing `.githooks/` scripts). If so, do **not** overwrite or repoint — integrate the `commit-msg` check into the existing setup, or hand the integration to the user. Never clobber another tool's hook wiring.
+   d. **If CI enforcement was accepted:**
+      - For a GitHub Actions project, copy `assets/commit-lint.yml` (bundled with this skill) to `.github/workflows/memorize-it-commit-lint.yml`, adapting its CONFIG block: `SUBJECT_REGEX` and `REQUIRED_FIELDS` to the confirmed choices, and `CHECK_MODE` to the squash-message source — `commits` when the host concatenates commit messages, `pr` when it composes from the PR title + description. If a workflow of that name already exists, show a diff and confirm before overwriting.
+      - For other CI systems (e.g. GitLab CI), don't force the GitHub template — describe the equivalent job (run the same subject/field checks over the MR's commits or title/description) and let the user place it in their pipeline.
+      - Tell the user the two human steps CI enforcement needs: make the check a **required status check** in branch protection, and (where the platform supports it, e.g. GitHub Enterprise pre-receive hooks or GitLab push rules) add a server-side commit-message rule for a hard gate on all pushes.
 
 **What to defer to a human (Setup):**
 - Verifying that the chosen squash-message source matches the host's actual repository setting (e.g. GitHub's "Default commit message" for squash merges). The skill records the intended behavior; a human must confirm the host is configured to match.
 - The nudge is advisory, not enforcement: it raises the odds Claude uses the skill but does not guarantee it on every commit. Editing `CLAUDE.md` requires the user's go-ahead.
 - The enforcement hook guards **local** commits only. A squash-merge performed in a host's web UI composes the message server-side, where the hook does not run — so it cannot guarantee the message that lands on the trunk. Also, `core.hooksPath` is repo-wide: if the project already uses a hook manager, integrating (not overwriting) is a human decision.
+- CI enforcement only bites once it is a **required status check** — Setup generates the workflow but cannot configure branch protection; a human must mark the check required. Even then, on cloud hosts the person merging can hand-edit the squash message textbox at merge time, which no CI check sees; closing that fully needs a server-side rule (GitHub Enterprise pre-receive hook / GitLab push rule) that only some platforms offer.
 
 ---
 
@@ -183,6 +189,7 @@ Every one has a working default, so the skill is useful out of the box and riche
 | Audit scope | `<trunk>..HEAD`, on request |
 | Auto-use nudge in `CLAUDE.md` | offered during Setup (recommended on) |
 | Enforcement hook (`.githooks/commit-msg`) | offered during Setup (off by default) |
+| CI enforcement (PR commit lint) | offered during Setup (off by default) |
 
 ---
 
