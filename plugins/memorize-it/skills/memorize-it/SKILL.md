@@ -63,9 +63,17 @@ Two things matter:
    - **Squash-message source** — how the host composes a squash commit message: *commit details* (concatenates commit messages — blocks survive automatically) or *PR/MR title + description* (blocks must live in the PR/MR body). Determines the [Preserve on merge](#preserve-on-merge) path. Default: commit details.
    - **PR/MR mirroring** — off by default. If on (recommended when the squash source is the PR/MR description), record the platform mechanics for reading and updating the PR/MR description.
    - **Audit scope** — the default range to scan (e.g. `<trunk>..HEAD`) and whether to prompt about non-compliant commits proactively.
-4. **Always write `.claude/rules/memorize-it.md`** at the end — even when every decision was left at its default. The file records the confirmed choices (and platform mechanics, when mirroring is on) and, crucially, marks the skill as configured so it is not treated as first-run again. When all defaults were accepted, write a minimal file that says so (e.g. a note that Setup ran and all defaults were confirmed) rather than leaving no file behind.
+   - **Auto-use nudge** — this skill installs no hooks, so on its own it only fires when the model recognizes a trigger. Offer (recommended, default yes) to add a one-line nudge to the project's `CLAUDE.md` so the convention is in front of Claude every session and it reaches for the skill when committing. Ask before writing to `CLAUDE.md`; if the user declines, the skill still works when invoked explicitly ("memorize it").
+4. **Write the config, and the nudge if accepted:**
+   a. **Always write `.claude/rules/memorize-it.md`** — even when every decision was left at its default. The file records the confirmed choices (and platform mechanics, when mirroring is on) and, crucially, marks the skill as configured so it is not treated as first-run again. When all defaults were accepted, write a minimal file that says so (e.g. a note that Setup ran and all defaults were confirmed) rather than leaving no file behind.
+   b. **If the auto-use nudge was accepted,** add a concise line to the project's `CLAUDE.md` (create the file if absent), for example:
+      > When making a commit, use the `memorize-it` skill to record the session conclusion (why / what, plus tried / next / concerns where relevant) in the commit message, following `.claude/rules/memorize-it.md`.
 
-**What to defer to a human (Setup):** verifying that the chosen squash-message source matches the host's actual repository setting (e.g. GitHub's "Default commit message" for squash merges). The skill records the intended behavior; a human must confirm the host is configured to match.
+      Be idempotent — check for an existing memorize-it nudge first and don't duplicate it.
+
+**What to defer to a human (Setup):**
+- Verifying that the chosen squash-message source matches the host's actual repository setting (e.g. GitHub's "Default commit message" for squash merges). The skill records the intended behavior; a human must confirm the host is configured to match.
+- The nudge is advisory, not enforcement: it raises the odds Claude uses the skill but does not guarantee it on every commit (only a git hook would, and this skill installs none by design). Editing `CLAUDE.md` requires the user's go-ahead.
 
 ---
 
@@ -168,6 +176,7 @@ Every one has a working default, so the skill is useful out of the box and riche
 | Platform mechanics (read/update PR/MR) | none — required only if mirroring is on |
 | Trunk branch | the repository's default branch |
 | Audit scope | `<trunk>..HEAD`, on request |
+| Auto-use nudge in `CLAUDE.md` | offered during Setup (recommended on) |
 
 ---
 

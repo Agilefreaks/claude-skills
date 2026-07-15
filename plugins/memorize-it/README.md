@@ -72,6 +72,11 @@ assumptions, even when a detected value matches the default**. It always writes
 `.claude/rules/memorize-it.md` at the end (recording your confirmed choices, and marking the
 skill as configured so Setup doesn't re-trigger on the next run).
 
+Because the skill installs **no git hooks**, Setup also offers (recommended) to add a one-line
+nudge to your project's `CLAUDE.md` so the convention is in front of Claude every session and
+it reaches for the skill automatically when you commit — without a hard hook that could block
+commits. Decline it and the skill still works whenever you invoke it explicitly.
+
 ### Claude Code (terminal)
 
 After installing via `/plugin install memorize-it@agilefreaks-skills`:
