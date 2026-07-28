@@ -7,6 +7,7 @@ Conventions used below: `<trunk>` is the default branch (e.g. `main`); `<key>` i
 ## Contents
 
 - [Capture](#capture)
+- [PR/MR description](#prmr-description)
 - [Preserve on merge](#preserve-on-merge)
 - [Recall (tiered)](#recall-tiered)
 - [Audit](#audit)
@@ -31,10 +32,53 @@ Check that a message carries the labeled block (the required labels are present)
 git log -1 --format=%B | grep -iE '^(why|what|tried|next|concerns):'
 ```
 
+Sweep a composed message (or a PR/MR body) for what must never land — credential-shaped values, one developer's local setup, conversational residue, and attribution footers:
+
+```sh
+# Credential-shaped values — a hit here means rotate, not just reword:
+SECRETS='(AKIA|ASIA)[0-9A-Z]{16}|gh[pousr]_[A-Za-z0-9]{16,}|xox[baprs]-[0-9A-Za-z-]{10,}|sk-[A-Za-z0-9]{20,}|AIza[0-9A-Za-z_-]{20,}|BEGIN [A-Z ]*PRIVATE KEY|(pass(word|wd)?|secret|token|api[_-]?key)[[:space:]]*[:=][[:space:]]*.?[A-Za-z0-9+/=_-]{12,}'
+
+# One developer's setup, and conversational residue:
+PAT='co-authored-by:.*(claude|copilot|cursor|codex)|generated with|/(Users|home)/|\.git/info/exclude|\.env|worktree|say the word|let me know|want me to|(^|[^[:alpha:]])I |\byou\b'
+
+git log -1 --format=%B | grep -niE -- "$SECRETS|$PAT"
+
+# Same sweep over a PR/MR body:
+gh pr view <number> --json body --jq .body | grep -niE -- "$SECRETS|$PAT"
+```
+
+Hits are candidates, not verdicts — `you` inside a quoted error message is fine, a stray `I see no hazard` is not. Read each hit and decide. Nothing matching is the expected state.
+
+A `$SECRETS` hit is the one exception: treat it as real until proven otherwise. If the value ever reached a pushed commit or a PR/MR body, rewriting the message does **not** contain it — say so and get it rotated.
+
 Trailer variant — read a single field across history:
 
 ```sh
 git log --format='%H %(trailers:key=Why,valueonly)'
+```
+
+## PR/MR description
+
+Read the branch's blocks to consolidate them into one description (see `pr-description.md` for what to lift from where):
+
+```sh
+git log --reverse --format='--- %h %s%n%b' <trunk>..HEAD
+```
+
+Read and replace a description (GitHub shapes; GitLab equivalents use `glab mr`, recorded in project rules when the host is GitLab):
+
+```sh
+gh pr view <number> --json title,body --jq .body > <file>
+
+# Edit <file>, then replace the whole body — never append an edit log:
+gh pr edit <number> --body-file <file>
+```
+
+Detect a project template before writing a description for the first time:
+
+```sh
+ls .github/PULL_REQUEST_TEMPLATE.md .github/pull_request_template.md \
+   .github/PULL_REQUEST_TEMPLATE/ .gitlab/merge_request_templates/ 2>/dev/null
 ```
 
 ## Preserve on merge
@@ -98,7 +142,8 @@ For each commit, flag it when:
 
 - the subject does not match the configured convention (default: starts with `[<key>]`), or
 - the body carries no labeled block (no `why:`/`what:`/… lines; or no recognized trailers, in the trailer variant), or
-- a required field label (`why`, `what` by default) is absent from the block.
+- a required field label (`why`, `what` by default) is absent from the block, or
+- the body carries an assistant-attribution footer, machine-local detail, or conversational residue — use the sweep under [Capture](#capture).
 
 Report the list with what each is missing, then offer fixes:
 

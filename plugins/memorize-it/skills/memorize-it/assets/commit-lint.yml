@@ -51,6 +51,12 @@ jobs:
           SUBJECT_REGEX='^\[[A-Za-z]*-?[0-9]+\] .+'
           # Required body field labels (space-separated), matched as "^label:".
           REQUIRED_FIELDS='why what'
+          # Assistant-attribution footers the standard forbids. Set to '' to disable.
+          ATTRIBUTION_REGEX='Co-Authored-By:.*(Claude|Copilot|Cursor|Codex)|Generated with .*(Claude|Copilot|Cursor|Codex)'
+          # Secret-shaped values that must never enter permanent history. Set to '' to disable.
+          SECRET_REGEX='(AKIA|ASIA)[0-9A-Z]{16}|gh[pousr]_[A-Za-z0-9]{16,}|xox[baprs]-[0-9A-Za-z-]{10,}|sk-[A-Za-z0-9]{20,}|AIza[0-9A-Za-z_-]{20,}|eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}|BEGIN [A-Z ]*PRIVATE KEY|(pass(word|wd)?|secret|token|api[_-]?key|access[_-]?key)[[:space:]]*[:=][[:space:]]*.?[A-Za-z0-9+/=_-]{12,}'
+          # One developer's local setup, which is never project context. Set to '' to disable.
+          LOCAL_REGEX='/(Users|home)/[A-Za-z0-9._-]+/|\.git/info/exclude|(^|[^A-Za-z])\.env($|[^A-Za-z])'
           # "commits" or "pr" — see the header comment.
           CHECK_MODE='commits'
           # --------------------------------------------------------------------------
@@ -68,11 +74,25 @@ jobs:
                 || say "$2 is missing a '$field:' line"
             done
           }
+          check_pattern() {
+            # $1 body, $2 label, $3 regex, $4 message
+            [ -n "$3" ] || return 0
+            printf '%s\n' "$1" | grep -Eiq -- "$3" && say "$2 $4" || true
+          }
+          check_content() {
+            check_pattern "$1" "$2" "$ATTRIBUTION_REGEX" \
+              "carries an assistant-attribution footer — commits stay authored by the developer"
+            check_pattern "$1" "$2" "$SECRET_REGEX" \
+              "looks like it contains a credential — remove it, and rotate it if it is real"
+            check_pattern "$1" "$2" "$LOCAL_REGEX" \
+              "references a local path or local-only setup — describe the project, not one machine"
+          }
 
           case "$CHECK_MODE" in
             pr)
               check_subject "$PR_TITLE"
               check_fields "$PR_BODY" "PR description"
+              check_content "$PR_BODY" "PR description"
               ;;
             *)
               for sha in $(git rev-list "$BASE_SHA".."$HEAD_SHA"); do
@@ -83,6 +103,7 @@ jobs:
                 esac
                 check_subject "$subject"
                 check_fields "$body" "commit ${sha} body"
+                check_content "$body" "commit ${sha} body"
               done
               ;;
           esac

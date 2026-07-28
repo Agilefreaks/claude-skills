@@ -68,11 +68,25 @@ Keep required fields minimal; optional fields should be filled only when they ca
 
 ## Writing good conclusions
 
-- **Write for a reader with no memory of the session.** Not for `git blame`, not for a changelog.
+- **Write for a reader with no memory of the session** — and no access to the machine it ran on. Not for `git blame`, not for a changelog.
 - **`tried` is where the value is.** A diff shows the chosen path; only the commit can record the paths not taken and why.
 - **Be concrete in `concerns`.** "Might have edge cases" helps no one. "Assumes UTC; breaks for non-UTC tenants" is a gift to the next person.
 - **Don't pad.** Leave an optional field out rather than filling it with filler.
-- **No AI attribution.** The commit is the developer's — never add a `Co-Authored-By:` trailer for Claude or a "Generated with" line. The block captures the reasoning, not the tool.
+- **No AI attribution.** The commit is the developer's — never add a `Co-Authored-By:` trailer for Claude or a "Generated with" line, in the commit or in the PR/MR description. The block captures the reasoning, not the tool. A general instruction elsewhere may default to adding those footers; for these messages this rule wins, and the composed message should be re-read to confirm nothing was appended.
+- **No secrets, ever.** No passwords, tokens, keys, connection strings, customer or personal data, or identifiers a project treats as sensitive. Commit messages and PR/MR bodies are permanent and world-readable within the repo, and they propagate to forks, CI logs, and host APIs — a leaked value has to be **rotated**, not just edited out. Name a credential's location, never its value, and check even the location against the project's rules.
+- **Nothing machine-local.** No ignore-file entries, local hook or `git config` state, sibling worktrees, other clones, or absolute home-directory paths. None of it exists for the next reader, and mentioning it implies an action they can't take.
+- **State the system, not your access.** A verification you couldn't perform is worth recording as a property of the change; *why you personally couldn't perform it* is not.
+
+  ```
+  ✗ next: staging was never verified — its admin password isn't in the env's
+    vars file, so I couldn't read it.
+  ✓ next: apply in envs/staging — it carries the same defaults as prod did and
+    can reorder the same way. Prod is applied and verified; staging is not.
+  ```
+
+- **A conclusion, not a transcript.** No offers ("say the word if you want a CI gate"), no questions, no first person, nothing addressing the reader. Those belong in the chat that produced the change, not in the record of it. State what the change is and what is true about it: *"the convention is advisory — no hook, no CI lint, so nothing rejects a non-compliant message."*
+- **A standing rule goes to the project's living docs, phrased forward.** The commit keeps the incident; the conventions file gets the instruction that follows from it ("set X explicitly on anything you add"), not the retelling ("X was left at the default and prod scrambled"). A gotcha written as history gives the next contributor nothing to act on.
+- **The test for every line:** would it still be true, and still actionable, for someone reading this in a fresh clone? If not, cut it. A quick mechanical sweep for all of the above is in `git-recipes.md`.
 
 ## Variant: native git trailers
 
