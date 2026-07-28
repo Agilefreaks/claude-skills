@@ -109,4 +109,8 @@ Include "set up", "configure", and "onboard" in the frontmatter `description` so
 
 ## Versioning
 
-Skills are versioned via `plugin.json` and the marketplace entry. When updating a skill's behavior materially, bump the version. Document the change in `CHANGELOG.md`.
+Skills are versioned via `plugin.json` and the marketplace entry.
+
+**Any change to a skill's shipped content requires a version bump** — SKILL.md, anything under `references/`, `scripts/` or `assets/`. This is mechanical, not a judgment call: the plugin cache is keyed by version, so `plugin update` on an unbumped edit reports "already at the latest version" and keeps serving the old snapshot. An unbumped change is invisible to every installed copy, however material it is.
+
+Bump `plugin.json` and the marketplace entry together (see `marketplace.md`), and document the change in `CHANGELOG.md`.

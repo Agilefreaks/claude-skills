@@ -1,0 +1,9 @@
+{
+  "name": "memorize-it",
+  "description": "Captures a working session's conclusion (why, what, tried, next, concerns) into the commit and the PR/MR description, and recalls it later so future sessions and reviewers know why decisions were made. Squash-and-merge aware, written at project altitude: no secrets, nothing from one developer's setup.",
+  "version": "0.3.0",
+  "author": {
+    "name": "AgileFreaks"
+  },
+  "keywords": ["commit-context", "decision-log", "prompt-journal", "recall", "git", "squash-and-merge", "code-review", "memory"]
+}

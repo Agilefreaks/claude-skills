@@ -7,6 +7,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **memorize-it** (0.3.0) — new plugin. Captures a working session's conclusion as structured
+  context in git commits and PR/MR descriptions, and recalls it later so future sessions and
+  reviewers know why decisions were made.
+- **The commit standard** — an issue-keyed subject plus a block of labeled `key: value` lines:
+  `why`/`what` required, `tried`/`next`/`concerns` optional and extensible. No delimiters — the
+  labels are the structure, so blocks stay readable after a squash concatenates them.
+- **The PR/MR description standard** — `Why` / `What` / `Limits of this change`, filled into the
+  project's own PR template where one exists, with the title held to the commit convention
+  because a description-sourced squash makes it the trunk subject.
+- **Craft rules for both** — subject names the change not the area, `what` names decisions not
+  files, length proportional to the change, one logical change per commit, fixed field order,
+  verification stated precisely.
+- **Project-altitude content rules** — no secrets or sensitive values (a leaked one needs
+  rotation, not a reword), nothing from one developer's setup (local ignore/hook state, untracked
+  `.env`, home-directory paths, sibling worktrees), no first-person access limits, and no
+  conversational residue. Commits stay authored by the developer: no `Co-Authored-By`/"Generated
+  with" in the commit or the description.
+- **Squash-and-merge survival** — per-commit blocks concatenate onto the trunk, or a mirrored
+  block lives in the description when the host composes the squash message from it. Mirroring is
+  a prerequisite for that squash source, not a suggestion.
+- **Tiered recall with a guaranteed fallback** — local commit body → PR/MR description →
+  individual PR/MR commits.
+- **Audit mode** — flags commits and descriptions missing the subject key, a required field, or
+  carrying secrets, attribution, machine-local detail or residue; offers to fix unpushed ones and
+  never rewrites published history.
+- **Setup runs on first use**, confirms every decision (no silent defaults), and **commits what it
+  writes** — the rules file, `CLAUDE.md` nudge, hook and CI workflow are shared project config,
+  never git-ignored or local-only. An existing rules file that is untracked or ignored is treated
+  as half-configured.
+- **Optional enforcement, off by default** — an enforcement-only `.githooks/commit-msg` hook and a
+  deterministic CI commit-lint workflow (no Claude token), both adapted to the confirmed
+  convention. Made a required status check, the CI job guards every PR merging to the trunk.
+- Configurable with working defaults via `.claude/rules/memorize-it.md`: commit convention,
+  issue-key derivation (and what to do when no key exists), block style (labeled lines or native
+  git trailers), squash-message source, description structure, mirroring, and platform mechanics.
+- Integrates with the `code-review` (recall feeds problem validation) and `feature-development`
+  (capture at hand-off) skills.
+- Bumps marketplace `metadata.version` 1.6.0 → 1.7.0 (new plugin).
+
+### Changed
+
+- **Skill versioning is now mechanical** ([`.claude/rules/skill-authoring.md`](.claude/rules/skill-authoring.md),
+  [`.claude/rules/marketplace.md`](.claude/rules/marketplace.md)) — any change to a skill's shipped
+  content requires a version bump, replacing the "materially" judgment call. The plugin cache is
+  keyed by version, so an unbumped edit is invisible to every installed copy.
+
 ## [1.6.0] - 2026-07-08
 
 ### Changed
