@@ -37,7 +37,9 @@ When updating a plugin:
 1. Bump the version in `plugins/<name>/.claude-plugin/plugin.json`
 2. Bump the matching version in the plugin's entry in `.claude-plugin/marketplace.json`
 
-Both must always be in sync. The marketplace `metadata.version` is bumped separately when the marketplace itself changes (new plugins, structural changes).
+Both must always be in sync. Every change to a plugin's shipped content needs one — the plugin cache is keyed by version, so an unbumped edit never reaches an installed copy (see `skill-authoring.md`).
+
+The marketplace `metadata.version` is bumped separately when the marketplace itself changes (new plugins, structural changes). It matters for delivery too: a client holding the cached manifest resolves the plugin version from it, so a plugin bump can go unnoticed if the marketplace version doesn't move with it.
 
 ## CHANGELOG.md
 

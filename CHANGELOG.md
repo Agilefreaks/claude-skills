@@ -9,45 +9,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **memorize-it** (0.2.0) — new plugin. Captures the conclusion of a prompting/working
-  session as structured context in git commits — an issue-keyed subject plus a block of
-  labeled `key: value` lines with `why`/`what` (required) and `tried`/`next`/`concerns`
-  (optional, extensible) — and recalls it later so future sessions and reviewers understand
-  why decisions were made. Squash-and-merge aware: per-commit blocks survive onto the trunk
-  (via commit-message concatenation or a mirrored PR/MR description, depending on the host's
-  squash-message source), and recall is tiered with a guaranteed fallback — local commit body
-  → PR/MR description → individual PR/MR commits. Ships a standard for the **PR/MR description**
-  as well as the commit — `Why` / `What` / `Limits of this change`, filled into the project's own
-  PR template where one exists, with the title held to the commit convention because a
-  description-sourced squash makes it the trunk subject — plus the craft rules that decide
-  whether either gets read (subject names the change not the area, `what` names decisions not
+- **memorize-it** (0.3.0) — new plugin. Captures a working session's conclusion as structured
+  context in git commits and PR/MR descriptions, and recalls it later so future sessions and
+  reviewers know why decisions were made.
+- **The commit standard** — an issue-keyed subject plus a block of labeled `key: value` lines:
+  `why`/`what` required, `tried`/`next`/`concerns` optional and extensible. No delimiters — the
+  labels are the structure, so blocks stay readable after a squash concatenates them.
+- **The PR/MR description standard** — `Why` / `What` / `Limits of this change`, filled into the
+  project's own PR template where one exists, with the title held to the commit convention
+  because a description-sourced squash makes it the trunk subject.
+- **Craft rules for both** — subject names the change not the area, `what` names decisions not
   files, length proportional to the change, one logical change per commit, fixed field order,
-  verification stated precisely). Includes an audit mode that flags commits and descriptions not
-  following the standard and offers to fix unpushed ones (never rewrites published history). Generic and companion-rules-driven (`.claude/rules/memorize-it.md`); commit
-  convention, issue-key derivation, block style (labeled `key: value` lines or native git
-  trailers), squash-message source, PR/MR mirroring, and platform mechanics are all
-  configurable with working defaults. Setup runs on first use, confirms every decision with
-  the user (no silent defaults), and **commits what it writes** — the rules file, nudge, hook,
-  and CI workflow are shared project config, never git-ignored or left local-only, because a
-  convention that never reaches the trunk never reaches a new clone, worktree, or teammate
-  either; an existing rules file that is untracked or ignored is treated as half-configured.
-  Setup can optionally add a `CLAUDE.md` auto-use nudge, generate an enforcement-only
-  `.githooks/commit-msg` hook, and/or generate a CI commit-lint workflow (all off by default)
-  adapted to the chosen convention — the CI check, made a required status check, guards every PR
-  merging into the trunk on any host. Captured context is written at project altitude for a
-  reader in a fresh clone: no secrets or sensitive values (a leaked one needs rotation, not a
-  reword), nothing from one developer's setup (local ignore/hook state, untracked `.env` files,
-  home-directory paths, sibling worktrees — each developer's environment legitimately differs),
-  and no first-person access limits — a missing verification is recorded as a property of the
-  change, not of the author's credentials — and it reads as a conclusion rather than a transcript of the
-  session (no offers, questions, or reader-addressing), with standing rules going to the
-  project's living docs phrased as forward instructions instead of incident retellings. Commits stay authored by the developer — no AI co-authorship
-  (`Co-Authored-By`/"Generated with") in the commit or the PR/MR description. The optional hook
-  and CI check reject attribution footers, credential-shaped values, and local paths
-  deterministically. Audit flags those content failures alongside missing
-  subjects and fields, and `references/git-recipes.md` carries a one-line sweep for them. Integrates with the `code-review` (recall feeds problem
-  validation) and `feature-development` (capture at hand-off) skills.
-  Bumps marketplace `metadata.version` 1.6.0 → 1.7.0 (new plugin).
+  verification stated precisely.
+- **Project-altitude content rules** — no secrets or sensitive values (a leaked one needs
+  rotation, not a reword), nothing from one developer's setup (local ignore/hook state, untracked
+  `.env`, home-directory paths, sibling worktrees), no first-person access limits, and no
+  conversational residue. Commits stay authored by the developer: no `Co-Authored-By`/"Generated
+  with" in the commit or the description.
+- **Squash-and-merge survival** — per-commit blocks concatenate onto the trunk, or a mirrored
+  block lives in the description when the host composes the squash message from it. Mirroring is
+  a prerequisite for that squash source, not a suggestion.
+- **Tiered recall with a guaranteed fallback** — local commit body → PR/MR description →
+  individual PR/MR commits.
+- **Audit mode** — flags commits and descriptions missing the subject key, a required field, or
+  carrying secrets, attribution, machine-local detail or residue; offers to fix unpushed ones and
+  never rewrites published history.
+- **Setup runs on first use**, confirms every decision (no silent defaults), and **commits what it
+  writes** — the rules file, `CLAUDE.md` nudge, hook and CI workflow are shared project config,
+  never git-ignored or local-only. An existing rules file that is untracked or ignored is treated
+  as half-configured.
+- **Optional enforcement, off by default** — an enforcement-only `.githooks/commit-msg` hook and a
+  deterministic CI commit-lint workflow (no Claude token), both adapted to the confirmed
+  convention. Made a required status check, the CI job guards every PR merging to the trunk.
+- Configurable with working defaults via `.claude/rules/memorize-it.md`: commit convention,
+  issue-key derivation (and what to do when no key exists), block style (labeled lines or native
+  git trailers), squash-message source, description structure, mirroring, and platform mechanics.
+- Integrates with the `code-review` (recall feeds problem validation) and `feature-development`
+  (capture at hand-off) skills.
+- Bumps marketplace `metadata.version` 1.6.0 → 1.7.0 (new plugin).
+
+### Changed
+
+- **Skill versioning is now mechanical** ([`.claude/rules/skill-authoring.md`](.claude/rules/skill-authoring.md),
+  [`.claude/rules/marketplace.md`](.claude/rules/marketplace.md)) — any change to a skill's shipped
+  content requires a version bump, replacing the "materially" judgment call. The plugin cache is
+  keyed by version, so an unbumped edit is invisible to every installed copy.
 
 ## [1.6.0] - 2026-07-08
 

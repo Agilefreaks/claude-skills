@@ -81,7 +81,7 @@
       "name": "memorize-it",
       "source": "./plugins/memorize-it",
       "description": "Captures the conclusion of prompting/working sessions as structured context in git commits (why, what, tried, next, concerns) and recalls it later so future sessions and reviewers understand why decisions were made. Ships a standard for the PR/MR description as well as the commit, written at project altitude — no secrets, nothing from one developer's local setup. Squash-and-merge aware, with tiered recall across the commit body, PR/MR description, and individual PR commits. Integrates with the code-review and feature-development skills.",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "author": {
         "name": "AgileFreaks"
       },
