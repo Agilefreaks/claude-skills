@@ -104,7 +104,7 @@ Next: per-tier limits (blocked on billing).
 Concerns: in-process state, per-instance limits; needs Redis before scale-out.
 ```
 
-Trade-off: trailers are best for short, single-line values. Multi-paragraph prose in `why`/`what` is more awkward than in the delimited block. Choose trailers when values are terse and `git`-native tooling matters; choose the delimited block when conclusions are prose.
+Trade-off: trailers are best for short, single-line values. Multi-paragraph prose in `why`/`what` is more awkward than in the labeled block. Choose trailers when values are terse and `git`-native tooling matters; choose the labeled block when conclusions are prose.
 
 ## Variant: conventional commits
 

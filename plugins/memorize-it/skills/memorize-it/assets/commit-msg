@@ -21,6 +21,9 @@ SUBJECT_REGEX='^\[[A-Za-z]*-?[0-9]+\] .+'
 REQUIRED_FIELDS='why what'
 # Assistant-attribution footers the standard forbids. Set to '' to disable.
 ATTRIBUTION_REGEX='Co-Authored-By:.*(Claude|Copilot|Cursor|Codex)|Generated with .*(Claude|Copilot|Cursor|Codex)'
+# The three content patterns below are duplicated in assets/commit-msg,
+# assets/commit-lint.yml and references/git-recipes.md — change all three, or
+# the documented sweep will disagree with what actually rejects a commit.
 # Secret-shaped values that must never enter permanent history. Set to '' to disable.
 SECRET_REGEX='(AKIA|ASIA)[0-9A-Z]{16}|gh[pousr]_[A-Za-z0-9]{16,}|xox[baprs]-[0-9A-Za-z-]{10,}|sk-[A-Za-z0-9]{20,}|AIza[0-9A-Za-z_-]{20,}|eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}|BEGIN [A-Z ]*PRIVATE KEY|(pass(word|wd)?|secret|token|api[_-]?key|access[_-]?key)[[:space:]]*[:=][[:space:]]*.?[A-Za-z0-9+/=_-]{12,}'
 # One developer's local setup, which is never project context. Set to '' to disable.

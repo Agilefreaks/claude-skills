@@ -80,7 +80,33 @@ A description is not a concatenation of the branch's commit blocks. Read them (`
 - **`What`** — one bullet per decision that survived into the final state. A decision made in commit 2 and reversed in commit 5 doesn't appear; the reversal's reasoning may belong in `Limits` or in `tried` on the commit itself.
 - **`Limits`** — the union of the still-open `concerns` and `next` across commits, minus anything the branch went on to resolve.
 
-Where the host squashes from **commit details**, per-commit blocks reach the trunk on their own, so the description is for the reviewer and needn't be parseable. Where it squashes from the **PR/MR title + description**, the description *is* the trunk message: keep a labeled block in it (mirroring), because that is the only copy recall will find.
+Where the host squashes from **commit details**, per-commit blocks reach the trunk on their own, so the description is for the reviewer and needn't be parseable.
+
+Where it squashes from the **PR/MR title + description**, the description *is* the trunk message, so it carries the prose sections *and* a labeled block — the only copy recall will find. The block goes last, in a marker-delimited managed section, with **every label at column 0**:
+
+```markdown
+## Why
+
+…
+
+## What
+
+- …
+
+## Limits of this change
+
+- …
+
+<!-- memorize-it:begin -->
+why: every execution sat at the default priority, so the flow reordered itself
+  on a later write and logins for unknown emails failed.
+what: explicit priority on each execution and subflow, gapped by 10; dropped the
+  sibling depends_on chain, which never controlled read-back order.
+next: apply in the staging env — it carries the same defaults.
+<!-- memorize-it:end -->
+```
+
+Indenting those labels under a heading or wrapping them in a fenced code block breaks both the parse and the bundled CI check in `pr` mode. The markers let mirroring rewrite its own section without touching the prose above it.
 
 ## Revising on a re-review
 

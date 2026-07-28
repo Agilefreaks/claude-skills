@@ -35,17 +35,25 @@ git log -1 --format=%B | grep -iE '^(why|what|tried|next|concerns):'
 Sweep a composed message (or a PR/MR body) for what must never land — credential-shaped values, one developer's local setup, conversational residue, and attribution footers:
 
 ```sh
-# Credential-shaped values — a hit here means rotate, not just reword:
-SECRETS='(AKIA|ASIA)[0-9A-Z]{16}|gh[pousr]_[A-Za-z0-9]{16,}|xox[baprs]-[0-9A-Za-z-]{10,}|sk-[A-Za-z0-9]{20,}|AIza[0-9A-Za-z_-]{20,}|BEGIN [A-Z ]*PRIVATE KEY|(pass(word|wd)?|secret|token|api[_-]?key)[[:space:]]*[:=][[:space:]]*.?[A-Za-z0-9+/=_-]{12,}'
+# If the enforcement hook is installed, reuse ITS patterns — one source of truth,
+# so the manual sweep can never be weaker than what will reject the commit:
+eval "$(grep -E '^(SECRET|LOCAL|ATTRIBUTION)_REGEX=' .githooks/commit-msg 2>/dev/null)"
 
-# One developer's setup, and conversational residue:
-PAT='co-authored-by:.*(claude|copilot|cursor|codex)|generated with|/(Users|home)/|\.git/info/exclude|\.env|worktree|say the word|let me know|want me to|(^|[^[:alpha:]])I |\byou\b'
+# Fallback when no hook is installed (keep in sync with assets/commit-msg and
+# assets/commit-lint.yml — all three carry the same three patterns):
+: "${SECRET_REGEX:=(AKIA|ASIA)[0-9A-Z]{16}|gh[pousr]_[A-Za-z0-9]{16,}|xox[baprs]-[0-9A-Za-z-]{10,}|sk-[A-Za-z0-9]{20,}|AIza[0-9A-Za-z_-]{20,}|eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}|BEGIN [A-Z ]*PRIVATE KEY|(pass(word|wd)?|secret|token|api[_-]?key|access[_-]?key)[[:space:]]*[:=][[:space:]]*.?[A-Za-z0-9+/=_-]{12,}}"
+: "${ATTRIBUTION_REGEX:=Co-Authored-By:.*(Claude|Copilot|Cursor|Codex)|Generated with .*(Claude|Copilot|Cursor|Codex)}"
+: "${LOCAL_REGEX:=/(Users|home)/[A-Za-z0-9._-]+/|\.git/info/exclude|(^|[^A-Za-z])\.env($|[^A-Za-z])}"
 
-git log -1 --format=%B | grep -niE -- "$SECRETS|$PAT"
+# Conversational residue has no enforced counterpart — judgment only:
+RESIDUE='say the word|let me know|want me to|(^|[^[:alpha:]])I |\byou\b'
+
+git log -1 --format=%B | grep -niE -- "$SECRET_REGEX|$ATTRIBUTION_REGEX|$LOCAL_REGEX|$RESIDUE"
 
 # Same sweep over a PR/MR body:
-gh pr view <number> --json body --jq .body | grep -niE -- "$SECRETS|$PAT"
+gh pr view <number> --json body --jq .body | grep -niE -- "$SECRET_REGEX|$ATTRIBUTION_REGEX|$LOCAL_REGEX|$RESIDUE"
 ```
+
 
 Hits are candidates, not verdicts — `you` inside a quoted error message is fine, a stray `I see no hazard` is not. Read each hit and decide. Nothing matching is the expected state.
 
