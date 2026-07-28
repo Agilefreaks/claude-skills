@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **memorize-it** (0.1.0) — new plugin. Captures the conclusion of a prompting/working
+- **memorize-it** (0.2.0) — new plugin. Captures the conclusion of a prompting/working
   session as structured context in git commits — an issue-keyed subject plus a block of
   labeled `key: value` lines with `why`/`what` (required) and `tried`/`next`/`concerns`
   (optional, extensible) — and recalls it later so future sessions and reviewers understand
