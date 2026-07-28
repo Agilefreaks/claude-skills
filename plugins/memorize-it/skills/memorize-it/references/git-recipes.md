@@ -41,23 +41,31 @@ eval "$(grep -E '^(SECRET|LOCAL|ATTRIBUTION)_REGEX=' .githooks/commit-msg 2>/dev
 
 # Fallback when no hook is installed (keep in sync with assets/commit-msg and
 # assets/commit-lint.yml — all three carry the same three patterns):
-: "${SECRET_REGEX:=(AKIA|ASIA)[0-9A-Z]{16}|gh[pousr]_[A-Za-z0-9]{16,}|xox[baprs]-[0-9A-Za-z-]{10,}|sk-[A-Za-z0-9]{20,}|AIza[0-9A-Za-z_-]{20,}|eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}|BEGIN [A-Z ]*PRIVATE KEY|(pass(word|wd)?|secret|token|api[_-]?key|access[_-]?key)[[:space:]]*[:=][[:space:]]*.?[A-Za-z0-9+/=_-]{12,}}"
-: "${ATTRIBUTION_REGEX:=Co-Authored-By:.*(Claude|Copilot|Cursor|Codex)|Generated with .*(Claude|Copilot|Cursor|Codex)}"
-: "${LOCAL_REGEX:=/(Users|home)/[A-Za-z0-9._-]+/|\.git/info/exclude|(^|[^A-Za-z])\.env($|[^A-Za-z])}"
+: "${SECRET_REGEX=(AKIA|ASIA)[0-9A-Z]{16}|gh[pousr]_[A-Za-z0-9]{16,}|xox[baprs]-[0-9A-Za-z-]{10,}|sk-[A-Za-z0-9]{20,}|AIza[0-9A-Za-z_-]{20,}|eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}|BEGIN [A-Z ]*PRIVATE KEY|(pass(word|wd)?|secret|token|api[_-]?key|access[_-]?key)[[:space:]]*[:=][[:space:]]*.?[A-Za-z0-9+/=_-]{12,}}"
+: "${ATTRIBUTION_REGEX=Co-Authored-By:.*(Claude|Copilot|Cursor|Codex)|Generated with .*(Claude|Copilot|Cursor|Codex)}"
+: "${LOCAL_REGEX=/(Users|home)/[A-Za-z0-9._-]+/|\.git/info/exclude|(^|[^A-Za-z])\.env($|[^A-Za-z])}"
 
 # Conversational residue has no enforced counterpart — judgment only:
 RESIDUE='say the word|let me know|want me to|(^|[^[:alpha:]])I |\byou\b'
 
-git log -1 --format=%B | grep -niE -- "$SECRET_REGEX|$ATTRIBUTION_REGEX|$LOCAL_REGEX|$RESIDUE"
+# Combine only the non-empty patterns: a project may disable a check by setting
+# it to '' , and an empty branch in an alternation either errors (BSD grep,
+# ugrep) or matches every line (GNU grep).
+PAT=''
+for p in "$SECRET_REGEX" "$ATTRIBUTION_REGEX" "$LOCAL_REGEX" "$RESIDUE"; do
+  [ -n "$p" ] && PAT="${PAT:+$PAT|}$p"
+done
+
+git log -1 --format=%B | grep -niE -- "$PAT"
 
 # Same sweep over a PR/MR body:
-gh pr view <number> --json body --jq .body | grep -niE -- "$SECRET_REGEX|$ATTRIBUTION_REGEX|$LOCAL_REGEX|$RESIDUE"
+gh pr view <number> --json body --jq .body | grep -niE -- "$PAT"
 ```
 
 
 Hits are candidates, not verdicts — `you` inside a quoted error message is fine, a stray `I see no hazard` is not. Read each hit and decide. Nothing matching is the expected state.
 
-A `$SECRETS` hit is the one exception: treat it as real until proven otherwise. If the value ever reached a pushed commit or a PR/MR body, rewriting the message does **not** contain it — say so and get it rotated.
+A `$SECRET_REGEX` hit is the one exception: treat it as real until proven otherwise. If the value ever reached a pushed commit or a PR/MR body, rewriting the message does **not** contain it — say so and get it rotated.
 
 Trailer variant — read a single field across history:
 

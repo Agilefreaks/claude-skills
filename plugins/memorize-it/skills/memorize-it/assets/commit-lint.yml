@@ -82,12 +82,12 @@ jobs:
               # a fenced block they will not match, and they would not be
               # parseable off the trunk either.
               printf '%s\n' "$1" | grep -iq "^$field:" \
-                || say "$2 is missing a '$field:' line at the start of a line$3"
+                || say "$2 is missing a '$field:' line at the start of a line${3:-}"
             done
           }
           check_pattern() {
             # $1 body, $2 label, $3 regex, $4 message
-            [ -n "$3" ] || return 0
+            [ -n "${3:-}" ] || return 0
             printf '%s\n' "$1" | grep -Eiq -- "$3" && say "$2 $4" || true
           }
           check_content() {
