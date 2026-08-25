@@ -77,7 +77,7 @@ Ask two questions:
 1. Does this code actually solve the problem it's meant to solve?
 2. Will shipping this improvement increase the value of the project as a whole?
 
-If the answer to either is no — **stop**. Don't review the code. Get in touch with whoever decides what gets built and talk it through. Reviewing code that won't survive in production is a waste of time.
+If the answer to either is no — **stop**. Don't review the code. Post that conclusion as the summary (Phase 6), then get in touch with whoever decides what gets built and talk it through. Reviewing code that won't survive in production is a waste of time — but stopping is a review result, and it is worthless to everyone else unless you write it down where they will see it.
 
 To answer these questions: read the linked issue or ticket, supporting documentation, and any relevant discussion. If your project defines how to locate the relevant issue or ticket (task management integration, branch naming conventions), follow that. If no issue exists or no integration is configured, use the PR title and description as the source of truth. Check whether the diff plausibly addresses what was described.
 
@@ -87,7 +87,7 @@ To answer these questions: read the linked issue or ticket, supporting documenta
 
 ## Phase 2: Build & Runability
 
-- Is the build passing? If not, pause the review. A broken build can't be trusted. Even if the new change works correctly, other things could be broken. Don't assume a build failure is innocuous.
+- Is the build passing? If not, pause the review and say so in the summary (Phase 6). A broken build can't be trusted. Even if the new change works correctly, other things could be broken. Don't assume a build failure is innocuous.
 - Is the code running somewhere other than the author's machine? A production environment is ideal; a staging environment or another developer's machine is an acceptable smoke test.
 - Did getting the code running require asking someone for help? If so, documentation is missing or setup needs to be automated — or both.
 
@@ -197,6 +197,8 @@ If your project has defined platform-specific posting mechanics (how to post a r
 
 Omit checklist sections that don't apply to this specific change. A config-only change doesn't need event sourcing verification. A documentation update doesn't need performance testing.
 
+**Every run reaches this phase.** The summary is unconditional: a clean diff, a stop at problem validation, a stand-down on a red build, and a review with no findings each get one saying so. The stops in Phases 1–4 and in Core Principle 4 mean stop *reviewing*, not stop *reporting* — this is the only phase that writes to the change, so a run that ends before it discards everything it did. A review that writes nothing is indistinguishable from one whose output was lost, and CI wrappers that check whether the review produced anything cannot tell the two apart either.
+
 **Maintain exactly one summary per change.** Post the summary as a standalone comment that begins with a hidden marker (default: `<!-- code-review-summary -->`) and that your platform allows you to later delete. On a re-review: find your previous summary by its marker, delete it, and post the fresh summary — never accumulate summaries. Mark each inline finding the same way (default: `<!-- code-review-finding -->` as the first line of the comment body) so a future re-review can recognize its own threads. On a re-review, also execute the thread dispositions from Phase 0 (in-thread replies and resolutions, per the configured thread handling mode) when posting.
 
 If your project defines posting mechanics, follow them for how to fetch, reply to, resolve, delete, and post comments on your platform. Otherwise, structure the output clearly with the sections above.
@@ -211,7 +213,7 @@ If your project defines posting mechanics, follow them for how to fetch, reply t
 
 3. **Defer honestly.** If you can't verify something — runtime behavior, user experience, whether a dependent feature still works — say so explicitly and put it in the human checklist. Don't imply you've checked what you haven't.
 
-4. **Stop on blockers.** A broken build, a change that solves the wrong problem, or a fundamental design concern is a reason to stop and flag, not continue reviewing code that may not survive.
+4. **Stop on blockers.** A broken build, a change that solves the wrong problem, or a fundamental design concern is a reason to stop and flag, not continue reviewing code that may not survive. Flagging means posting the summary (Phase 6) — a stop you don't write down is a stop nobody else knows happened.
 
 5. **Ask when uncertain.** Pausing a review to ask the author a question is always the right move when something is unclear. These conversations build shared understanding and catch mistaken assumptions before they cause damage.
 

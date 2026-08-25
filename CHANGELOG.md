@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **code-review** (1.2.0 → 1.2.1) — a review that stops early now posts its summary instead
+  of ending silently. Phase 6 is the only phase that writes to the change, and Phase 1
+  ("stop. Don't review the code."), Phase 2 ("pause the review") and Core Principle 4 ("stop
+  and flag") all end the run before it, so a stop produced no comment, no inline findings and
+  no trace on the PR — indistinguishable from a review whose output was lost. Observed on
+  cnbc-dach #530 and #531: three consecutive runs ending at `num_turns: 2` having written
+  nothing, against a 47-file PR that reviewed normally at 87 turns. Each stop now says to post
+  the conclusion as the summary first, and Phase 6 states that every run reaches it — a clean
+  diff, a stop at problem validation, a red build and a no-findings review each get a summary
+  saying so.
+
 ## [1.6.0] - 2026-07-08
 
 ### Changed
