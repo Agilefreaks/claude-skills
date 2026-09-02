@@ -1,10 +1,19 @@
 name: Validate Plugins
 
-# Checks that the marketplace manifest, every plugin manifest, and every
-# SKILL.md frontmatter parse. This repo has no build system and no test runner,
-# so this is the only automated gate — see .claude/rules/marketplace.md.
+# The repo's only automated gate — it has no build system and no test runner.
+# Three steps, all of which can fail the PR:
 #
-# Requires Claude Code v2.1.233 or later for `claude plugin validate`.
+#   1. `claude plugin validate .`         — the marketplace manifest parses
+#   2. `claude plugin validate <plugin>`  — each plugin manifest parses, and so
+#                                           does every SKILL.md frontmatter
+#   3. Check version agreement            — each plugin's version matches across
+#                                           plugin.json, marketplace.json and the
+#                                           README Plugin Catalogue row
+#
+# `claude plugin validate` exits 1 on a malformed manifest or malformed SKILL.md
+# frontmatter, and 0 when clean — verified against both cases.
+#
+# See .claude/rules/marketplace.md. Requires Claude Code v2.1.233 or later.
 
 on:
   pull_request:

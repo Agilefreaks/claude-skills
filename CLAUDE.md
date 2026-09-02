@@ -4,7 +4,7 @@
 
 A plugin marketplace for Claude Code and Claude.ai Cowork. It contains skills distilled from real AgileFreaks project experience, packaged as installable plugins.
 
-**No build system. No test runner. No package dependencies.** All content is Markdown and JSON. The one automated check is `.github/workflows/validate.yml`, which validates the manifests and every `SKILL.md` frontmatter and checks that plugin versions agree across the three places they are written.
+**No build system. No test runner. No package dependencies.** All content is Markdown and JSON. The one gate that can fail a PR is `.github/workflows/validate.yml`, which validates the manifests and every `SKILL.md` frontmatter and checks that plugin versions agree across the three places they are written. `code-review.yml` also runs on every PR, but it reports rather than blocks.
 
 ## Plugin structure
 
