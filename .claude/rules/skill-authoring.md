@@ -48,13 +48,18 @@ Verify the frontmatter parses with `claude plugin validate <plugin-dir>` before 
 
 ```
 skill-name/
-├── SKILL.md          # Required — under 500 lines and ~5k tokens
+├── SKILL.md          # Required — under 500 lines; see Size and placement
 ├── scripts/          # Executable code for deterministic tasks
 ├── references/       # Docs loaded into context as needed
 └── assets/           # Templates, icons, fonts used in output
 ```
 
-Move detailed reference content to `references/`. For reference files over 100 lines, include a table of contents — Claude often previews a long file with a partial read, and without a contents list it cannot tell what it missed. Keep references one level deep from SKILL.md; a reference that links to another reference gets read partially or not at all. When a skill supports multiple domains, organize by variant under `references/`.
+Move detailed reference content to `references/`. When a skill supports multiple domains, organize by variant under `references/`.
+
+Two rules keep that content actually readable, both for the same reason — Claude frequently previews a long or indirectly-reached file with a partial read, and cannot tell what it missed:
+
+- **Give any reference over 100 lines a table of contents**, so a partial read still shows the full scope of what is in the file.
+- **Every reference must be reachable in one hop from a SKILL.md that names it.** Before adding one, check: does its own SKILL.md name this file? A reference *citing* another file is fine, and sometimes necessary — the Android plugins point at `android-project-starter:conventions` for canonical file shapes instead of copying them, because a second copy would drift. What the rule forbids is content whose only route is a chain.
 
 ### Size and placement
 
