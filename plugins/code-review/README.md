@@ -57,8 +57,8 @@ Run checks relevant to the changes. Skip sections for unaffected areas.
 ```markdown
 ## Output Format
 
-Three sections are always present. The rest appear only where they say something those three
-do not, so a small change gets a short review.
+Four sections are always present — Verdict, Concerns, Risk and For a human. The rest appear
+only where they say something those four do not, so a small change gets a short review.
 
 **Verdict** — one or two sentences: can this merge, and what stands in the way.
 

@@ -179,15 +179,16 @@ If your project has defined platform-specific posting mechanics (how to post a r
 
 **Filter here, not earlier.** Every finding recorded in Phases 0–5 reaches this point; decide now which ones reach the author. A low-confidence blocker is still worth raising; a low-confidence nice-to-have usually is not. Lead the concerns with the blockers.
 
-**Produce a review summary.** Three sections are always present, in this order:
+**Produce a review summary.** Four sections are always present, in this order:
 
 1. **Verdict** — one or two sentences: can this merge, and what is the one thing standing in the way.
 2. **Concerns** — the findings that reach the author, blockers first, each in the claim/evidence/consequence shape. Tag both general and line-level findings.
 3. **Risk** — the level, always. Add reasoning only where the concerns don't already show it.
+4. **For a human** — the checklist below. It is never omitted; it is the only place the review states what it did not verify.
 
 Write the concerns first and the verdict from them. A verdict written first becomes a target the concerns get trimmed to fit.
 
-Add either of the following only where it tells the reader something those three do not:
+Add either of the following only where it tells the reader something those four do not:
 
 - **Context** — when the change's purpose is not evident from its title and diff.
 - **What was checked** — only the checks whose result would change the merge decision, one line each. Not a log of everything you looked at.

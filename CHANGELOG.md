@@ -42,9 +42,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **code-review** (1.3.0 → 1.4.0) — reviews are concise by default. Measured on this repo's
   own PR #18, a review summary ran 1,334 words of which only 21% were findings; the rest was
   scaffolding the skill mandated, and inline findings averaged 190 words. Phase 6 no longer
-  requires six sections: **Verdict** and **Concerns** are always present, and Context, what
-  was checked, previous findings and risk reasoning appear only where they say something
-  those two do not. Each finding is written as **claim, evidence, consequence** — and if no
+  requires six sections in every review: **Verdict**, **Concerns**, **Risk** and **For a
+  human** are always present, **Previous findings** is added after the verdict on re-reviews,
+  and Context and what-was-checked appear only where they say something the rest do not. Each finding is written as **claim, evidence, consequence** — and if no
   consequence can be stated, it is a style preference rather than a defect, which is the
   guard against brevity quietly rewarding the technical proofreading the source methodology
   opens by warning about. The human checklist drops its two always-on entries for one

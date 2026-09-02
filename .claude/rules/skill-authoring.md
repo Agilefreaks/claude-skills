@@ -166,6 +166,8 @@ For a skill that runs a long tool-calling loop, also put this in the standing bl
 
 A skill that produces files rather than a report, or that is pure reference with no run loop, needs neither. Adding them there is noise.
 
+A skill may also drop any sentence it has encoded structurally instead. `code-review` keeps only "write it for a reviewer who did not watch you work"; its output shape puts the verdict first and admits sections conditionally, so the outcome-first and match-the-length sentences would restate what the format already enforces. Prefer the structure — an instruction competing with a template loses. Note the substitution where you make it, so a later audit reads it as a decision rather than a gap.
+
 ### Don't add self-check scaffolding
 
 Current models verify their own work without being told, and instructions like "double-check your answer" or "use a subagent to verify" now cause redundant work rather than better output. This does **not** apply to a genuine verification *phase* — running the test suite, driving the app against acceptance criteria, checking a build is green. That is methodology, and it stays.
