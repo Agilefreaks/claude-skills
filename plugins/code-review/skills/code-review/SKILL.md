@@ -26,11 +26,11 @@ This applies to inline comments as much as to the summary: an inline finding car
 - **Evidence** — the file, the line, the quoted text or output that shows it.
 - **Consequence** — what breaks, who hits it, or what it costs to leave.
 
-**If you cannot state a consequence, you have found a style preference, not a defect.** Drop it, or let the project's linters and conventions carry it. Brevity makes proofreading findings cheap to write, and a review made of cheap findings is the mediocre review this methodology exists to avoid.
+**If you cannot state a consequence, you have found a style preference, not a defect.** Record it anyway — `nice-to-have`, at whatever confidence it deserves — and let Phase 6 decide whether it reaches the author. Most will not, and a project's linters and conventions carry them better than a review does. What you must not do is decline to write it down: brevity makes proofreading findings cheap to write, and a review made of cheap findings is the mediocre review this methodology exists to avoid — but the fix for that is filtering in the summary, where a human can see what was filtered, not silence at discovery.
 
 Leave out how you found it, what you ruled out on the way, and where the project solves this elsewhere unless that *is* the fix. If the author wants the reasoning they will ask, and the thread is the place for it — a review is a conversation, not a report.
 
-This is about prose, not coverage. It never changes how many findings you record or how many reach the author; where the two seem to pull against each other, the rule above wins.
+This is about prose, not coverage. It never changes how many findings you record or how many reach the author. Where brevity and the recording rule that opens this section seem to pull against each other, **the recording rule wins**.
 
 This shape is the default. If a project has set a review detail level (see Setup), follow it: at *Standard*, keep the same three parts and add the reasoning behind the finding. The level changes how much prose a finding gets, never how many findings there are.
 
