@@ -4,7 +4,7 @@
 
 A plugin marketplace for Claude Code and Claude.ai Cowork. It contains skills distilled from real AgileFreaks project experience, packaged as installable plugins.
 
-**No build system. No test runner. No package dependencies.** All content is Markdown and JSON.
+**No build system. No test runner. No package dependencies.** All content is Markdown and JSON. The one automated check is `.github/workflows/validate.yml`, which validates the manifests and every `SKILL.md` frontmatter and checks that plugin versions agree across the three places they are written.
 
 ## Plugin structure
 
@@ -23,6 +23,7 @@ The marketplace manifest lives at `.claude-plugin/marketplace.json`.
 2. Add an entry to `.claude-plugin/marketplace.json`
 3. Add a row to the Plugin Catalogue table in `README.md`
 4. Add an entry under `[Unreleased]` in `CHANGELOG.md`
+5. Run `claude plugin validate plugins/<name>` and `claude plugin validate .` — CI runs both, plus a version-agreement check
 
 See `.claude/rules/marketplace.md` for field requirements and conventions.
 

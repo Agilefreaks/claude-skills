@@ -90,9 +90,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   widen the signal. Reference-file table-of-contents threshold lowered from 300 lines to 100 to
   match the platform guidance.
 
-- **`.claude/rules/marketplace.md`** — `claude plugin validate` added to the new-plugin
-  checklist, alongside the version-agreement check CI now runs across `plugin.json`,
-  `marketplace.json` and the README Plugin Catalogue row.
+- **`.claude/rules/marketplace.md`, `CLAUDE.md`, `.claude/rules/code-review.md`** — the
+  new-plugin checklist gained the validation step, and the three places that asserted this
+  repo has no automated check were corrected. `.claude/rules/code-review.md` in particular
+  told the code-review skill to skip build verification outright; it now points Phase 2 at
+  the workflow's status, with a red run treated as a broken build and a green run explicitly
+  not standing in for functional validation of skill behaviour.
 
 ## [1.6.0] - 2026-07-08
 
