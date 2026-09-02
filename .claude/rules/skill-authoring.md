@@ -125,7 +125,9 @@ Example blockquote:
 
 ## Setup section
 
-When your skill has extension points, include a **Setup** section in SKILL.md (before Phase 1) that describes how to interactively configure the skill. This section travels with the plugin and is available wherever the skill is installed — no external files needed.
+When your skill has extension points, include a **Setup** section in SKILL.md that describes how to interactively configure the skill. It travels with the plugin and is available wherever the skill is installed — no external files needed.
+
+**Put it after the phases, not before them**, once a skill approaches the size boundary above. Setup runs on its own invocation ("set up <skill>"), where the file has just been loaded and position costs nothing; during an actual run it is dead weight in the one part of the file that survives compaction. This is the case the Size and placement section has in mind when it names setup wizards as content to keep past the first 5,000 tokens. In a small skill, either position is fine.
 
 The Setup section should:
 
@@ -163,6 +165,12 @@ For a skill that runs a long tool-calling loop, also put this in the standing bl
 > Say in one line what you are about to do before your first tool call, and give a brief update when you find something load-bearing or change direction. Before reporting progress, tie each claim to a command you actually ran: if a check fails, say so with its output; if a step was skipped, say that.
 
 A skill that produces files rather than a report, or that is pure reference with no run loop, needs neither. Adding them there is noise.
+
+A skill may also drop any sentence it has encoded structurally instead. `code-review` keeps only "write it for a reviewer who did not watch you work"; its output shape puts the verdict first and admits sections conditionally, so the outcome-first and match-the-length sentences would restate what the format already enforces. Prefer the structure — an instruction competing with a template loses.
+
+The same skill splits the tool-loop block rather than taking or leaving it whole. The narration half is omitted: it runs unattended in CI, where a line before each tool call is output nobody reads. The grounding half is kept and strengthened, because a shorter finding leaves less prose in which the basis for a claim would otherwise show.
+
+Record every substitution and omission where you make it, and keep the record complete — a partial account is worse than none, because the next audit reads it as the whole list and closes the gaps it does not mention.
 
 ### Don't add self-check scaffolding
 

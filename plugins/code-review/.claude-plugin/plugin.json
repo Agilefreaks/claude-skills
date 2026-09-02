@@ -1,7 +1,7 @@
 {
   "name": "code-review",
   "description": "Outside-in, risk-driven code review methodology. Reviews pull requests across all change types: bug fixes, new features, add-ons, extensions, and refinements. Re-review aware: reconciles previously posted findings and keeps a single summary comment per PR. Project-specific checks, posting mechanics, and context gathering are configured via a companion rules file in your project.",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "author": {
     "name": "AgileFreaks"
   },

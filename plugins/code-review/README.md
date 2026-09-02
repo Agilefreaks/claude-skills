@@ -57,47 +57,40 @@ Run checks relevant to the changes. Skip sections for unaffected areas.
 ```markdown
 ## Output Format
 
-### > Automated Review
+Four sections are always present — Verdict, Concerns, Risk and For a human. The rest appear
+only where they say something those four do not, so a small change gets a short review.
 
-**Context**
-- **PR:** #<number> - <title>
-- **Issue:** #<number> - <title> (or "No linked issue")
-- **Change Type:** [Bug Fix / New Feature / Enhancement / Refactoring / Config/Docs]
-- **Scope:** [Brief description]
+**Verdict** — one or two sentences: can this merge, and what stands in the way.
 
-**Looks Good**
-- [Specific passing checks]
+**Previous Findings** _(re-reviews only)_ — one line each: Resolved / Answered / Still open, plus a few words.
 
-**Concerns Found**
+**Concerns** — blockers first. Each finding is claim, evidence, consequence:
 
-_See inline comments in the Files Changed tab for specific line-level concerns._
-
-Inline findings carry the same two tags, after the marker:
-
-\`\`\`
-<!-- code-review-finding -->
-`[important]` `[confidence: high]` **Short title.**
-
-Explanation.
-\`\`\`
-
-_General concerns, blockers first:_
-- `[blocker | important | nice-to-have]` `[confidence: high | medium | low]` [Concern and why it matters]
+`[blocker | important | nice-to-have]` `[confidence: high | medium | low]` **What is wrong.**
+The file and line, or the quoted output, that shows it.
+What breaks, who hits it, or what it costs to leave.
 
 (If none: "No issues found")
 
-**Previous Findings** _(re-reviews only)_
-- Resolved: [finding] — verified fixed in <sha>
-- Answered: [finding] — author response accepted
-- Still open: [finding] — no response yet
+Inline findings use the same three parts, after the marker:
 
-**Risk Assessment**
-- **Risk Level:** [Low / Medium / High]
-- **Reasoning:** [Why]
+\`\`\`
+<!-- code-review-finding -->
+`[important]` `[confidence: high]` **What is wrong.**
+The evidence.
+The consequence.
+\`\`\`
 
----
+**Risk** — the level, always. Reasoning only where the concerns don't already show it.
 
-[Human Reviewer Checklist — generated per SKILL.md Phase 6]
+**For a human** — one standing line saying the review did not run the code, then one line per
+thing it could not verify. Nothing that already appears above as a concern.
+
+Add only where they carry something the required sections do not:
+
+**Context** — when the change's purpose is not evident from its title and diff.
+**What was checked** — only checks whose result would change the merge decision, one line each.
+
 
 ## Posting Mechanics
 
@@ -147,7 +140,8 @@ jq -n \
   --arg commit_id "$COMMIT_SHA" \
   --arg path "relative/path/to/file.rb" \
   --arg body "<!-- code-review-finding -->
-**Concern:** Description and suggestion" \
+\`[important]\` \`[confidence: high]\` **What is wrong.**
+The evidence. The consequence." \
   --argjson line 42 \
   '{commit_id: $commit_id, event: "COMMENT", body: "", comments: [{path: $path, line: $line, side: "RIGHT", body: $body}]}' \
 | gh api repos/${REPO}/pulls/${PR_NUMBER}/reviews --method POST --input -
@@ -202,6 +196,8 @@ Once the plugin is distributed to your org, use it from any Cowork project. See 
 Run `set up code-review` in Claude Code or Claude.ai Cowork to generate `.github/workflows/code-review.yml` in your project automatically. The Setup wizard asks which model to use and writes the workflow for you.
 
 Opus is the default and the right choice for almost every repo. Fable is available for high-stakes reviews at roughly double the per-token cost; note that its safety classifiers can decline a security-heavy diff, which shows up as a failed CI run rather than a posted review. The workflow passes a model *alias* rather than a dated model id, so it follows the current release instead of pinning one that will be retired.
+
+The most capable models write longer prose by default, and effort does not reliably shorten it — so length is set by the skill, not the model. Reviews are **Brief** out of the box: four required sections, and each finding written as claim, evidence, consequence. If your team would rather have the reasoning inline than ask for it in the thread, set **Review Detail** to *Standard* during Setup. Neither setting changes which findings are reported; only how much prose each one gets.
 
 After the file is generated, add `CLAUDE_CODE_OAUTH_TOKEN` as a repository secret:
 
