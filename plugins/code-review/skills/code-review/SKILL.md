@@ -32,6 +32,8 @@ Leave out how you found it, what you ruled out on the way, and where the project
 
 This is about prose, not coverage. It never changes how many findings you record or how many reach the author; where the two seem to pull against each other, the rule above wins.
 
+This shape is the default. If a project has set a review detail level (see Setup), follow it: at *Standard*, keep the same three parts and add the reasoning behind the finding. The level changes how much prose a finding gets, never how many findings there are.
+
 ---
 
 ## Phase 0: Prior Review State (re-reviews)
@@ -177,19 +179,20 @@ If your project has defined platform-specific posting mechanics (how to post a r
 
 **Filter here, not earlier.** Every finding recorded in Phases 0–5 reaches this point; decide now which ones reach the author. A low-confidence blocker is still worth raising; a low-confidence nice-to-have usually is not. Lead the concerns with the blockers.
 
-**Produce a review summary.** Two sections are always present:
+**Produce a review summary.** Three sections are always present, in this order:
 
 1. **Verdict** — one or two sentences: can this merge, and what is the one thing standing in the way.
 2. **Concerns** — the findings that reach the author, blockers first, each in the claim/evidence/consequence shape. Tag both general and line-level findings.
+3. **Risk** — the level, always. Add reasoning only where the concerns don't already show it.
 
 Write the concerns first and the verdict from them. A verdict written first becomes a target the concerns get trimmed to fit.
 
-Add any of the following only where it tells the reader something those two do not:
+Add either of the following only where it tells the reader something those three do not:
 
 - **Context** — when the change's purpose is not evident from its title and diff.
 - **What was checked** — only the checks whose result would change the merge decision, one line each. Not a log of everything you looked at.
-- **Previous findings** (re-reviews) — one line per prior finding: *resolved* (verified fixed), *answered* (author response accepted), or *still open*, plus a few words. Not a restatement of the finding. First-time reviews omit this.
-- **Risk level** — always give the level; give reasoning only where the concerns don't already show it.
+
+On a re-review, add **Previous findings** immediately after the verdict: one line per prior finding — *resolved* (verified fixed), *answered* (author response accepted), or *still open* — plus a few words. Not a restatement of the finding. First-time reviews omit it.
 
 **Produce a human reviewer checklist.** One standing line — this review did not run the code — then one line for each thing you could not verify: a deferral you made in Phases 1–4, a claim you could not check, a behaviour only a person can judge. Nothing else. If you deferred nothing beyond the standing line, say so and move on.
 

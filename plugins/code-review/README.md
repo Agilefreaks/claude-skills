@@ -57,10 +57,12 @@ Run checks relevant to the changes. Skip sections for unaffected areas.
 ```markdown
 ## Output Format
 
-Two sections are always present. The rest appear only where they say something those two do
-not, so a small change gets a short review.
+Three sections are always present. The rest appear only where they say something those three
+do not, so a small change gets a short review.
 
 **Verdict** — one or two sentences: can this merge, and what stands in the way.
+
+**Previous Findings** _(re-reviews only)_ — one line each: Resolved / Answered / Still open, plus a few words.
 
 **Concerns** — blockers first. Each finding is claim, evidence, consequence:
 
@@ -79,15 +81,15 @@ The evidence.
 The consequence.
 \`\`\`
 
+**Risk** — the level, always. Reasoning only where the concerns don't already show it.
+
 **For a human** — one standing line saying the review did not run the code, then one line per
 thing it could not verify. Nothing that already appears above as a concern.
 
-Add only where they carry something the two required sections do not:
+Add only where they carry something the required sections do not:
 
 **Context** — when the change's purpose is not evident from its title and diff.
 **What was checked** — only checks whose result would change the merge decision, one line each.
-**Previous Findings** _(re-reviews)_ — one line each: Resolved / Answered / Still open, plus a few words.
-**Risk** — the level always; reasoning only where the concerns don't already show it.
 
 
 ## Posting Mechanics
