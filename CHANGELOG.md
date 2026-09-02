@@ -69,6 +69,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   safety classifiers that can decline a security-heavy diff — which surfaces as a failed CI run
   rather than a review. The generated workflow passes a model **alias**, never a dated id.
 
+- **feature-development** (0.3.0 → 0.4.0) — Setup moved below Phase 6, per the Setup-placement
+  rule in `skill-authoring.md`. With Setup ahead of Phase 1, the last ~2,400 characters of the
+  file fell past the ~20,000-character compaction boundary — all of them inside Phase 6
+  (Hand Off), including the non-interactive git recipe for curating checkpoint commits into
+  logical ones. Hand Off is the phase a long session reaches last, which is precisely when a
+  compaction will already have happened, while ~5,000 characters of one-time setup wizard sat
+  in the protected zone. Every phase now ends inside the boundary (Phase 6 closes at ~17,450
+  characters) and Setup, which runs on its own invocation where position costs nothing, sits
+  past it. A move only: the standing rules and all six phases are byte-identical.
+
 - **feature-development** (0.2.0 → 0.3.0) — Phase 2's exploration is now sized to the unknown
   rather than unconditionally launching parallel Explore subagents, and commits to a
   delegation once made instead of re-deriving its findings. Phase 4 gained a "stay inside the

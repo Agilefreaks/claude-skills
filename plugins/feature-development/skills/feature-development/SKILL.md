@@ -79,83 +79,6 @@ that work from the first turn — begin at Phase 1.
 
 ---
 
-## Setup
-
-When asked to set up, configure, onboard, or create a rules file for this skill:
-
-1. Read all existing project rules (`.claude/rules/`, `CLAUDE.md`) to understand what is
-   already configured. Do **not** re-ask build, test, lint, or run commands — those are
-   project-level concerns already configured elsewhere.
-2. Inspect the project:
-   - Existing skill rules (`code-review.md`, `run.md`, `verify.md` in `.claude/rules/`)
-   - Any documented **spec or issue workflow** — a rules file or CLAUDE.md section that
-     describes where the spec lives (inline note, tracking issue, external doc) or how to
-     handle a feature ticket or bug report before writing code
-   - Any documented **branch naming convention** — in CI configs, CLAUDE.md, or rules files
-   - Any documented **testing strategy** — a rules file or CLAUDE.md section describing
-     which component types systematically require tests, required test patterns or idioms to
-     follow or avoid, test file locations, and where in the test pyramid different changes
-     should be covered. This is **not a setup question** — carry this information directly
-     into the implementation loop so every test written follows the project's strategy
-     automatically. Mention in the closing setup summary that a strategy was found and will
-     be followed.
-3. Present **skill-specific choices only** via interactive dialogs. **All questions must be
-   phrased in plain, user-facing language — never expose the skill's internal phase numbers
-   or names (e.g. "Phase 1", "Phase 3", "Frame", "Hand Off") in a question or option label.
-   Those names are for the agent's own orientation, not for the user.**
-
-   **Spec, issue & branch workflow:**
-   If the project documents how to capture a spec and name branches, **summarize what you
-   found in plain language and ask to confirm or adjust** — do not present a jargon
-   either/or. For example:
-
-   > "Your project documents a workflow: the spec lives in a GitHub issue (I'll use the
-   > existing one, or create it if there isn't one yet) and branches are named
-   > `{issue_number}-short-desc`. I'll follow that instead of the skill's defaults — use
-   > it, or adjust?"
-
-   Key rule: **never force creating a tracking issue** when one already exists for the
-   work at hand. Detect and use the existing issue; create one only when the documented
-   workflow calls for it and none exists. If nothing is documented, fall back to the
-   skill defaults (inline spec note; `feature/<ticket-slug>` from `main`).
-
-   **Other choices:**
-   - **Test collaboration mode** — the loop used while implementing:
-     - *Solo AI* (default): agent runs red/green itself, one test at a time; escape hatch
-       to agentic manual testing when test-first genuinely doesn't fit
-     - *Assert-in-the-loop*: agent scaffolds one test (arrange + act + empty assertion
-       placeholder); human writes the assertions; agent confirms genuine red and implements
-       to green
-     - *Ping-pong*: human writes failing test → agent greens it and writes next failing
-       test → human greens it and writes next → …
-     - *Ask each feature*: no fixed mode; at the start of each feature's implementation
-       the skill asks which of the three modes to use for that feature only
-   - **Review delegation** — detected automatically (check for `code-review.md` in
-     `.claude/rules/`); ask only if ambiguous
-   - **Commit granularity** — how commits are made while implementing and reshaped at
-     hand-off:
-     - *Checkpoint + curate* (default): checkpoint-commit after each green; reshape into
-       a few logical, behaviour-level commits at hand-off
-     - *One commit per criterion*: commit once per acceptance criterion (may span 2–3 tests);
-       no reshape step needed
-     - *Keep every checkpoint*: commit per green, never reshape (maximum bisect granularity,
-       noisiest published history)
-   - **Trigger enforcement (optional, off by default)** — install a `UserPromptSubmit` hook
-     in this project so the harness nudges Claude to invoke `feature-development` whenever it
-     detects feature, bug, or ticket intent. This is the only enforcement-level trigger; the
-     skill's description and body notes are advisory (the model still chooses). Recommend it
-     only for teams that have seen the skill under-trigger — particularly when plan mode is
-     active at the first turn. If opted in, run `/update-config` in this project: it will
-     write the hook into the project's `settings.json`. No hook is bundled with this plugin.
-4. Write `.claude/rules/feature-development.md` containing only the non-default choices.
-   If the user accepts all defaults (or the detected workflow covers everything), confirm no
-   rules file is needed and stop.
-
-**What to defer to a human (Setup):** the correct branch base and naming convention if the
-project doesn't document them — Setup cannot infer this reliably from `.git/config` alone.
-
----
-
 ## Phase 1: Frame
 
 Read the ticket, issue, or spec. Write a short spec (a scratch note is fine) containing:
@@ -398,3 +321,80 @@ deliberately left out of scope.
 
 **What to defer to a human:** the final review, approval, and merge decision. The agent
 prepares and narrates; a human decides whether to ship.
+
+---
+
+## Setup
+
+When asked to set up, configure, onboard, or create a rules file for this skill:
+
+1. Read all existing project rules (`.claude/rules/`, `CLAUDE.md`) to understand what is
+   already configured. Do **not** re-ask build, test, lint, or run commands — those are
+   project-level concerns already configured elsewhere.
+2. Inspect the project:
+   - Existing skill rules (`code-review.md`, `run.md`, `verify.md` in `.claude/rules/`)
+   - Any documented **spec or issue workflow** — a rules file or CLAUDE.md section that
+     describes where the spec lives (inline note, tracking issue, external doc) or how to
+     handle a feature ticket or bug report before writing code
+   - Any documented **branch naming convention** — in CI configs, CLAUDE.md, or rules files
+   - Any documented **testing strategy** — a rules file or CLAUDE.md section describing
+     which component types systematically require tests, required test patterns or idioms to
+     follow or avoid, test file locations, and where in the test pyramid different changes
+     should be covered. This is **not a setup question** — carry this information directly
+     into the implementation loop so every test written follows the project's strategy
+     automatically. Mention in the closing setup summary that a strategy was found and will
+     be followed.
+3. Present **skill-specific choices only** via interactive dialogs. **All questions must be
+   phrased in plain, user-facing language — never expose the skill's internal phase numbers
+   or names (e.g. "Phase 1", "Phase 3", "Frame", "Hand Off") in a question or option label.
+   Those names are for the agent's own orientation, not for the user.**
+
+   **Spec, issue & branch workflow:**
+   If the project documents how to capture a spec and name branches, **summarize what you
+   found in plain language and ask to confirm or adjust** — do not present a jargon
+   either/or. For example:
+
+   > "Your project documents a workflow: the spec lives in a GitHub issue (I'll use the
+   > existing one, or create it if there isn't one yet) and branches are named
+   > `{issue_number}-short-desc`. I'll follow that instead of the skill's defaults — use
+   > it, or adjust?"
+
+   Key rule: **never force creating a tracking issue** when one already exists for the
+   work at hand. Detect and use the existing issue; create one only when the documented
+   workflow calls for it and none exists. If nothing is documented, fall back to the
+   skill defaults (inline spec note; `feature/<ticket-slug>` from `main`).
+
+   **Other choices:**
+   - **Test collaboration mode** — the loop used while implementing:
+     - *Solo AI* (default): agent runs red/green itself, one test at a time; escape hatch
+       to agentic manual testing when test-first genuinely doesn't fit
+     - *Assert-in-the-loop*: agent scaffolds one test (arrange + act + empty assertion
+       placeholder); human writes the assertions; agent confirms genuine red and implements
+       to green
+     - *Ping-pong*: human writes failing test → agent greens it and writes next failing
+       test → human greens it and writes next → …
+     - *Ask each feature*: no fixed mode; at the start of each feature's implementation
+       the skill asks which of the three modes to use for that feature only
+   - **Review delegation** — detected automatically (check for `code-review.md` in
+     `.claude/rules/`); ask only if ambiguous
+   - **Commit granularity** — how commits are made while implementing and reshaped at
+     hand-off:
+     - *Checkpoint + curate* (default): checkpoint-commit after each green; reshape into
+       a few logical, behaviour-level commits at hand-off
+     - *One commit per criterion*: commit once per acceptance criterion (may span 2–3 tests);
+       no reshape step needed
+     - *Keep every checkpoint*: commit per green, never reshape (maximum bisect granularity,
+       noisiest published history)
+   - **Trigger enforcement (optional, off by default)** — install a `UserPromptSubmit` hook
+     in this project so the harness nudges Claude to invoke `feature-development` whenever it
+     detects feature, bug, or ticket intent. This is the only enforcement-level trigger; the
+     skill's description and body notes are advisory (the model still chooses). Recommend it
+     only for teams that have seen the skill under-trigger — particularly when plan mode is
+     active at the first turn. If opted in, run `/update-config` in this project: it will
+     write the hook into the project's `settings.json`. No hook is bundled with this plugin.
+4. Write `.claude/rules/feature-development.md` containing only the non-default choices.
+   If the user accepts all defaults (or the detected workflow covers everything), confirm no
+   rules file is needed and stop.
+
+**What to defer to a human (Setup):** the correct branch base and naming convention if the
+project doesn't document them — Setup cannot infer this reliably from `.git/config` alone.
