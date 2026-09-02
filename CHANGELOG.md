@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-09-02
+
 ### Added
 
 - **Plugin validation in CI** (`.github/workflows/validate.yml`) — runs `claude plugin validate`
