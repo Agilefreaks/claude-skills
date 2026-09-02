@@ -91,7 +91,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   match the platform guidance.
 
 - **`.claude/rules/marketplace.md`** — `claude plugin validate` added to the new-plugin
-  checklist, with a note that it does not check version agreement between the two manifests.
+  checklist, alongside the version-agreement check CI now runs across `plugin.json`,
+  `marketplace.json` and the README Plugin Catalogue row.
 
 ## [1.6.0] - 2026-07-08
 
