@@ -23,6 +23,44 @@ Throughout, "feature" means the unit of work in flight — a new feature or a bu
 
 ---
 
+## Standing rules
+
+These hold for the whole session, not just the phase you are in.
+
+### Core principles
+
+1. **Code is cheap; good code is not.** Delivering new code is near-free; delivering
+   secure, maintainable, correct code remains expensive. Those savings belong in spec
+   and verification — not skipped steps.
+
+2. **Aim higher, not just faster.** Shipping lower-quality code faster with agents is a
+   deliberate choice — and the wrong one. If adopting agentic practices is reducing quality,
+   address that directly rather than accepting it.
+
+3. **First run the tests.** Before touching any production code, run the full test suite
+   to locate the harness, gauge the project's scale, and establish a testing-first bias
+   for the session.
+
+4. **Red before green.** Write one test, confirm it genuinely fails, then implement.
+   Skipping the red phase risks tests that always pass and code that exercises nothing.
+
+5. **Git is a safety net — use it actively.** Branch before the first line of code.
+   Commit checkpoints after each green — then reshape those checkpoints into a few logical
+   commits before hand-off, so a big feature reads as several meaningful commits, not one
+   and not thirty. Every mistake is reversible; use that guarantee freely.
+
+6. **Never inflict unreviewed code.** Opening a PR with agent-produced lines you haven't
+   read delegates the actual work to your collaborators. Review your own diff before asking
+   anyone else to.
+
+### Reporting as you go
+
+Say in one line what you are about to do before your first tool call, and give a brief update when you find something load-bearing or change direction — a root cause located, a test that will not go red, a plan step that turned out wrong.
+
+Before reporting progress, tie each claim to a command you actually ran. If tests fail, say so with the output. If a step was skipped, say that. When something is done and verified, state it plainly without hedging. A green suite you did not watch run is not a green suite.
+
+---
+
 ## Works with plan mode
 
 This skill and plan mode are complementary, not competing — plan mode is never a reason to
@@ -145,8 +183,15 @@ without making assumptions. Stop and ask rather than guess.
 
 ## Phase 2: Explore & Baseline
 
-Launch parallel Explore subagents — each gets a fresh context window and does not consume
-top-level context:
+Size the exploration to the unknown. Where the surface is wide — several modules, an
+unfamiliar test harness, a bug with no obvious origin — launch parallel Explore subagents,
+one per question; each gets a fresh context window and does not consume top-level context.
+Where it is a handful of files you could read directly, read them: a subagent that
+re-establishes context to answer a question you could have answered in three tool calls
+costs more than it saves. If you do delegate, commit to it — brief the agent precisely the
+first time, and do not re-derive its findings once it reports back.
+
+Questions worth their own agent:
 
 - One agent: locate existing patterns, utilities, and components relevant to the feature
 - One agent: find the test suite, understand test organization and the testing harness, and
@@ -228,21 +273,27 @@ for each mode is in `references/test-collaboration-modes.md`.
 **Invariant across all modes: exactly one test at a time.** Never generate 2–10 tests
 up front. One failing test → implement → green → commit → next test.
 
-**Solo AI (default):** write one failing test, confirm it genuinely fails, implement the
-minimum to make it pass, re-run to confirm green, checkpoint-commit, repeat.
-
-**Assert-in-the-loop:** agent scaffolds one test (arrange + act + assertion placeholder);
-human writes the assertions; agent confirms genuine red; agent implements to green; commit;
-next test.
-
-**Ping-pong:** human writes a failing test; agent makes it pass and writes the next failing
-test; human makes it pass and writes the next failing test; repeat.
+Read that reference before the first test — it is the operational source of truth for who
+writes the test, who writes the assertions, and who implements, in each mode. The default,
+*Solo AI*, is: write one failing test, confirm it genuinely fails, implement the minimum to
+make it pass, re-run to confirm green, checkpoint-commit, repeat.
 
 **Testing strategy:** every test written in this phase follows the project's documented
 testing strategy surfaced in Explore — the appropriate level and kind of test for the layer
 being changed, required patterns, forbidden idioms, and correct file location. When no
 strategy is documented, default to the lowest-level (fastest, most isolated) test that can
 prove the behaviour.
+
+**Stay inside the change.** If you find a pre-existing bug, a performance concern, or
+behaviour the spec does not mention, do not fix or extend it here unless the requested
+change cannot work without it — record it as a follow-up for the Phase 6 hand-off. Where
+the spec is ambiguous, implement the reading its wording and the surrounding code most
+directly support, state that assumption, and do not build for the other readings as well.
+Prefer a targeted edit to rewriting a whole file when the result is the same. Commit tests
+only where the spec asks for them or the repository already keeps tests for this kind of
+change, sized like the neighbouring test files; scratch checks and throwaway scripts do not
+become permanent test files. This bounds the *extras* only — every acceptance criterion
+still gets implemented, completely.
 
 After each green: make a checkpoint commit. These are working checkpoints — cheap, reversible,
 and (under the default *Checkpoint + curate* granularity) reshaped into logical commits at
@@ -339,33 +390,12 @@ review. Otherwise, apply an inline checklist:
 Prepare the PR/MR description from the linear walkthrough and the Phase 1 spec. If your
 project defines a PR template or posting mechanics, follow them.
 
+Lead with the outcome: the first sentence of your hand-off says what now works that did not
+before. The walkthrough comes after. Write it for a reviewer who did not watch you work —
+they did not see the exploration, they do not know the shorthand you built up along the way,
+and they cannot decode a reference to "the second plan step". Name files and behaviours in
+plain language. Match the length to the size of the change, and include the follow-ups you
+deliberately left out of scope.
+
 **What to defer to a human:** the final review, approval, and merge decision. The agent
 prepares and narrates; a human decides whether to ship.
-
----
-
-## Core Principles
-
-1. **Code is cheap; good code is not.** Delivering new code is near-free; delivering
-   secure, maintainable, correct code remains expensive. Those savings belong in spec
-   and verification — not skipped steps.
-
-2. **Aim higher, not just faster.** Shipping lower-quality code faster with agents is a
-   deliberate choice — and the wrong one. If adopting agentic practices is reducing quality,
-   address that directly rather than accepting it.
-
-3. **First run the tests.** Before touching any production code, run the full test suite
-   to locate the harness, gauge the project's scale, and establish a testing-first bias
-   for the session.
-
-4. **Red before green.** Write one test, confirm it genuinely fails, then implement.
-   Skipping the red phase risks tests that always pass and code that exercises nothing.
-
-5. **Git is a safety net — use it actively.** Branch before the first line of code.
-   Commit checkpoints after each green — then reshape those checkpoints into a few logical
-   commits before hand-off, so a big feature reads as several meaningful commits, not one
-   and not thirty. Every mistake is reversible; use that guarantee freely.
-
-6. **Never inflict unreviewed code.** Opening a PR with agent-produced lines you haven't
-   read delegates the actual work to your collaborators. Review your own diff before asking
-   anyone else to.

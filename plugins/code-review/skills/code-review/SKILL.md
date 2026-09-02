@@ -24,7 +24,7 @@ When asked to set up, configure, onboard, or create a rules file for this skill:
    - **Output Format** — custom structure for the review output, or use the built-in format
    - **Posting Mechanics** — how to post the review (GitHub PR comment, inline comments, stdout)
    - **Re-review Thread Handling** — on a re-review, what to do with your own prior finding threads: *Reply and resolve* (default — reply in-thread and resolve threads that are fixed or answered), *Reply only* (reply in-thread but leave resolution to humans), or *Summary only* (never touch prior threads; report their status only in the summary)
-   - **CI Integration** — offer to generate a GitHub Actions workflow that runs this review automatically on every PR. Always ask this, even if no `.github/workflows/` directory exists yet — this may be the project's first workflow. Present model choices: *Opus (recommended)* / *Sonnet* / *Skip*. Default: Opus.
+   - **CI Integration** — offer to generate a GitHub Actions workflow that runs this review automatically on every PR. Always ask this, even if no `.github/workflows/` directory exists yet — this may be the project's first workflow. Present model choices: *Opus (recommended)* / *Sonnet* / *Fable* / *Skip*. Default: Opus. When presenting Fable, say what the trade is: the strongest reviewer available, at roughly double the per-token cost, and its safety classifiers can decline a security-heavy diff — which surfaces as a failed CI run rather than a review. Pass model **aliases**, not dated identifiers, so the workflow tracks the current release instead of pinning a retired one.
 4. Write `.claude/rules/code-review.md` containing only the user's choices. Omit any decision where the user accepts the default — the skill's built-in behavior handles those.
 5. If the user opted in to CI Integration:
    a. Read `assets/code-review.yml` (bundled with this skill) as the workflow template.
@@ -182,10 +182,17 @@ If your project has defined platform-specific posting mechanics (how to post a r
 - **Medium** — touches existing behavior or shared code, but well-tested and the dependencies are understood
 - **High** — modifies shared components with dependents, tests changed or missing for the change type, security or auth involved
 
+**Record every finding with a severity and a confidence.** Do not narrow the search while reviewing — a concern you decline to write down in Phases 1–5 cannot be recovered later. Filtering happens here, in the summary, where a human can see what was filtered.
+
+- **Severity** — `blocker` (must not ship as-is: breaks the build, solves the wrong problem, introduces a security hole, or removes a contract other code depends on), `important` (should be addressed before merge), `nice-to-have` (worth noting, safe to defer).
+- **Confidence** — `high` (verified in the diff or the surrounding code), `medium` (consistent with what the diff shows, not confirmed), `low` (a question worth asking, not yet a claim). Say plainly what you did not check rather than raising the confidence to match the concern.
+
+A low-confidence blocker is still worth raising; a low-confidence nice-to-have usually is not. Lead the concerns with the blockers.
+
 **Produce a review summary** that includes:
 - Context: what the PR does, what problem it solves
 - What looks good
-- Concerns found (both general and line-level where applicable)
+- Concerns found, each tagged with its severity and confidence (both general and line-level where applicable)
 - On a re-review: a **Previous findings** section listing each of your prior findings with its status — *resolved* (verified fixed), *answered* (author response accepted), or *still open* — before the new concerns. First-time reviews omit this section.
 - Risk level and reasoning
 
@@ -200,6 +207,8 @@ Omit checklist sections that don't apply to this specific change. A config-only 
 **Maintain exactly one summary per change.** Post the summary as a standalone comment that begins with a hidden marker (default: `<!-- code-review-summary -->`) and that your platform allows you to later delete. On a re-review: find your previous summary by its marker, delete it, and post the fresh summary — never accumulate summaries. Mark each inline finding the same way (default: `<!-- code-review-finding -->` as the first line of the comment body) so a future re-review can recognize its own threads. On a re-review, also execute the thread dispositions from Phase 0 (in-thread replies and resolutions, per the configured thread handling mode) when posting.
 
 If your project defines posting mechanics, follow them for how to fetch, reply to, resolve, delete, and post comments on your platform. Otherwise, structure the output clearly with the sections above.
+
+Lead with the outcome: the first sentence of the summary says whether this change is safe to merge and why. The section-by-section detail comes after. Write it for a reviewer who did not watch you work — name the file and the behaviour rather than referring to a finding by number, and spell out an acronym the first time it appears. Match the length of the review to the size of the change; a two-line config diff does not need a full risk narrative.
 
 ---
 
@@ -216,3 +225,5 @@ If your project defines posting mechanics, follow them for how to fetch, reply t
 5. **Ask when uncertain.** Pausing a review to ask the author a question is always the right move when something is unclear. These conversations build shared understanding and catch mistaken assumptions before they cause damage.
 
 6. **One conversation per finding.** A finding that already has a thread is continued in that thread — verified, acknowledged, or left open — never re-posted. Accumulating duplicate comments erodes trust in the review.
+
+7. **Report what you find, filter afterwards.** Narrowing the search while reviewing loses real findings; narrowing the summary does not. Record everything with a severity and a confidence, then decide in Phase 6 what reaches the author.

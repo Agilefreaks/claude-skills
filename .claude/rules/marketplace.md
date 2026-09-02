@@ -39,6 +39,8 @@ When updating a plugin:
 
 Both must always be in sync. The marketplace `metadata.version` is bumped separately when the marketplace itself changes (new plugins, structural changes).
 
+`claude plugin validate` checks that the two manifests parse and that every `SKILL.md` frontmatter is well-formed. It does **not** check that the versions agree with each other — that stays a review item.
+
 ## CHANGELOG.md
 
 Follow [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) conventions:
@@ -73,3 +75,4 @@ add it under **Settings → Secrets and variables → Actions** before publishin
 2. Add an entry to `.claude-plugin/marketplace.json`
 3. Add a row to the Plugin Catalogue table in `README.md`
 4. Add an entry under `[Unreleased]` in `CHANGELOG.md`
+5. Run `claude plugin validate plugins/<name>` and `claude plugin validate .` — both must pass before opening the PR. CI runs the same checks (`.github/workflows/validate.yml`).

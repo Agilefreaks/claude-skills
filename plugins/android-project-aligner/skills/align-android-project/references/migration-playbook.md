@@ -7,6 +7,22 @@ Every recipe assumes:
 - Project identifiers are resolved: `<project>` (plugin id prefix), `<Project>` (class prefix), `<root-pkg>` (root Kotlin package), and the module inventory.
 - You're on the migration branch and the working tree was clean at branch creation.
 
+## Contents
+
+- Phase 1 — Foundation: catalog + build-logic
+- Phase 2 — Foundation: gradle.properties + wrapper
+- Phase 3 — Core: common + testing
+- Phase 4 — Core: designsystem + ui
+- Phase 5 — Core: data + env + dev-tools (when flavors phase opts in)
+- Phase 6 — Feature split
+- Phase 7 — Feature normalize
+- Phase 8 — App wiring
+- Phase 9 — Quality + CI
+- Phase 10 — Tests
+- Phase 11 — Project-local skills
+- Deferred-decision migrations
+- Cross-phase rules
+
 ## Phase 1 — Foundation: catalog + build-logic
 
 **Goal:** the project has a single version catalog and the 9 (or 8) convention plugins, registered and resolvable.

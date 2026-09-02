@@ -22,6 +22,30 @@ The workflow has three stages with checkpoints between them:
 
 Each phase commits on the migration branch. The user controls when (or whether) to merge.
 
+## Guardrails — these hold for the whole run
+
+- **Never modify files outside cwd.**
+- **Never push, never set a remote.** Commit boundary is the phase; merge is the user's job.
+- **Never `--no-verify`.** Pre-commit hooks exist for a reason and run in CI anyway. Fix the root cause.
+- **Never overwrite the user's hand-edited files without asking.** Particularly project-local skills (`.claude/skills/`) and config files (`.detekt/config.yml`, `.lint/config.xml`, `.editorconfig`, CI workflows) — diff first, ask before applying.
+- **Never rewrite business logic.** Re-shape files (split/move/rename) and add missing scaffolding. Behavior changes are out of scope for the aligner.
+- **Never delete files without explicit confirmation.** If a phase would remove a file (e.g. a custom MVI base the conventions replace), call it out in the plan and ask before doing it during apply.
+- **Use `git mv` when moving files** so history is preserved.
+- **Defer the high-risk migrations** (DI swap, nav swap, custom-MVI swap, app/ rename) until the user explicitly opts in. Default is "leave intact and document the deviation."
+- **Stop after 5 fix-loop iterations** on a phase. Don't churn. Tell the user exactly what's failing and let them decide.
+- **The conventions skill is the source of truth.** When in doubt, re-read the relevant section. Don't invent new conventions in this skill — point at the canonical reference.
+- **Refuse to start** if cwd isn't an Android project, isn't a git repo, or has uncommitted unrelated changes the user hasn't decided what to do with.
+
+**Stay inside the change.** Re-shape and scaffold; don't improve. If you notice a
+pre-existing bug, a performance concern, or behaviour the gap report doesn't name, don't
+fix it in a phase — record it for the final summary. Prefer a targeted edit to rewriting a
+whole file when the result is the same.
+
+**Reporting as you go.** Say in one line what you're about to do before each phase, and
+give a brief update when you find something load-bearing or change direction. Before
+reporting a phase green, tie the claim to a command you actually ran: if a build or check
+fails, say so with its output; if a step was skipped, say that.
+
 ## Step 0 — Load conventions + pre-flight
 
 ### 0.1 — Load the conventions skill
@@ -129,86 +153,27 @@ For each finding, record a tuple `(finding, severity, effort, risk, conventions-
 
 Categories to walk, in this order (matches the phasing in Step 4):
 
-### 2.1 — Foundation
-- Version catalog presence + shape (single `gradle/libs.versions.toml`, `[versions]` / `[libraries]` / `[plugins]` sections, convention plugin aliases with `version = "unspecified"`).
-- AGP / Kotlin / KSP / Compose Compiler version alignment (Kotlin == Compose Compiler version; KSP `<kotlin>-<X.Y.Z>`).
-- `build-logic/` presence. If missing: blocker. If present: enumerate plugin classes in `build-logic/convention/src/main/kotlin/` and compare against the 9 expected (or 8 without Room).
-- `gradle.properties` — `android.builtInKotlin` toggle matching AGP version; no legacy `android.defaults.buildfeatures.*` keys.
-- `gradlew` + wrapper version (latest stable supporting the resolved AGP).
+Audit these thirteen areas, in order. `references/audit-checklist.md` carries the grep
+recipe, the severity/effort/risk mapping, and the conventions section to cite for each one —
+work from it rather than from memory, and don't restate its criteria here.
 
-### 2.2 — Module layout
-- `core/common`, `core/model`, `core/data`, `core/testing` — present?
-- `core/designsystem-base` + `core/designsystem-mobile` (and `-tv` if TV) — present? Or single `core/designsystem`?
-- `core/ui-mobile` (and `core/ui-tv` if TV) — present?
-- Each feature under `feature/<x>/` — split into `data/`, `ui-mobile/`, (`ui-tv/` if TV)? Or single-module?
-- App modules — `app-mobile/`, `app-tv/`? Or legacy `app/`?
+1. Foundation — version catalog, AGP/Kotlin/KSP/Compose alignment, `build-logic/`, `gradle.properties`, wrapper
+2. Module layout — `core/*`, per-feature `data` + `ui-*` split, app modules
+3. MVI base types — `ViewAction` / `ViewState` / `ViewSideEffect` / `BaseViewModel`
+4. Screen / ScreenContent split
+5. Repository encapsulation — `internal` impls, no app→data dependency
+6. DI library — Koin, and the module aggregation shape
+7. Navigation — Navigation 3 entries and `NavDisplay`
+8. Persistence + Network
+9. Theming — Material 3 tokens, no hardcoded colors
+10. Flavors + dev-tools — qa/prod, `IS_QA`, environment override
+11. Tooling + CI — Spotless, detekt, Android Lint, `.editorconfig`, workflows
+12. Test conventions — `MainCoroutineRule`, ViewModel and Compose test patterns
+13. Project-local skills — `<project>-android-planner` / `-implementer`
 
-### 2.3 — MVI base types
-- `core/common/src/main/kotlin/<root-pkg>/core/`: `ViewAction.kt`, `ViewState.kt`, `ViewSideEffect.kt`, `BaseViewModel.kt`?
-- If present, do their shapes match the conventions skill verbatim (`StateFlow<State>` for state, single-consumer `Channel<Effect>`, buffered `MutableSharedFlow<Action>(extraBufferCapacity = 64)`, `init { viewModelScope.launch { _actions.onEach(::onAction).collect() } }`)?
-- If custom MVI base (different signatures, different framework like Orbit, etc.): flag as a `high`-risk migration — propose to introduce the canonical `BaseViewModel` alongside and migrate ViewModels feature-by-feature.
-
-### 2.4 — Screen / ScreenContent split
-- For each feature ui module, grep `components/`:
-  - `<Feature>Screen.kt` present?
-  - `<Feature>ScreenContent.kt` present as a separate file?
-  - ScreenContent signature: `(modifier: Modifier = Modifier, state: <FeatureState>, onAction: (<FeatureAction>) -> Unit)`?
-  - ScreenContent has no `koinViewModel`, `LocalContext.current`, `rememberLauncherForActivityResult`?
-  - At least one `@<Project>Previews` composable at the bottom that constructs a sample State and passes `onAction = {}`?
-
-### 2.5 — Repository encapsulation
-- For each feature with a `data/` module:
-  - `<Feature>Repository.kt` is a public interface?
-  - `<Feature>RepositoryImpl.kt` is declared `internal class`?
-  - `di/<Feature>DataModule.kt` exposes `val <feature>DataModule` (public)?
-  - Grep `app-mobile/build.gradle.kts` (and `app-tv/`) for `:feature:<x>:data` — must be empty.
-- If repositories are split per form-factor (a mobile repo and a TV repo): flag — conventions say the data layer is shared.
-
-### 2.6 — DI library
-- Koin? Then check `<Feature>Modules.kt` aggregator presence per feature, `<Project>Application` `startKoin { ... }` shape.
-- Hilt? Flag as `high`-risk migration. Ask the user: (a) leave Hilt intact and apply only stack-agnostic conventions, (b) migrate to Koin (involves rewriting every `@Inject` constructor + module). Default to (a) unless the user explicitly wants (b).
-- Manual DI / no DI: flag as a Koin-introduction migration.
-
-### 2.7 — Navigation
-- `androidx.navigation3.runtime` import or dependency? If yes: check `EntryProviderScope<NavKey>.<feature>Entry(...)` shape per feature, `NavDisplay` wiring in the app, no string-based routes.
-- `androidx.navigation:navigation-compose` (Nav2)? Flag as a Nav3 migration. `high`-risk because route shape changes.
-- Custom navigation? Flag and ask.
-
-### 2.8 — Persistence + Network
-- Room dependency + `AndroidRoomConventionPlugin` registered + module applies it for any module that uses Room?
-- Retrofit / Apollo / Ktor / nothing? Conventions don't mandate one; check that whatever's used is wired through `core/data` and exposed via Koin.
-- DataStore?
-
-### 2.9 — Theming
-- `<Project>Theme.kt` in `core/designsystem-mobile`?
-- `@<Project>Previews` multi-preview annotation?
-- Hardcoded colors / text styles in feature modules? Grep for `Color(0x`, `TextStyle(`, `fontSize =` outside `core/designsystem-*`.
-
-### 2.10 — Flavors + dev-tools
-- `qa` and `prod` flavors declared (via `<project>.android.flavors` or directly)?
-- `BuildConfig.IS_QA` / `BuildConfig.API_BASE_URL` accessible?
-- `core/data/env/` (EnvironmentConfig + DataStore + Koin module)?
-- `core/ui-mobile/dev/` (ShakeDetector + DevToolsBroadcastListener + EnvSelectorDialog + DevToolsHost)?
-- App-level `DevToolsHost(enabled = BuildConfig.IS_QA)` wrap?
-
-### 2.11 — Tooling + CI
-- Spotless plugin applied? ktlint version pinned in catalog?
-- detekt plugin applied? `.detekt/config.yml` present?
-- `.lint/config.xml` present?
-- `.editorconfig` present?
-- `.github/workflows/build.yml` (or equivalent) running spotlessCheck + lint + detekt + test?
-- `.github/dependabot.yml`?
-
-### 2.12 — Test conventions
-- `MainCoroutineRule` in `core/testing` defaulting to `UnconfinedTestDispatcher`?
-- ViewModel tests use Turbine + Mockito-Kotlin + Truth?
-- Compose tests live in `src/test/kotlin/` (not `src/androidTest/`)?
-- `src/test/resources/robolectric.properties` with `sdk=34`?
-
-### 2.13 — Project-local skills
-- `.claude/skills/<project>-android-planner/SKILL.md` present?
-- `.claude/skills/<project>-android-implementer/SKILL.md` present?
-- If present, do they reference the correct project class prefix + module inventory? (Re-generating them in Phase 11 is cheap; flag for refresh.)
+Read the whole checklist before recording findings: a gap in one area often explains a gap
+in another, and the checklist's "smell → convention" mapping is what keeps the gap report
+pointing at canonical shapes instead of inventing new ones.
 
 ## Step 3 — Gap report
 
@@ -503,17 +468,3 @@ If any phase was skipped by the user, list the gaps that remain unaddressed (so 
 ### 10.1 — Do not push
 
 Never run `git push`, never set a remote, never `git push --set-upstream`. The branch is local. The user merges when ready. This skill stops at the local commits.
-
-## Guardrails
-
-- **Never modify files outside cwd.**
-- **Never push, never set a remote.** Commit boundary is the phase; merge is the user's job.
-- **Never `--no-verify`.** Pre-commit hooks exist for a reason and run in CI anyway. Fix the root cause.
-- **Never overwrite the user's hand-edited files without asking.** Particularly project-local skills (`.claude/skills/`) and config files (`.detekt/config.yml`, `.lint/config.xml`, `.editorconfig`, CI workflows) — diff first, ask before applying.
-- **Never rewrite business logic.** Re-shape files (split/move/rename) and add missing scaffolding. Behavior changes are out of scope for the aligner.
-- **Never delete files without explicit confirmation.** If a phase would remove a file (e.g. a custom MVI base the conventions replace), call it out in the plan and ask before doing it during apply.
-- **Use `git mv` when moving files** so history is preserved.
-- **Defer the high-risk migrations** (DI swap, nav swap, custom-MVI swap, app/ rename) until the user explicitly opts in. Default is "leave intact and document the deviation."
-- **Stop after 5 fix-loop iterations** on a phase. Don't churn. Tell the user exactly what's failing and let them decide.
-- **The conventions skill is the source of truth.** When in doubt, re-read the relevant section. Don't invent new conventions in this skill — point at the canonical reference.
-- **Refuse to start** if cwd isn't an Android project, isn't a git repo, or has uncommitted unrelated changes the user hasn't decided what to do with.

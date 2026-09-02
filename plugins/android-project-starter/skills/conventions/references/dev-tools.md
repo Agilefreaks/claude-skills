@@ -4,6 +4,20 @@ This reference holds the verbatim Kotlin source for the qa-only env-override lay
 
 Substitute `<root-pkg>` with the project's root Kotlin package. Read `SKILL.md` first — that section explains *why* each piece exists and where it gets wired.
 
+## Contents
+
+- `core/data/.../env/EnvironmentConfig.kt` — interface
+- `core/data/.../env/EnvironmentConfigImpl.kt` — DataStore-backed implementation
+- `core/data/.../env/di/EnvironmentModule.kt` — Koin module
+- `core/data/.../network/EnvironmentBaseUrlInterceptor.kt`
+- `core/ui-mobile/.../dev/ShakeDetector.kt`
+- `core/ui-mobile/.../dev/DevToolsBroadcastListener.kt`
+- `core/ui-mobile/.../dev/DevToolsHost.kt`
+- `core/ui-mobile/.../dev/EnvSelectorDialog.kt`
+- TV variant — `core/ui-tv/.../dev/DevToolsHost.kt`
+- Wiring at the app layer
+- Triggering the dialog
+
 ## `core/data/.../env/EnvironmentConfig.kt` — interface
 
 ```kotlin

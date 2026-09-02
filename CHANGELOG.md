@@ -7,6 +7,88 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Plugin validation in CI** (`.github/workflows/validate.yml`) — runs `claude plugin validate`
+  against the marketplace manifest and every plugin directory on each pull request. The repo has
+  no build system or test runner, so this is its first automated gate. Requires Claude Code
+  v2.1.233 or later.
+- Tables of contents in the six `references/` files over 100 lines that lacked one
+  (`audit-checklist.md`, `migration-playbook.md`, `build-logic.md`, `dev-tools.md`,
+  `compose-authoring.md`, `file-templates.md`). Long reference files are often previewed with a
+  partial read; without a contents list there is no signal of what was missed.
+
+### Changed
+
+- **Re-baselined every skill for the current Claude model generation** (Opus 5, released
+  2026-07-24; Fable 5.1, released 2026-09-01). Both models ship documented behavioural shifts
+  that prompt authors are told to tune for, and they move in opposite directions on several of
+  them — so all guidance added here is written in model-neutral terms rather than pinned to a
+  model. The audit found no dated prompting patterns to remove: no reasoning incantations, no
+  assistant prefill, no anti-formatting rules, no anti-laziness boilerplate, no pinned model
+  ids. The work was additive and structural.
+
+- **Standing rules moved above the compaction cut** in the three oversized skills. Claude Code
+  does not re-read a `SKILL.md` on later turns, and auto-compaction re-attaches only the first
+  5,000 tokens of each invoked skill. `init-android-project` (~11.9k tokens),
+  `conventions` (~11.4k) and `align-android-project` (~7.3k) all kept their guardrails in a
+  closing section, which is exactly where they get dropped partway through a long run. Each now
+  carries its non-negotiables in a standing block before the first step.
+
+- **code-review** (1.2.0 → 1.3.0) — every finding now carries a **severity**
+  (`blocker` / `important` / `nice-to-have`, the vocabulary `align-android-project` already
+  used) and a **confidence** (`high` / `medium` / `low`), and filtering moved from discovery
+  into the Phase 6 summary. A severity filter stated in the prompt is followed literally and
+  suppresses real findings at the point where they cannot be recovered. New Core Principle 7,
+  "Report what you find, filter afterwards". Phase 6 gained outcome-first reporting guidance.
+  Setup's CI Integration now offers *Fable* alongside *Opus* (still the default) and *Sonnet*,
+  with the trade stated: strongest reviewer available, roughly double the per-token cost, and
+  safety classifiers that can decline a security-heavy diff — which surfaces as a failed CI run
+  rather than a review. The generated workflow passes a model **alias**, never a dated id.
+
+- **feature-development** (0.2.0 → 0.3.0) — Phase 2's exploration is now sized to the unknown
+  rather than unconditionally launching parallel Explore subagents, and commits to a
+  delegation once made instead of re-deriving its findings. Phase 4 gained a "stay inside the
+  change" bound: no fixing pre-existing bugs found in passing, targeted edits over whole-file
+  rewrites, and no promoting scratch checks into permanent test files — with the explicit
+  carve-out that this limits extras only, never the acceptance criteria. Core Principles and a
+  new reporting convention moved into a standing block at the top. Phase 4's restatement of the
+  three test-collaboration modes now points at `references/test-collaboration-modes.md`, which
+  already held the full state machines. Phase 5's Verify phase is deliberately unchanged: it is
+  a methodology phase, not the self-check scaffolding current guidance says to delete.
+
+- **dep-update-merge** (1.1.0 → 1.2.0) — a standing "while you work" block requiring every
+  progress claim to be tied to a command actually run, and outcome-first reporting in Phase 6.
+
+- **android-project-starter** (0.3.0 → 0.4.0) — `conventions` is now `user-invocable: false`;
+  it is background knowledge for other skills, and `/conventions` was never a meaningful action
+  for a user to take. Its closing guidance moved into an opening "How to use this skill" block
+  carrying the repo's first "What to defer to a human" note for this skill. Dropped a reference
+  to a `bump-versions` skill that does not exist in this marketplace.
+  `init-android-project` hoisted its Guardrails and Question rules into a single standing block
+  before Step 0, dropping the one duplicated statement of the one-question-at-a-time rule, and
+  gained a deferral note at the declaring-done gate: a green build gate proves the scaffold
+  compiles and tests clean, not that the architecture suits the product.
+
+- **android-project-aligner** (0.1.0 → 0.2.0) — Guardrails hoisted above Step 0 and extended
+  with a stay-inside-the-change bound (re-shape and scaffold, don't improve) and a
+  progress-grounding rule. Step 2's thirteen inline audit sub-sections collapsed to the area
+  list plus a pointer to `references/audit-checklist.md`, which already carried the same
+  thirteen areas with grep recipes and severity mappings the SKILL.md restated more thinly.
+
+- **`.claude/rules/skill-authoring.md`** — the frontmatter reference was roughly a third of the
+  current surface. Now split into Agent Skills spec fields (portable to Cowork) and Claude Code
+  only fields, with guidance on the two invocation switches and a rule against setting `model`
+  or `effort` in a published skill. New "Size and placement" section covering the 5,000-token
+  compaction budget and the fact that skills are not re-read on later turns. New "Writing for
+  the current model generation" section: no model names in a skill, say how to report back,
+  don't add self-check scaffolding, say what to leave alone, and don't narrow the search to
+  widen the signal. Reference-file table-of-contents threshold lowered from 300 lines to 100 to
+  match the platform guidance.
+
+- **`.claude/rules/marketplace.md`** — `claude plugin validate` added to the new-plugin
+  checklist, with a note that it does not check version agreement between the two manifests.
+
 ## [1.6.0] - 2026-07-08
 
 ### Changed

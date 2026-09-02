@@ -4,6 +4,24 @@ This is the operational checklist the aligner walks during **Step 2 — Inventor
 
 Read this top to bottom on the first pass. On re-runs you can jump to the section the user wants to focus on.
 
+## Contents
+
+- How to record findings
+- 1. Foundation
+- 2. Module layout
+- 3. MVI base types
+- 4. Screen / ScreenContent split
+- 5. Repository encapsulation
+- 6. DI library
+- 7. Navigation
+- 8. Persistence + Network
+- 9. Theming
+- 10. Flavors + dev-tools
+- 11. Tooling + CI
+- 12. Test conventions
+- 13. Project-local skills
+- Quick-grep cheat sheet
+
 ## How to record findings
 
 For every check that diverges from the conventions, record one finding:

@@ -4,6 +4,22 @@ This reference holds the verbatim source for every convention plugin generated b
 
 **Read this file before generating anything under `build-logic/`.** Substitute `<project>` with the project's plugin-id prefix (lowercase, hyphens stripped). Do not refactor, do not extract helpers, do not add `package` declarations.
 
+## Contents
+
+- `ProjectExtensions.kt` — shared `libs` accessor (lives in its own package)
+- `AndroidApplicationConventionPlugin.kt`
+- `AndroidLibraryConventionPlugin.kt`
+- `AndroidApplicationComposeConventionPlugin.kt` and `AndroidLibraryComposeConventionPlugin.kt`
+- `AndroidFeatureConventionPlugin.kt`
+- `AndroidFlavorsConventionPlugin.kt`
+- `AndroidLintConventionPlugin.kt`
+- `AndroidRoomConventionPlugin.kt`
+- `JvmLibraryConventionPlugin.kt`
+- `build-logic/convention/build.gradle.kts`
+- `build-logic/settings.gradle.kts`
+- Root `settings.gradle.kts`
+- `gradle.properties` Kotlin handling — AGP version matters
+
 ## `ProjectExtensions.kt` — shared `libs` accessor (lives in its own package)
 
 File path: `build-logic/convention/src/main/kotlin/<project>/android/buildlogic/ProjectExtensions.kt` (replace `<project>` with the project's plugin-id prefix — for `acme` the path is `…/acme/android/buildlogic/ProjectExtensions.kt`).

@@ -12,7 +12,7 @@ Reviews pull requests in six phases, with a re-review pass when the PR was revie
 3. **Test Audit** — are modified/deleted tests a red flag?
 4. **Coverage Assessment** — categorizes the change (bug fix, new feature, add-on, extension, refinement) and applies risk-appropriate expectations
 5. **Project-Specific Checks** — deferred to your project's rules file
-6. **Risk Assessment & Output** — Low / Medium / High risk level, review summary, human reviewer checklist
+6. **Risk Assessment & Output** — Low / Medium / High risk level, review summary, human reviewer checklist. Every finding carries a severity and a confidence; filtering happens in the summary, never during the review itself
 
 ## Companion rules file (recommended)
 
@@ -72,8 +72,8 @@ Run checks relevant to the changes. Skip sections for unaffected areas.
 
 _See inline comments in the Files Changed tab for specific line-level concerns._
 
-_General concerns:_
-- [Concern and why it matters]
+_General concerns, blockers first:_
+- `[blocker | important | nice-to-have]` `[confidence: high | medium | low]` [Concern and why it matters]
 
 (If none: "No issues found")
 
@@ -190,7 +190,9 @@ Once the plugin is distributed to your org, use it from any Cowork project. See 
 
 ### GitHub Actions
 
-Run `set up code-review` in Claude Code or Claude.ai Cowork to generate `.github/workflows/code-review.yml` in your project automatically. The Setup wizard asks which model to use (Opus recommended) and writes the workflow for you.
+Run `set up code-review` in Claude Code or Claude.ai Cowork to generate `.github/workflows/code-review.yml` in your project automatically. The Setup wizard asks which model to use and writes the workflow for you.
+
+Opus is the default and the right choice for almost every repo. Fable is available for high-stakes reviews at roughly double the per-token cost; note that its safety classifiers can decline a security-heavy diff, which shows up as a failed CI run rather than a posted review. The workflow passes a model *alias* rather than a dated model id, so it follows the current release instead of pinning one that will be retired.
 
 After the file is generated, add `CLAUDE_CODE_OAUTH_TOKEN` as a repository secret:
 

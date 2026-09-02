@@ -11,6 +11,14 @@ description: "Bundle and merge dependency update PRs/MRs into a single verified 
 
 ---
 
+## While you work
+
+Say in one line what you are about to do before your first tool call, and give a brief update when you find something load-bearing or change direction — a breaking change in a changelog, a merge conflict, a failing build.
+
+Before reporting progress, tie each claim to a command you actually ran. If a build or test step fails, say so with its output. If a step was skipped, say that. A bundle reported as verified must be one you watched pass.
+
+---
+
 ## Setup
 
 When asked to set up, configure, onboard, or create a rules file for this skill:
@@ -156,6 +164,8 @@ Produce a summary report:
 ```
 
 If your project defines how to create the final PR/MR or how to post the output (platform command, PR template), follow that. Otherwise, output the report to stdout and leave the branch ready for the user to create a PR/MR manually.
+
+Lead with the outcome: your first sentence says whether the bundle is ready and what is in it. The table and the detail come after. Write it for someone who did not watch you work — name each dependency and what changed rather than referring back to numbers from earlier in the run. Match the length of the report to what actually happened; a clean five-package bundle does not need sections about risks that did not materialize.
 
 **What to defer to a human:** The final decision to merge. This skill prepares and verifies the combined change but does not merge to the default branch. A human must review the bundle and approve the merge.
 

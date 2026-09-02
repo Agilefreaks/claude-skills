@@ -1,0 +1,39 @@
+name: Validate Plugins
+
+# Checks that the marketplace manifest, every plugin manifest, and every
+# SKILL.md frontmatter parse. This repo has no build system and no test runner,
+# so this is the only automated gate — see .claude/rules/marketplace.md.
+#
+# Requires Claude Code v2.1.233 or later for `claude plugin validate`.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: claude plugin validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Validate marketplace manifest
+        run: claude plugin validate .
+
+      - name: Validate every plugin
+        run: |
+          set -euo pipefail
+          status=0
+          for plugin in plugins/*/; do
+            echo "::group::${plugin}"
+            claude plugin validate "$plugin" || status=1
+            echo "::endgroup::"
+          done
+          exit $status

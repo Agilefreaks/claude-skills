@@ -41,7 +41,7 @@ Or add to your project's `.claude/settings.json` to install automatically:
 
 ### GitHub Actions
 
-Run `set up code-review` in Claude Code or Claude.ai Cowork. The Setup wizard detects GitHub Actions usage, asks which model to use (Opus recommended), and generates `.github/workflows/code-review.yml` in your project.
+Run `set up code-review` in Claude Code or Claude.ai Cowork. The Setup wizard detects GitHub Actions usage, asks which model to use (Opus by default; Sonnet and Fable are offered), and generates `.github/workflows/code-review.yml` in your project.
 
 After the file is generated, add `CLAUDE_CODE_OAUTH_TOKEN` as a repository secret (generate it with `claude setup-token`, then add it under **GitHub repo → Settings → Secrets and variables → Actions**).
 
