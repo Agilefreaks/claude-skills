@@ -76,9 +76,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **android-project-aligner** (0.1.0 → 0.2.0) — Guardrails hoisted above Step 0 and extended
   with a stay-inside-the-change bound (re-shape and scaffold, don't improve) and a
-  progress-grounding rule; outcome-first reporting added at the Step 10 final summary. Step 2's thirteen inline audit sub-sections collapsed to the area
-  list plus a pointer to `references/audit-checklist.md`, which already carried the same
-  thirteen areas with grep recipes and severity mappings the SKILL.md restated more thinly.
+  progress-grounding rule; outcome-first reporting added at the Step 10 final summary.
+  Step 2's thirteen inline audit sub-sections collapsed to the area list plus a pointer to
+  `references/audit-checklist.md`, which already carried the same thirteen areas with grep
+  recipes and severity mappings the SKILL.md restated more thinly.
 
 - **`.claude/rules/skill-authoring.md`** — the frontmatter reference was roughly a third of the
   current surface. Now split into Agent Skills spec fields (portable to Cowork) and Claude Code
@@ -91,9 +92,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   match the platform guidance.
 
 - **`.claude/rules/marketplace.md`, `CLAUDE.md`, `.claude/rules/code-review.md`** — the
+  version-bump procedure now names all three places a plugin version is written
+  (`plugin.json`, the `marketplace.json` entry, and the README Plugin Catalogue row) rather
+  than two, matching what CI enforces; the two-place wording is where this PR's own five
+  stale catalogue rows came from. `metadata.version` is documented as moving once per
+  release in the `chore(release)` commit, which is what both prior releases did. The
   new-plugin checklist gained the validation step, and the three places that asserted this
-  repo has no automated check were corrected. `.claude/rules/code-review.md` in particular
-  told the code-review skill to skip build verification outright; it now points Phase 2 at
+  repo has no automated check were corrected — `.claude/rules/code-review.md` in particular
+  told the code-review skill to skip build verification outright, and now points Phase 2 at
   the workflow's status, with a red run treated as a broken build and a green run explicitly
   not standing in for functional validation of skill behaviour.
 

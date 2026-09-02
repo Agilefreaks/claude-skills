@@ -7,8 +7,7 @@ test-first loop, verify by driving the running app, and hand off for review.
 
 > **Status:** the six-phase methodology is distilled from established agentic engineering
 > practice. The three test-collaboration modes are pending real-project validation.
-> Feedback welcome. (Version lives in the root README's Plugin Catalogue — keeping a fourth
-> copy here only creates drift.)
+> Feedback welcome.
 
 ## What it does
 

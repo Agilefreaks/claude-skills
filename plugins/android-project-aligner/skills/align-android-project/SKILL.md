@@ -417,8 +417,6 @@ git commit -m "align: spotlessApply"
 
 ## Step 10 — Final summary
 
-Lead with the outcome: the first line says what the project now conforms to and what is still outstanding. The phase-by-phase detail follows. Write it for someone who did not watch the migration run — name the phases and files rather than referring back to numbers from the plan, and spell out what a skipped phase leaves undone. Match the length to what actually changed.
-
 Print to the user:
 
 ```
@@ -465,6 +463,8 @@ Next step:
 ```
 
 If any phase was skipped by the user, list the gaps that remain unaddressed (so they can pick them up later).
+
+Open with the outcome before that block: one sentence saying what the project now conforms to and what is still outstanding. Then print the template. Write the surrounding prose for someone who did not watch the migration run — say what a skipped phase leaves undone rather than only naming it, and don't make the reader map a phase number back to the plan.
 
 ### 10.1 — Do not push
 

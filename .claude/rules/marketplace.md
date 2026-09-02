@@ -38,7 +38,9 @@ A plugin version is written in three places. When updating a plugin, bump all th
 2. The plugin's entry in `.claude-plugin/marketplace.json`
 3. The plugin's row in the Plugin Catalogue table in `README.md`
 
-All three must always be in sync — CI fails the PR when they drift. The marketplace `metadata.version` is separate: it is bumped in the release commit, when the marketplace itself changes (new plugins, structural changes), not alongside a plugin bump.
+All three must always be in sync — CI fails the PR when they drift.
+
+The marketplace `metadata.version` is separate. It is the marketplace's own release number and moves once per release, in the `chore(release)` commit that promotes `[Unreleased]` to a dated heading — not in the feature PR, whatever that PR changed. Both releases so far (`c866321`, `49befc0`) did exactly that: a single plugin bump each, no new plugin, and `metadata.version` moved anyway.
 
 `claude plugin validate` checks that the two manifests parse and that every `SKILL.md` frontmatter is well-formed; it exits non-zero on either failure. It does **not** compare versions — `.github/workflows/validate.yml` does that in a separate step, across the three places listed above.
 
