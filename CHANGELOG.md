@@ -39,6 +39,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   closing section, which is exactly where they get dropped partway through a long run. Each now
   carries its non-negotiables in a standing block before the first step.
 
+- **code-review** (1.3.0 → 1.4.0) — reviews are concise by default. Measured on this repo's
+  own PR #18, a review summary ran 1,334 words of which only 21% were findings; the rest was
+  scaffolding the skill mandated, and inline findings averaged 190 words. Phase 6 no longer
+  requires six sections: **Verdict** and **Concerns** are always present, and Context, what
+  was checked, previous findings and risk reasoning appear only where they say something
+  those two do not. Each finding is written as **claim, evidence, consequence** — and if no
+  consequence can be stated, it is a style preference rather than a defect, which is the
+  guard against brevity quietly rewarding the technical proofreading the source methodology
+  opens by warning about. The human checklist drops its two always-on entries for one
+  standing line plus real deferrals only. A worked example of a complete short review now
+  sits in Phase 6, since examples pin output length harder than instructions do. New Setup
+  choice **Review Detail** (*Brief* default / *Standard*), and Phase 6 now actually honours
+  the **Output Format** extension point, which Setup had offered since 1.0.0 while nothing
+  downstream read it. Coverage is deliberately untouched: findings are still recorded with
+  severity and confidence from Phase 0 and filtered only in the summary. Checked against
+  Gregory Brown's *Effective Code Reviews*, which prescribes no report format at all and
+  treats a review as a conversation rather than a document — the cut sections were the
+  skill's own additions, and none of the methodology moved.
+
 - **code-review** (1.2.0 → 1.3.0) — every finding now carries a **severity**
   (`blocker` / `important` / `nice-to-have`, the vocabulary `align-android-project` already
   used) and a **confidence** (`high` / `medium` / `low`), and filtering moved from discovery
@@ -90,6 +109,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   don't add self-check scaffolding, say what to leave alone, and don't narrow the search to
   widen the signal. Reference-file table-of-contents threshold lowered from 300 lines to 100 to
   match the platform guidance.
+
+- **`.claude/rules/skill-authoring.md`** — the Setup-section rule said to place it "before
+  Phase 1", which contradicts the size-and-placement rule in the same file naming setup
+  wizards as the canonical content to keep *past* the first 5,000 tokens. Setup runs on its
+  own invocation, where position costs nothing, and is dead weight in the compaction-safe
+  zone during a real run. It now says to put Setup after the phases once a skill approaches
+  the boundary. `code-review` moved accordingly, which is what let its worked example fit
+  inside the zone that survives compaction.
 
 - **`.claude/rules/marketplace.md`, `CLAUDE.md`, `.claude/rules/code-review.md`** — the
   version-bump procedure now names all three places a plugin version is written

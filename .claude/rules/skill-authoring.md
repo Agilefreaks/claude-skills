@@ -125,7 +125,9 @@ Example blockquote:
 
 ## Setup section
 
-When your skill has extension points, include a **Setup** section in SKILL.md (before Phase 1) that describes how to interactively configure the skill. This section travels with the plugin and is available wherever the skill is installed — no external files needed.
+When your skill has extension points, include a **Setup** section in SKILL.md that describes how to interactively configure the skill. It travels with the plugin and is available wherever the skill is installed — no external files needed.
+
+**Put it after the phases, not before them**, once a skill approaches the size boundary above. Setup runs on its own invocation ("set up <skill>"), where the file has just been loaded and position costs nothing; during an actual run it is dead weight in the one part of the file that survives compaction. This is the case the Size and placement section has in mind when it names setup wizards as content to keep past the first 5,000 tokens. In a small skill, either position is fine.
 
 The Setup section should:
 

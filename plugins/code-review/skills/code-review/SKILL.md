@@ -20,35 +20,17 @@ description: "Outside-in, risk-driven code review methodology. Use when reviewin
 
 This applies to inline comments as much as to the summary: an inline finding carries the same two tags.
 
----
+**Write each finding as claim, evidence, consequence — and stop there.**
 
-## Setup
+- **Claim** — one bold sentence naming what is wrong. A reader who reads only this line knows the problem.
+- **Evidence** — the file, the line, the quoted text or output that shows it.
+- **Consequence** — what breaks, who hits it, or what it costs to leave.
 
-When asked to set up, configure, onboard, or create a rules file for this skill:
+**If you cannot state a consequence, you have found a style preference, not a defect.** Drop it, or let the project's linters and conventions carry it. Brevity makes proofreading findings cheap to write, and a review made of cheap findings is the mediocre review this methodology exists to avoid.
 
-1. Read all existing project rules (`.claude/rules/`, `CLAUDE.md`) to understand what is already configured. Do not duplicate conventions, commands, or checks that already exist in the project's configuration.
-2. Inspect the project for issue/PR linking conventions, CI configuration, linter/formatter configs, and code review platform indicators.
-3. Present the user with interactive choices for each skill-specific decision, using a choice dialog with options for each:
-   - **Context Gathering** — how to locate the relevant issue or ticket for a PR (branch naming, PR body keywords, task management integration)
-   - **Build Verification** — how to verify the build is passing (CI status checks, specific commands)
-   - **Coding Conventions** — project-specific checks beyond the skill's defaults (architecture rules, style rules already enforced by linters)
-   - **Output Format** — custom structure for the review output, or use the built-in format
-   - **Posting Mechanics** — how to post the review (GitHub PR comment, inline comments, stdout)
-   - **Re-review Thread Handling** — on a re-review, what to do with your own prior finding threads: *Reply and resolve* (default — reply in-thread and resolve threads that are fixed or answered), *Reply only* (reply in-thread but leave resolution to humans), or *Summary only* (never touch prior threads; report their status only in the summary)
-   - **CI Integration** — offer to generate a GitHub Actions workflow that runs this review automatically on every PR. Always ask this, even if no `.github/workflows/` directory exists yet — this may be the project's first workflow. Present model choices: *Opus (recommended)* / *Sonnet* / *Fable* / *Skip*. Default: Opus. When presenting Fable, say what the trade is: the strongest reviewer available, at roughly double the per-token cost, and its safety classifiers can decline a security-heavy diff — which surfaces as a failed CI run rather than a review. Pass model **aliases**, not dated identifiers, so the workflow tracks the current release instead of pinning a retired one.
-4. Write `.claude/rules/code-review.md` containing only the user's choices. Omit any decision where the user accepts the default — the skill's built-in behavior handles those.
-5. If the user opted in to CI Integration:
-   a. Read `assets/code-review.yml` (bundled with this skill) as the workflow template.
-   b. Substitute `--model opus` with `--model <chosen-model>` if the user chose a different model.
-   c. If `.github/workflows/code-review.yml` already exists in the project, show a diff and ask for confirmation before overwriting.
-   d. Write the workflow to `.github/workflows/code-review.yml` (create `.github/workflows/` if it doesn't exist).
-   e. Remind the user to add `CLAUDE_CODE_OAUTH_TOKEN` as a repository secret:
-      - Generate the token locally with: `claude setup-token`
-      - Add it at: **GitHub repo → Settings → Secrets and variables → Actions → New repository secret**
+Leave out how you found it, what you ruled out on the way, and where the project solves this elsewhere unless that *is* the fix. If the author wants the reasoning they will ask, and the thread is the place for it — a review is a conversation, not a report.
 
-**What to defer to a human (CI Integration):** The user must add the `CLAUDE_CODE_OAUTH_TOKEN` secret and verify that branch protection rules allow the action to post review comments. Setup cannot check or configure those.
-
-If the user accepts all defaults and no choices were made, confirm that no rules file is needed and stop.
+This is about prose, not coverage. It never changes how many findings you record or how many reach the author; where the two seem to pull against each other, the rule above wins.
 
 ---
 
@@ -195,26 +177,53 @@ If your project has defined platform-specific posting mechanics (how to post a r
 
 **Filter here, not earlier.** Every finding recorded in Phases 0–5 reaches this point; decide now which ones reach the author. A low-confidence blocker is still worth raising; a low-confidence nice-to-have usually is not. Lead the concerns with the blockers.
 
-**Produce a review summary** that includes:
-- Context: what the PR does, what problem it solves
-- What looks good
-- Concerns found, each tagged with its severity and confidence (both general and line-level where applicable)
-- On a re-review: a **Previous findings** section listing each of your prior findings with its status — *resolved* (verified fixed), *answered* (author response accepted), or *still open* — before the new concerns. First-time reviews omit this section.
-- Risk level and reasoning
+**Produce a review summary.** Two sections are always present:
 
-**Produce a human reviewer checklist** that includes only relevant items:
-- Problem validation (always) — have a human verify it actually works, not just that the code looks aligned with the issue
-- Build and functional verification (always) — run the feature, try it from a user perspective
-- Anything explicitly deferred in Phases 1–4: testing refinement dependents, verifying add-on failure isolation, trying out the feature in a real environment
-- Project-specific items where relevant: resetting projectors, testing integration points, checking authorization flows
+1. **Verdict** — one or two sentences: can this merge, and what is the one thing standing in the way.
+2. **Concerns** — the findings that reach the author, blockers first, each in the claim/evidence/consequence shape. Tag both general and line-level findings.
 
-Omit checklist sections that don't apply to this specific change. A config-only change doesn't need event sourcing verification. A documentation update doesn't need performance testing.
+Write the concerns first and the verdict from them. A verdict written first becomes a target the concerns get trimmed to fit.
+
+Add any of the following only where it tells the reader something those two do not:
+
+- **Context** — when the change's purpose is not evident from its title and diff.
+- **What was checked** — only the checks whose result would change the merge decision, one line each. Not a log of everything you looked at.
+- **Previous findings** (re-reviews) — one line per prior finding: *resolved* (verified fixed), *answered* (author response accepted), or *still open*, plus a few words. Not a restatement of the finding. First-time reviews omit this.
+- **Risk level** — always give the level; give reasoning only where the concerns don't already show it.
+
+**Produce a human reviewer checklist.** One standing line — this review did not run the code — then one line for each thing you could not verify: a deferral you made in Phases 1–4, a claim you could not check, a behaviour only a person can judge. Nothing else. If you deferred nothing beyond the standing line, say so and move on.
+
+Do not restate a concern that already appears above. A finding and a deferral are different things: a finding is something you found, a deferral is something you could not look at.
 
 **Maintain exactly one summary per change.** Post the summary as a standalone comment that begins with a hidden marker (default: `<!-- code-review-summary -->`) and that your platform allows you to later delete. On a re-review: find your previous summary by its marker, delete it, and post the fresh summary — never accumulate summaries. Mark each inline finding the same way (default: `<!-- code-review-finding -->` as the first line of the comment body) so a future re-review can recognize its own threads. On a re-review, also execute the thread dispositions from Phase 0 (in-thread replies and resolutions, per the configured thread handling mode) when posting.
 
-If your project defines posting mechanics, follow them for how to fetch, reply to, resolve, delete, and post comments on your platform. Otherwise, structure the output clearly with the sections above.
+If a project defines an output format or a review detail level, follow it. Otherwise use the shape above. If your project defines posting mechanics, follow them for how to fetch, reply to, resolve, delete, and post comments on your platform.
 
-Lead with the outcome: the first sentence of the summary says whether this change is safe to merge and why. The section-by-section detail comes after. Write it for a reviewer who did not watch you work — name the file and the behaviour rather than referring to a finding by number, and spell out an acronym the first time it appears. Match the length of the review to the size of the change; a two-line config diff does not need a full risk narrative.
+Write it for a reviewer who did not watch you work: name the file and the behaviour rather than referring to a finding by number, and spell out an acronym the first time it appears.
+
+An example of the whole shape, for a first review of a small bug fix:
+
+```
+**Verdict** — Safe to merge once the regression test covers the reported path. The fix is
+right; the test proves something narrower than the bug report describes.
+
+**Concerns**
+
+`[important]` `[confidence: high]` **The regression test bypasses the reported failure path.**
+`spec/signup_spec.rb:42` asserts the validation error on the model. The bug report describes a
+blank email on the signup form rendering a 500.
+A future change to the controller re-opens this bug with the suite green.
+
+`[nice-to-have]` `[confidence: medium]` **The blank-email guard has no sibling for invalid emails.**
+`User#validate_email` handles `nil` but not malformed input, and the same form accepts both.
+If this bug arrived by that route, the invalid case is still open — worth a ticket either way.
+
+**Risk** — Low. Isolated to signup validation; no shared code touched.
+
+**For a human**
+- This review did not run the code.
+- Nothing else deferred.
+```
 
 ---
 
@@ -233,3 +242,34 @@ Lead with the outcome: the first sentence of the summary says whether this chang
 6. **One conversation per finding.** A finding that already has a thread is continued in that thread — verified, acknowledged, or left open — never re-posted. Accumulating duplicate comments erodes trust in the review.
 
 7. **Report what you find, filter afterwards.** Narrowing the search while reviewing loses real findings; narrowing the summary does not. Record everything with a severity and a confidence, then decide in Phase 6 what reaches the author.
+
+---
+
+## Setup
+
+When asked to set up, configure, onboard, or create a rules file for this skill:
+
+1. Read all existing project rules (`.claude/rules/`, `CLAUDE.md`) to understand what is already configured. Do not duplicate conventions, commands, or checks that already exist in the project's configuration.
+2. Inspect the project for issue/PR linking conventions, CI configuration, linter/formatter configs, and code review platform indicators.
+3. Present the user with interactive choices for each skill-specific decision, using a choice dialog with options for each:
+   - **Context Gathering** — how to locate the relevant issue or ticket for a PR (branch naming, PR body keywords, task management integration)
+   - **Build Verification** — how to verify the build is passing (CI status checks, specific commands)
+   - **Coding Conventions** — project-specific checks beyond the skill's defaults (architecture rules, style rules already enforced by linters)
+   - **Output Format** — custom structure for the review output, or use the built-in format
+   - **Review Detail** — how much prose each finding gets: *Brief* (default — claim, evidence, consequence), or *Standard* (adds the reasoning behind each finding, for teams who review asynchronously and want fewer round trips). This dials prose only; neither setting changes which findings are reported.
+   - **Posting Mechanics** — how to post the review (GitHub PR comment, inline comments, stdout)
+   - **Re-review Thread Handling** — on a re-review, what to do with your own prior finding threads: *Reply and resolve* (default — reply in-thread and resolve threads that are fixed or answered), *Reply only* (reply in-thread but leave resolution to humans), or *Summary only* (never touch prior threads; report their status only in the summary)
+   - **CI Integration** — offer to generate a GitHub Actions workflow that runs this review automatically on every PR. Always ask this, even if no `.github/workflows/` directory exists yet — this may be the project's first workflow. Present model choices: *Opus (recommended)* / *Sonnet* / *Fable* / *Skip*. Default: Opus. When presenting Fable, say what the trade is: the strongest reviewer available, at roughly double the per-token cost, and its safety classifiers can decline a security-heavy diff — which surfaces as a failed CI run rather than a review. Pass model **aliases**, not dated identifiers, so the workflow tracks the current release instead of pinning a retired one.
+4. Write `.claude/rules/code-review.md` containing only the user's choices. Omit any decision where the user accepts the default — the skill's built-in behavior handles those.
+5. If the user opted in to CI Integration:
+   a. Read `assets/code-review.yml` (bundled with this skill) as the workflow template.
+   b. Substitute `--model opus` with `--model <chosen-model>` if the user chose a different model.
+   c. If `.github/workflows/code-review.yml` already exists in the project, show a diff and ask for confirmation before overwriting.
+   d. Write the workflow to `.github/workflows/code-review.yml` (create `.github/workflows/` if it doesn't exist).
+   e. Remind the user to add `CLAUDE_CODE_OAUTH_TOKEN` as a repository secret:
+      - Generate the token locally with: `claude setup-token`
+      - Add it at: **GitHub repo → Settings → Secrets and variables → Actions → New repository secret**
+
+**What to defer to a human (CI Integration):** The user must add the `CLAUDE_CODE_OAUTH_TOKEN` secret and verify that branch protection rules allow the action to post review comments. Setup cannot check or configure those.
+
+If the user accepts all defaults and no choices were made, confirm that no rules file is needed and stop.
