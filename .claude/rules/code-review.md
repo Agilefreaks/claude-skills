@@ -8,7 +8,7 @@ Look for a linked GitHub issue in the PR body or PR title. If a GitHub issue is 
 
 This repo has no build system or test runner (pure Markdown and JSON), but it does have one automated gate: `.github/workflows/validate.yml` runs `claude plugin validate` on the marketplace manifest and every plugin directory, then checks that each plugin's version agrees across `plugin.json`, its `marketplace.json` entry, and its README Plugin Catalogue row.
 
-Check that workflow's status and report it in one line. A red run is a blocker: treat it as Phase 2's broken build and pause the review. A green run means the manifests parse and the versions agree; it says nothing about whether the skill content is correct, so the human checklist still carries the line that skill behaviour was not exercised.
+Check that workflow's status. A red run is a blocker: treat it as Phase 2's broken build, pause the review, and say so in the verdict. A green run needs no line of its own — it changes nothing about the merge decision, so mention it under **What was checked** only where a finding turns on it. Either way the human checklist still carries the line that skill behaviour was not exercised: a green gate means the manifests parse and the versions agree, not that the skill content is correct.
 
 ## Posting Mechanics
 

@@ -197,7 +197,7 @@ Run `set up code-review` in Claude Code or Claude.ai Cowork to generate `.github
 
 Opus is the default and the right choice for almost every repo. Fable is available for high-stakes reviews at roughly double the per-token cost; note that its safety classifiers can decline a security-heavy diff, which shows up as a failed CI run rather than a posted review. The workflow passes a model *alias* rather than a dated model id, so it follows the current release instead of pinning one that will be retired.
 
-The most capable models write longer prose by default, and effort does not reliably shorten it — so length is set by the skill, not the model. Reviews are **Brief** out of the box: two required sections, and each finding written as claim, evidence, consequence. If your team would rather have the reasoning inline than ask for it in the thread, set **Review Detail** to *Standard* during Setup. Neither setting changes which findings are reported; only how much prose each one gets.
+The most capable models write longer prose by default, and effort does not reliably shorten it — so length is set by the skill, not the model. Reviews are **Brief** out of the box: four required sections, and each finding written as claim, evidence, consequence. If your team would rather have the reasoning inline than ask for it in the thread, set **Review Detail** to *Standard* during Setup. Neither setting changes which findings are reported; only how much prose each one gets.
 
 After the file is generated, add `CLAUDE_CODE_OAUTH_TOKEN` as a repository secret:
 

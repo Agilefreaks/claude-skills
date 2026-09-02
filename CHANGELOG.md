@@ -110,13 +110,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   widen the signal. Reference-file table-of-contents threshold lowered from 300 lines to 100 to
   match the platform guidance.
 
-- **`.claude/rules/skill-authoring.md`** — the Setup-section rule said to place it "before
-  Phase 1", which contradicts the size-and-placement rule in the same file naming setup
-  wizards as the canonical content to keep *past* the first 5,000 tokens. Setup runs on its
-  own invocation, where position costs nothing, and is dead weight in the compaction-safe
-  zone during a real run. It now says to put Setup after the phases once a skill approaches
-  the boundary. `code-review` moved accordingly, which is what let its worked example fit
-  inside the zone that survives compaction.
+  Two further rules landed with the code-review work: **Setup goes after the phases** once a
+  skill approaches the size boundary, since the same file already names setup wizards as the
+  content to keep past the first 5,000 tokens — moving it is what let `code-review`'s worked
+  example fit inside the zone that survives compaction. And a skill may **drop a mandated
+  output sentence it has encoded structurally instead**, provided it notes the substitution,
+  so a later audit reads it as a decision rather than a gap.
 
 - **`.claude/rules/marketplace.md`, `CLAUDE.md`, `.claude/rules/code-review.md`** — the
   version-bump procedure now names all three places a plugin version is written
