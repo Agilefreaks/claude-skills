@@ -2,6 +2,23 @@
 
 These rules apply to every Compose file the wizard and the project-local implementer write. They're distilled from the patterns in [compose-expert](https://github.com/aldefy/compose-skill/tree/master/skills/compose-expert), adapted to this project's stack (Android-only, Material 3, MVI in ViewModel via `StateFlow`, Navigation 3, Koin).
 
+## Contents
+
+- State management — where state lives and how to read it
+- Stability & recomposition skipping
+- Modifier ordering — first principle: modifiers paint left-to-right
+- Side effects — pick the right API
+- Lists & lazy scrolling
+- Animation & motion
+- Composition locals — use sparingly
+- Theming (Material 3)
+- Canvas & DrawScope safety
+- Accessibility
+- TV-specific Compose (only if TV picked)
+- Crash patterns to avoid (production playbook)
+- Performance verification
+- Deprecated patterns to avoid
+
 ## State management — where state lives and how to read it
 
 **ViewModel owns business state. Composables never own business state.**

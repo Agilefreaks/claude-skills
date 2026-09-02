@@ -4,6 +4,24 @@ This is the operational checklist the aligner walks during **Step 2 — Inventor
 
 Read this top to bottom on the first pass. On re-runs you can jump to the section the user wants to focus on.
 
+## Contents
+
+- How to record findings
+- 1. Foundation
+- 2. Module layout
+- 3. MVI base types
+- 4. Screen / ScreenContent split
+- 5. Repository encapsulation
+- 6. DI library
+- 7. Navigation
+- 8. Persistence + Network
+- 9. Theming
+- 10. Flavors + dev-tools
+- 11. Tooling + CI
+- 12. Test conventions
+- 13. Project-local skills
+- Quick-grep cheat sheet
+
 ## How to record findings
 
 For every check that diverges from the conventions, record one finding:
@@ -198,6 +216,11 @@ Mismatches:
 - **Impl is public** → important, S, low. Phase 7. Action: prepend `internal` modifier.
 - **`<feature>DataModule` is not exposed (or named differently)** → important, S, low. Phase 7. Action: rename to canonical, mark public.
 - **App module depends on `:feature:<x>:data`** → important, S, medium. Phase 8. Action: remove the dependency; the ui module's `<feature>Modules` aggregator already includes `<feature>DataModule`.
+- **Repositories split per form factor** (a mobile repository and a separate TV one for the same feature) → important, M, medium. Phase 7. The conventions put one shared `feature/<x>/data` behind both ui modules; only the ui layer splits by form factor. Action: merge the two into the shared data module and have `ui-mobile` and `ui-tv` depend on it. Check with:
+  ```bash
+  find feature -type d -name 'data*' | sort
+  ```
+  → one `data` directory per feature, never `data-mobile` / `data-tv` or two repository implementations of the same interface.
 
 ## 6. DI library
 

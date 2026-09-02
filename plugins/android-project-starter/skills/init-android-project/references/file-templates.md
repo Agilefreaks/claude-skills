@@ -4,6 +4,16 @@ This reference holds the verbatim file bodies the wizard writes during Step 10. 
 
 Substitute `<Project>` / `<Project>Previews` / `<applicationId>` / `<root-pkg>` / `<project>` with the values gathered in Step 1. Do not trim — these bodies are sized for real projects.
 
+## Contents
+
+- `.editorconfig` (Step 10.1)
+- `.gitignore` (Step 10.1)
+- `.detekt/config.yml` (Step 10.7)
+- `google-services.json` placeholder (Step 10.8)
+- Implementer SKILL.md — Compose authoring pointer block (Step 10.9)
+- Generated project's README — "Build variants" section (Step 10.10)
+- Generated project's README — "Development tools" section (Step 10.10)
+
 ## `.editorconfig` (Step 10.1)
 
 Compose-aware ktlint defaults so the first lint pass after generation doesn't trip on Composable function naming or the MVI `_actions` backing-property pattern. Substitute `<Project>Previews` with the project's actual multi-preview annotation name (e.g. `AcmePreviews`):

@@ -1,0 +1,84 @@
+name: Validate Plugins
+
+# The repo's only automated gate — it has no build system and no test runner.
+# Three steps, all of which can fail the PR:
+#
+#   1. `claude plugin validate .`         — the marketplace manifest parses
+#   2. `claude plugin validate <plugin>`  — each plugin manifest parses, and so
+#                                           does every SKILL.md frontmatter
+#   3. Check version agreement            — each plugin's version matches across
+#                                           plugin.json, marketplace.json and the
+#                                           README Plugin Catalogue row
+#
+# `claude plugin validate` exits 1 on a malformed manifest or malformed SKILL.md
+# frontmatter, and 0 when clean — verified against both cases.
+#
+# See .claude/rules/marketplace.md. Requires Claude Code v2.1.233 or later.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: claude plugin validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Claude Code
+        # Pinned to a major so an upstream release can't silently turn the repo's
+        # only gate red; still picks up fixes within v2.
+        run: npm install -g @anthropic-ai/claude-code@2
+
+      - name: Validate marketplace manifest
+        run: claude plugin validate .
+
+      - name: Validate every plugin
+        run: |
+          set -euo pipefail
+          status=0
+          for plugin in plugins/*/; do
+            echo "::group::${plugin}"
+            claude plugin validate "$plugin" || status=1
+            echo "::endgroup::"
+          done
+          exit $status
+
+      # `claude plugin validate` checks that the manifests parse, not that they
+      # agree. Each plugin's version must match in three places: its plugin.json,
+      # its marketplace.json entry, and its README Plugin Catalogue row.
+      - name: Check version agreement
+        run: |
+          python3 - <<'EOF'
+          import json, pathlib, re, sys
+
+          marketplace = json.loads(pathlib.Path(".claude-plugin/marketplace.json").read_text())
+          readme = pathlib.Path("README.md").read_text()
+          failed = []
+
+          for plugin in marketplace["plugins"]:
+              name = plugin["name"]
+              manifest = json.loads(
+                  pathlib.Path(f"plugins/{name}/.claude-plugin/plugin.json").read_text()
+              )["version"]
+              row = re.search(
+                  r"\| \[%s\]\(plugins/%s/\) \|.*?\| (\d+\.\d+\.\d+) \|" % (name, name),
+                  readme,
+              )
+              catalogue = row.group(1) if row else "missing"
+              if not plugin["version"] == manifest == catalogue:
+                  failed.append(
+                      f"{name}: marketplace.json={plugin['version']} "
+                      f"plugin.json={manifest} README={catalogue}"
+                  )
+              print(f"{name}: {plugin['version']}")
+
+          for line in failed:
+              print(f"::error::version mismatch -- {line}")
+          sys.exit(1 if failed else 0)
+          EOF

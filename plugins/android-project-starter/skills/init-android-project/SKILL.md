@@ -15,6 +15,38 @@ disable-model-invocation: true
 
 You are running an interactive wizard that scaffolds a new Android project in the **current working directory**. The user invoked you explicitly via `/android-project-starter:init-android-project`. Don't assume — confirm, gather answers in phased rounds, generate, then **verify the project builds before considering the job done**.
 
+## Standing rules — read before doing anything
+
+These apply to every step below, for the whole run.
+
+### Guardrails
+
+- **Never overwrite an existing file without asking.** Bail in Step 0 if cwd looks like an existing project.
+- **Commit only the scaffold, only after verification passes.** `git init` + `git add .` + `git commit -m "setup architecture"` runs in Step 12, after the build-success gate is green. Don't commit before verification. Don't push — never run `git push`, never set a remote.
+- **Never `--no-verify`.** If a pre-commit hook fails, fix the root cause (usually `spotlessApply`) and re-stage. Bypassing the hook lands a broken state in source control.
+- **Never modify files outside cwd.**
+- **Never invent helpers in build-logic.** Use exactly the 9 (or 8) plugin classes the conventions skill names. Inline duplication is the right call.
+- **Never use `CommonExtension`.** Each plugin configures its own `ApplicationExtension` or `LibraryExtension`.
+- **Never declare a `package`** on convention plugin classes — they live in the default package.
+- **Don't skip the build-success gate.** Step 11 is not optional. The user has been burned by half-broken scaffolds; the verification cycle is the contract.
+- **If a step fails 5 times**, stop, report what's failing, and let the user decide whether to retry or abort. Don't keep churning.
+- **Refuse to commit if the working tree contains sensitive or generated files** that the `.gitignore` should have caught (e.g. `local.properties`, `**/build/`, `*.keystore`). Fix the ignore, re-stage, then commit.
+
+**Reporting as you go.** Before reporting a step green, tie the claim to a command you actually ran: if a build, check, or test fails, say so with its output; if a step was skipped, say that. Never report a verification you did not watch pass.
+
+### Question rules
+
+**Ask exactly one question at a time. Wait for the answer before asking the next.** This rule is non-negotiable and applies in every mode, including Claude Code's auto-accept (Shift+Tab) mode where confirmations are bypassed — auto-accept does not mean "infer answers" or "batch questions."
+
+- **`AskUserQuestion` calls must contain exactly one item in the `questions` array.** Never pass 2, 3, or 4 questions to a single `AskUserQuestion` call. One call → one question → one answer. Then make the next call.
+- **Plain-text questions go in their own chat message** — one question per message. Do not enumerate multiple `1. … 2. … 3. …` prompts in a single message and ask the user to reply with all answers. Each item gets its own message; wait for the answer before sending the next.
+- **Do not infer or auto-fill answers from defaults**, even when a recommended value is obvious. The user has to confirm every choice explicitly. The phrase "(recommended)" on an option means "this is the option I expect you to pick most often" — not "I'll pick this if you don't answer."
+- **Echo the answer back briefly** before moving on (e.g. "Got it — Mobile + TV. Next:"). This makes the conversation legible when scrolled later.
+
+The step labels below (e.g. "Step 2 — Targets + SDK") are **rounds** in the sense of "stage of the wizard", not "one round = one prompt". Each numbered sub-item in a round is a separate `AskUserQuestion` call (or separate chat message for plain-text rounds).
+
+---
+
 ## Step 0 — Load conventions and pre-flight
 
 1. **Load the conventions skill** (`android-project-starter:conventions`). It is the source of truth for module layout, MVI shape, build-logic plugins, theming, tests, version-lookup sources, and tooling defaults. **Every file you generate must match the canonical shapes shown there.** The conventions skill calls out specific traps (CommonExtension, helper files, package declarations) — follow those rules literally.
@@ -26,17 +58,6 @@ You are running an interactive wizard that scaffolds a new Android project in th
    - An empty directory or one with only `.git/`, `.idea/`, `README.md`, or `.DS_Store` is fine — proceed.
 
 3. **Greeting:** tell the user briefly what's about to happen — "I'll ask ~22 questions one at a time, resolve the latest stable versions in parallel, generate the project, then run `./gradlew help`, `assembleDebug`, `lint`, and `test` to verify. Total time ~10–15 minutes. Every project gets `qa` (default) and `prod` product flavors and a shake/broadcast dev dialog for switching API base URL on qa builds."
-
-## Question rules — read before asking anything (applies to every step below)
-
-**Ask exactly one question at a time. Wait for the answer before asking the next.** This rule is non-negotiable and applies in every mode, including Claude Code's auto-accept (Shift+Tab) mode where confirmations are bypassed — auto-accept does not mean "infer answers" or "batch questions."
-
-- **`AskUserQuestion` calls must contain exactly one item in the `questions` array.** Never pass 2, 3, or 4 questions to a single `AskUserQuestion` call. One call → one question → one answer. Then make the next call.
-- **Plain-text questions go in their own chat message** — one question per message. Do not enumerate multiple `1. … 2. … 3. …` prompts in a single message and ask the user to reply with all answers. Each item gets its own message; wait for the answer before sending the next.
-- **Do not infer or auto-fill answers from defaults**, even when a recommended value is obvious. The user has to confirm every choice explicitly. The phrase "(recommended)" on an option means "this is the option I expect you to pick most often" — not "I'll pick this if you don't answer."
-- **Echo the answer back briefly** before moving on (e.g. "Got it — Mobile + TV. Next:"). This makes the conversation legible when scrolled later.
-
-The step labels below (e.g. "Step 2 — Targets + SDK") are **rounds** in the sense of "stage of the wizard", not "one round = one prompt". Each numbered sub-item in a round is a separate `AskUserQuestion` call (or separate chat message for plain-text rounds).
 
 ## Step 1 — Identity round (plain-text, one question per message)
 
@@ -413,6 +434,8 @@ You may only tell the user "done" after:
 
 If you skip any of these, the user lands on a project that compiles but is full of latent issues (deprecated APIs about to break, missing tests, ScreenContents that aren't actually tested). The verification cycle is the contract.
 
+**What to defer to a human:** whether the scaffold is the *right* architecture for what they are about to build. The gate proves the project compiles, passes its own tests, and is warning-clean — it cannot tell whether the feature split, the flavor URLs, or the chosen network and persistence libraries suit the product. Say that plainly rather than letting a green gate read as approval.
+
 ## Step 12 — Initial commit
 
 Once the verification cycle (Step 11) is green and the warning sweep is clean, **initialize git and create the first commit yourself**.
@@ -445,7 +468,7 @@ If the commit fails for any other reason (e.g. nothing to commit, missing user.e
 
 ### 12.3 — Report
 
-Print to the user:
+Lead with the outcome: the first line says the project is scaffolded and verified, and names what it is. The detail follows. Write it for someone who did not watch the wizard run — they did not see the questions scroll past, so name the choices rather than referring back to them. Keep it to the six items below; a green run does not need a narrative.
 
 1. **What was committed** — file count, commit SHA (`git rev-parse --short HEAD`), commit message.
 2. **The six gradle commands and their results** (✓ help, ✓ qa deps, ✓ qa compile, ✓ prod compile, ✓ test-compile smoke, ✓ spotless/detekt/lint/test).
@@ -457,17 +480,3 @@ Print to the user:
 ### 12.4 — Do not push
 
 Never run `git push`, never set a remote, never `git push --set-upstream`. The user wires up their remote when they're ready. This skill stops at the local commit.
-
-## Guardrails
-
-- **Never overwrite an existing file without asking.** Bail in Step 0 if cwd looks like an existing project.
-- **Commit only the scaffold, only after verification passes.** `git init` + `git add .` + `git commit -m "setup architecture"` runs in Step 12, after the build-success gate is green. Don't commit before verification. Don't push — never run `git push`, never set a remote.
-- **Never `--no-verify`.** If a pre-commit hook fails, fix the root cause (usually `spotlessApply`) and re-stage. Bypassing the hook lands a broken state in source control.
-- **Never modify files outside cwd.**
-- **Ask one question at a time, always.** Every `AskUserQuestion` call has exactly one item in `questions`; every plain-text question gets its own chat message. Wait for the answer before sending the next prompt. This rule applies in every mode — auto-accept (Shift+Tab) does NOT mean "infer answers" or "batch prompts." See "Question rules" near the top of this skill.
-- **Never invent helpers in build-logic.** Use exactly the 9 (or 8) plugin classes the conventions skill names. Inline duplication is the right call.
-- **Never use `CommonExtension`.** Each plugin configures its own `ApplicationExtension` or `LibraryExtension`.
-- **Never declare a `package`** on convention plugin classes — they live in the default package.
-- **Don't skip the build-success gate.** Step 11 is not optional. The user has been burned by half-broken scaffolds; the verification cycle is the contract.
-- **If a step fails 5 times**, stop, report what's failing, and let the user decide whether to retry or abort. Don't keep churning.
-- **Refuse to commit if the working tree contains sensitive or generated files** that the `.gitignore` should have caught (e.g. `local.properties`, `**/build/`, `*.keystore`). Fix the ignore, re-stage, then commit.

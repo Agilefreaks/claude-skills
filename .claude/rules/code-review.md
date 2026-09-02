@@ -6,7 +6,9 @@ Look for a linked GitHub issue in the PR body or PR title. If a GitHub issue is 
 
 ## Build Verification
 
-This repo has no build system (pure Markdown and JSON). Skip build verification and note in the human checklist that functional validation must be done manually.
+This repo has no build system or test runner (pure Markdown and JSON), but it does have one automated gate: `.github/workflows/validate.yml` runs `claude plugin validate` on the marketplace manifest and every plugin directory, then checks that each plugin's version agrees across `plugin.json`, its `marketplace.json` entry, and its README Plugin Catalogue row.
+
+Check that workflow's status on the PR and report it. A red run is a blocker; treat it as Phase 2's broken build and pause the review. A green run says the manifests parse and the versions agree — it says nothing about whether the skill content is correct, so still note in the human checklist that functional validation of skill behaviour must be done manually.
 
 ## Posting Mechanics
 

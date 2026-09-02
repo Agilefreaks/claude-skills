@@ -5,9 +5,9 @@ Six phases: frame the requirement (or document the defect), explore and establis
 baseline (plus root-cause analysis for bugs), plan, implement with a configurable
 test-first loop, verify by driving the running app, and hand off for review.
 
-> **Status:** v0.2.0. The six-phase methodology is distilled from established agentic
-> engineering practice. The three test-collaboration modes are pending real-project
-> validation. Feedback welcome.
+> **Status:** the six-phase methodology is distilled from established agentic engineering
+> practice. The three test-collaboration modes are pending real-project validation.
+> Feedback welcome.
 
 ## What it does
 
@@ -16,7 +16,7 @@ The skill encodes a complete feature development workflow:
 | Phase | What happens |
 |-------|-------------|
 | **Frame** | Read the ticket/spec/bug report; write acceptance criteria (or defect report: reproduction + expected vs actual) before touching code |
-| **Explore & Baseline** | Parallel Explore subagents map the codebase; root-cause analysis for bugs; run the full suite to establish a green baseline |
+| **Explore & Baseline** | Exploration sized to the unknown — parallel Explore subagents for a wide surface, direct reads for a handful of files; root-cause analysis for bugs; run the full suite to establish a green baseline |
 | **Plan** | Implementation steps as red/green pairs (Prove → Implement); for bugs, first pair is the regression test; branch created; hard human checkpoint |
 | **Implement** | Test-first entry gate; test-first loop (one test at a time); follows project testing strategy; checkpoint commits |
 | **Verify** | Full suite + agent drives the running app against acceptance criteria |

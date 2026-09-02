@@ -15,7 +15,7 @@
       "name": "dep-update-merge",
       "source": "./plugins/dep-update-merge",
       "description": "Bundles open dependency-update PRs/MRs into a single verified change with changelog analysis, breaking change triage, and build/test verification.",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "author": {
         "name": "AgileFreaks"
       },
@@ -26,7 +26,7 @@
       "name": "code-review",
       "source": "./plugins/code-review",
       "description": "Outside-in, risk-driven code review methodology based on Gregory Brown's Effective Code Reviews. Covers all change types: bug fixes, new features, enhancements, and refinements. Re-review aware: reconciles previously posted findings and keeps a single summary comment per PR.",
-      "version": "1.2.0",
+      "version": "1.3.0",
       "author": {
         "name": "AgileFreaks"
       },
@@ -37,7 +37,7 @@
       "name": "android-project-starter",
       "source": "./plugins/android-project-starter",
       "description": "Wizard-driven scaffolder for Android projects using a multi-module MVI + Compose + Koin architecture. Generates build-logic, core, feature modules, version catalog, navigation, DI, tooling (Spotless/detekt), CI, and project-local Claude skills.",
-      "version": "0.3.0",
+      "version": "0.4.0",
       "author": {
         "name": "Denis Coman"
       },
@@ -48,7 +48,7 @@
       "name": "android-project-aligner",
       "source": "./plugins/android-project-aligner",
       "description": "Audits an existing Android project against the android-project-starter conventions, produces a phased migration plan, and applies it on a fresh git branch with build verification at every step. Companion to android-project-starter for brownfield codebases. Also generates the project-local <project>-android-planner and <project>-android-implementer skills.",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "author": {
         "name": "Denis Coman"
       },
@@ -59,7 +59,7 @@
       "name": "feature-development",
       "source": "./plugins/feature-development",
       "description": "End-to-end development methodology for features and bug fixes: frame, explore (with root-cause analysis for bugs), plan, implement with a configurable test-first loop, verify by driving the app, and hand off for review. Works with plan mode — framing, exploration, and planning run during plan mode; implementation runs after approval.",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "author": {
         "name": "AgileFreaks"
       },

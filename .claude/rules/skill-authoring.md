@@ -22,22 +22,57 @@ description: "What the skill does and when to trigger it."
 ```
 
 Required fields:
-- `name` — kebab-case, max 64 characters
-- `description` — max 1024 characters. This is the **primary triggering mechanism**. Describe what the skill does AND the contexts or phrases that should activate it. Lean slightly "pushy" to ensure the skill triggers when useful.
+- `name` — kebab-case, max 64 characters. Lowercase letters, digits and hyphens only; no XML tags; must not contain the reserved words "anthropic" or "claude".
+- `description` — max 1024 characters. This is the **primary triggering mechanism**. Describe what the skill does AND the contexts or phrases that should activate it. Write it in the third person ("Bundles open dependency PRs…", never "I can help you…"), and put the key use case first: the listing entry is truncated at 1,536 characters, and Claude Code shortens descriptions further when many skills are installed. Lean slightly "pushy" to ensure the skill triggers when useful.
 
-Optional fields: `license`, `allowed-tools`, `metadata`, `compatibility`, `disable-model-invocation`. Do not add unrecognized keys — validation rejects them.
+### Optional fields
+
+Plugins in this marketplace are installed in Claude Code *and* Claude.ai Cowork, so it matters which half of the surface a field belongs to.
+
+**Agent Skills spec — portable everywhere:**
+`license`, `metadata`, `compatibility`, `allowed-tools`.
+
+**Claude Code only — accepted and ignored elsewhere:**
+`disable-model-invocation`, `user-invocable`, `disallowed-tools`, `argument-hint`, `arguments`, `model`, `effort`, `context`, `agent`, `background`, `hooks`, `paths`, `shell`.
+
+The two invocation switches are the ones worth reaching for:
+
+- `disable-model-invocation: true` — only a human may invoke it. Use it for a skill with side effects the model should not decide to trigger: scaffolding a project, deploying, sending a message.
+- `user-invocable: false` — only Claude may invoke it. Use it for background knowledge that is not a meaningful action for a user to take, such as a conventions or reference skill.
+
+**Do not set `model` or `effort` in a skill published here.** Both override the consuming session, their valid values vary by model, and a shared library should not take that decision away from the project installing it. A consumer can always set them in their own copy.
+
+Verify the frontmatter parses with `claude plugin validate <plugin-dir>` before committing.
 
 ## Skill anatomy
 
 ```
 skill-name/
-├── SKILL.md          # Required — keep under 500 lines
+├── SKILL.md          # Required — under 500 lines; see Size and placement
 ├── scripts/          # Executable code for deterministic tasks
 ├── references/       # Docs loaded into context as needed
 └── assets/           # Templates, icons, fonts used in output
 ```
 
-Keep SKILL.md under 500 lines. Move detailed reference content to `references/`. For large reference files (>300 lines), include a table of contents. When a skill supports multiple domains, organize by variant under `references/`.
+Move detailed reference content to `references/`. When a skill supports multiple domains, organize by variant under `references/`.
+
+Two rules keep that content actually readable, both for the same reason — Claude frequently previews a long or indirectly-reached file with a partial read, and cannot tell what it missed:
+
+- **Give any reference over 100 lines a table of contents**, so a partial read still shows the full scope of what is in the file.
+- **Every reference must be reachable in one hop from a SKILL.md that names it.** Before adding one, check: does its own SKILL.md name this file? A reference *citing* another file is fine, and sometimes necessary — the Android plugins point at `android-project-starter:conventions` for canonical file shapes instead of copying them, because a second copy would drift. What the rule forbids is content whose only route is a chain.
+
+### Size and placement
+
+Keep SKILL.md under 500 lines. Aim for under roughly 5,000 tokens (about 20,000 characters) as well, and treat that number as a placement constraint rather than a size limit: what matters is that everything past it is safe to lose.
+
+Two platform behaviours are the reason:
+
+- **Claude Code does not re-read SKILL.md on later turns.** The rendered content enters the conversation once, when the skill is invoked, and stays as it was. A rule that must hold for the whole task has to be written as a standing instruction, not as a step buried in phase four.
+- **Auto-compaction keeps only the first 5,000 tokens of each re-attached skill**, with a 25,000-token budget shared across every skill invoked in the session. Anything past that point silently stops applying partway through a long run.
+
+So put the non-negotiables — guardrails, prohibitions, core principles, how to communicate while working — in a standing block near the top, before the first numbered step. Ordering by narrative flow and leaving the guardrails as a closing section puts them exactly where they get dropped.
+
+Past the first 5,000 tokens, put only content the skill can afford to lose halfway through a long run: setup wizards, per-phase detail that will already have been read by the time compaction hits, and appendices. A skill that needs more than that in force at all times is a skill whose reference material belongs in `references/`.
 
 ## Structure
 
@@ -106,6 +141,42 @@ Extension points should be decisions unique to the skill's workflow. Project-lev
 ### Add setup triggers to the description
 
 Include "set up", "configure", and "onboard" in the frontmatter `description` so the skill activates when users ask to configure it.
+
+## Writing for the current model generation
+
+A skill is a per-model artifact. A line that is load-bearing on one generation becomes dead weight — sometimes actively harmful — on the next. Re-read this section whenever a new Claude model ships, and re-audit the skills against the model's prompting guide.
+
+### No model names in a skill
+
+Never name a model, and never encode a workaround for one model's quirk. Pinned names degrade silently at the next release, and the current generation splits both ways on the behaviours worth tuning: one model narrates too much where another goes quiet, one over-delegates where another under-delegates. Write the behaviour you want in model-neutral terms and it stays correct across both.
+
+The exception is a real configuration value a consumer will act on, such as a `--model` flag in a generated CI workflow. Prefer an alias (`opus`) over a dated identifier so it tracks the current release.
+
+### Say how to report back
+
+Skills in this repo run long, multi-phase sessions and end in something a human reads. Current models diverge sharply on how much they say while working and how long they write, so the skill has to state it. Include this in the phase that produces the skill's output:
+
+> Lead with the outcome: your first sentence answers what happened or what you found. Supporting detail comes after. Write it for someone who did not watch you work — spell out identifiers and drop the shorthand you built up along the way. Match the length of anything you write to a file to what the task needs; do not pad it with filler sections or redundant summaries.
+
+For a skill that runs a long tool-calling loop, also put this in the standing block at the top:
+
+> Say in one line what you are about to do before your first tool call, and give a brief update when you find something load-bearing or change direction. Before reporting progress, tie each claim to a command you actually ran: if a check fails, say so with its output; if a step was skipped, say that.
+
+A skill that produces files rather than a report, or that is pure reference with no run loop, needs neither. Adding them there is noise.
+
+### Don't add self-check scaffolding
+
+Current models verify their own work without being told, and instructions like "double-check your answer" or "use a subagent to verify" now cause redundant work rather than better output. This does **not** apply to a genuine verification *phase* — running the test suite, driving the app against acceptance criteria, checking a build is green. That is methodology, and it stays.
+
+### Say what to leave alone
+
+Current models expand scope: fixing nearby code, adding tests the task did not ask for, rewriting a whole file where a targeted edit would do. Any skill with an implement-or-apply phase should bound it:
+
+> If you find a pre-existing bug, a performance concern, or behaviour the task does not mention, do not fix or extend it here unless the requested change cannot work without it — report it as a follow-up. Prefer a targeted edit to rewriting a whole file when the result is the same. Commit tests only where the task asks for them or the repository already keeps tests for this kind of change; scratch checks do not become permanent test files.
+
+### Don't narrow the search to widen the signal
+
+If a skill produces findings, have it report everything it finds with a severity and a confidence, and filter in the summary. Telling a model to "only report high-severity issues" or to "be conservative" is followed literally and suppresses real findings at discovery time, where they cannot be recovered.
 
 ## Versioning
 

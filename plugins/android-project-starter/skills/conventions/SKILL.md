@@ -7,13 +7,19 @@ description: >
   tooling defaults. Load this skill whenever scaffolding or modifying an Android project
   generated (or to be generated) by this plugin. The init wizard defers to this skill for
   every file shape — it is the single source of truth for "what good looks like."
+user-invocable: false
 ---
 
 # Android Project Conventions
 
-This skill is the conventions bible for projects scaffolded by `android-project-starter`. It is **not** a wizard — it describes the target architecture so other skills can generate code that matches.
+This skill is the conventions bible for projects scaffolded by `android-project-starter`. It is **not** a wizard — it describes the target architecture so other skills can generate code that matches. Whenever you generate or modify a file in such a project, follow what's written here. If this file and the user's instructions conflict, the user wins — but flag the conflict.
 
-Whenever you generate or modify a file in a project scaffolded by this plugin, follow what's written here. If you see a conflict between this file and the user's instructions, the user wins — but flag the conflict.
+## How to use this skill
+
+- Re-read the relevant section rather than working from memory. The sections most often skimmed — the hard rules for convention plugins, the Screen/ScreenContent contract, Compose authoring — are the ones that produce silent build failures when approximated.
+- Most sections point at a file under `references/` for the verbatim shape. Read the reference before generating the file; the section here tells you *what* and *why*, the reference tells you exactly *how*.
+- Don't invent new patterns. The canonical shapes here are the source of truth, and inline duplication is deliberate where you might reach for a helper.
+- **What to defer to a human:** anything genuinely undefined here. This skill describes what good looks like for a scaffolded project; it cannot tell you whether a convention suits a product decision the user has not made yet. Ask rather than inventing a new convention, and say plainly which part of a generated file you were unable to ground in this reference.
 
 ## Top-level layout
 
@@ -436,7 +442,7 @@ Mirror density buckets (`drawable-nodpi`, `drawable-sw600dp-*-nodpi`) under the 
 
 ## Version-lookup sources
 
-When the wizard runs (or `bump-versions` is invoked), resolve the **latest stable** version for each library. **Skip alpha / beta / rc / SNAPSHOT releases** unless the user explicitly opted into pre-release for that specific library. Sources, in priority order:
+When resolving dependency versions, resolve the **latest stable** version for each library. **Skip alpha / beta / rc / SNAPSHOT releases** unless the user explicitly opted into pre-release for that specific library. Sources, in priority order:
 
 | Library family | Primary source | Notes |
 |---|---|---|
@@ -491,9 +497,3 @@ After scaffolding, the wizard writes two skills into the new project's `.claude/
 - **`<project>-android-implementer/SKILL.md`** — knows the same architecture and writes the code.
 
 Both skills should be derived from this conventions file with the user's choices baked in (e.g. project name, root package, the specific convention plugin ids, whether TV exists, which network library was picked). Keep them short and pointed — the conventions don't need to be re-explained, they need to be **applied**.
-
-## When in doubt
-
-- This skill is the reference. Re-read the relevant section.
-- Don't invent new patterns — the canonical shapes in this skill are the source of truth.
-- If something is genuinely undefined here, ask the user. Don't invent new conventions.

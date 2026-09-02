@@ -33,11 +33,16 @@ All `source` values in marketplace.json must be relative paths starting with `./
 
 ## Version bumps
 
-When updating a plugin:
-1. Bump the version in `plugins/<name>/.claude-plugin/plugin.json`
-2. Bump the matching version in the plugin's entry in `.claude-plugin/marketplace.json`
+A plugin version is written in three places. When updating a plugin, bump all three:
+1. `plugins/<name>/.claude-plugin/plugin.json`
+2. The plugin's entry in `.claude-plugin/marketplace.json`
+3. The plugin's row in the Plugin Catalogue table in `README.md`
 
-Both must always be in sync. The marketplace `metadata.version` is bumped separately when the marketplace itself changes (new plugins, structural changes).
+All three must always be in sync — CI fails the PR when they drift.
+
+The marketplace `metadata.version` is separate. It is the marketplace's own release number and moves once per release, in the `chore(release)` commit that promotes `[Unreleased]` to a dated heading — not in the feature PR, whatever that PR changed. Both releases so far (`c866321`, `49befc0`) did exactly that: a single plugin bump each, no new plugin, and `metadata.version` moved anyway.
+
+`claude plugin validate` checks that the two manifests parse and that every `SKILL.md` frontmatter is well-formed; it exits non-zero on either failure. It does **not** compare versions — `.github/workflows/validate.yml` does that in a separate step, across the three places listed above.
 
 ## CHANGELOG.md
 
@@ -73,3 +78,4 @@ add it under **Settings → Secrets and variables → Actions** before publishin
 2. Add an entry to `.claude-plugin/marketplace.json`
 3. Add a row to the Plugin Catalogue table in `README.md`
 4. Add an entry under `[Unreleased]` in `CHANGELOG.md`
+5. Run `claude plugin validate plugins/<name>` and `claude plugin validate .` — both must pass before opening the PR. `.github/workflows/validate.yml` runs both on every PR, plus a version-agreement check across `plugin.json`, `marketplace.json` and the README catalogue row.

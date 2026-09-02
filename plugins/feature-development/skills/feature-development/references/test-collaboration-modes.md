@@ -1,8 +1,10 @@
 # Test Collaboration Modes
 
 This reference defines the complete state machine for each of the three test collaboration
-modes available in the `feature-development` skill. SKILL.md Phase 4 summarizes each mode;
-this file encodes the precise rules the skill enforces.
+modes available in the `feature-development` skill. SKILL.md's Setup section introduces the
+modes so the user can pick one, and Phase 4 summarizes only the *Solo AI* default; for
+*Assert-in-the-loop* and *Ping-pong* this file is the operational source of truth. Read it
+before the first test.
 
 ## Contents
 

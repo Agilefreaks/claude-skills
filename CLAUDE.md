@@ -4,7 +4,7 @@
 
 A plugin marketplace for Claude Code and Claude.ai Cowork. It contains skills distilled from real AgileFreaks project experience, packaged as installable plugins.
 
-**No build system. No test runner. No package dependencies.** All content is Markdown and JSON.
+**No build system. No test runner. No package dependencies.** All content is Markdown and JSON. The one gate that can fail a PR is `.github/workflows/validate.yml`, which validates the manifests and every `SKILL.md` frontmatter and checks that plugin versions agree across the three places they are written. `code-review.yml` also runs on every PR, but it reports rather than blocks.
 
 ## Plugin structure
 
@@ -23,6 +23,7 @@ The marketplace manifest lives at `.claude-plugin/marketplace.json`.
 2. Add an entry to `.claude-plugin/marketplace.json`
 3. Add a row to the Plugin Catalogue table in `README.md`
 4. Add an entry under `[Unreleased]` in `CHANGELOG.md`
+5. Run `claude plugin validate plugins/<name>` and `claude plugin validate .` — CI runs both, plus a version-agreement check
 
 See `.claude/rules/marketplace.md` for field requirements and conventions.
 
@@ -34,7 +35,7 @@ See `.claude/rules/skill-authoring.md` for the full authoring rules.
 
 ## Versioning
 
-- Plugin versions are semver, tracked in both `plugin.json` and the plugin's entry in `marketplace.json`
+- Plugin versions are semver, written in three places that must agree: `plugin.json`, the plugin's entry in `marketplace.json`, and its row in the README Plugin Catalogue. CI fails the PR when they drift
 - `CHANGELOG.md` follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) — new entries under `[Unreleased]`, promoted to a dated version on release
 - On release, cut a GitHub Release (tag + notes) to trigger Slack notification — see `.claude/rules/marketplace.md` ("Publishing a release")
 
