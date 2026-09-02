@@ -76,7 +76,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **android-project-aligner** (0.1.0 → 0.2.0) — Guardrails hoisted above Step 0 and extended
   with a stay-inside-the-change bound (re-shape and scaffold, don't improve) and a
-  progress-grounding rule. Step 2's thirteen inline audit sub-sections collapsed to the area
+  progress-grounding rule; outcome-first reporting added at the Step 10 final summary. Step 2's thirteen inline audit sub-sections collapsed to the area
   list plus a pointer to `references/audit-checklist.md`, which already carried the same
   thirteen areas with grep recipes and severity mappings the SKILL.md restated more thinly.
 

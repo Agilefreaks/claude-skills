@@ -417,6 +417,8 @@ git commit -m "align: spotlessApply"
 
 ## Step 10 — Final summary
 
+Lead with the outcome: the first line says what the project now conforms to and what is still outstanding. The phase-by-phase detail follows. Write it for someone who did not watch the migration run — name the phases and files rather than referring back to numbers from the plan, and spell out what a skipped phase leaves undone. Match the length to what actually changed.
+
 Print to the user:
 
 ```

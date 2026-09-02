@@ -33,13 +33,14 @@ All `source` values in marketplace.json must be relative paths starting with `./
 
 ## Version bumps
 
-When updating a plugin:
-1. Bump the version in `plugins/<name>/.claude-plugin/plugin.json`
-2. Bump the matching version in the plugin's entry in `.claude-plugin/marketplace.json`
+A plugin version is written in three places. When updating a plugin, bump all three:
+1. `plugins/<name>/.claude-plugin/plugin.json`
+2. The plugin's entry in `.claude-plugin/marketplace.json`
+3. The plugin's row in the Plugin Catalogue table in `README.md`
 
-Both must always be in sync. The marketplace `metadata.version` is bumped separately when the marketplace itself changes (new plugins, structural changes).
+All three must always be in sync — CI fails the PR when they drift. The marketplace `metadata.version` is separate: it is bumped in the release commit, when the marketplace itself changes (new plugins, structural changes), not alongside a plugin bump.
 
-`claude plugin validate` checks that the two manifests parse and that every `SKILL.md` frontmatter is well-formed. It does **not** check that the versions agree with each other — `.github/workflows/validate.yml` does that in a separate step, comparing each plugin's version across `plugin.json`, its `marketplace.json` entry, and its README Plugin Catalogue row. Keep all three in step; CI fails the PR when they drift.
+`claude plugin validate` checks that the two manifests parse and that every `SKILL.md` frontmatter is well-formed; it exits non-zero on either failure. It does **not** compare versions — `.github/workflows/validate.yml` does that in a separate step, across the three places listed above.
 
 ## CHANGELOG.md
 
