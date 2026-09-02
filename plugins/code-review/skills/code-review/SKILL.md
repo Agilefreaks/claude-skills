@@ -20,6 +20,8 @@ description: "Outside-in, risk-driven code review methodology. Use when reviewin
 
 This applies to inline comments as much as to the summary: an inline finding carries the same two tags.
 
+Tie every claim to something you actually read or ran, and name it in the evidence. A finding written in the shape below carries less prose than it used to, so the basis for a claim has to be *in* it rather than around it: quote the line, or the command output, not your recollection of either. If a check failed, say so with its output; if you could not run one, say that instead of implying you did.
+
 **Write each finding as claim, evidence, consequence — and stop there.**
 
 - **Claim** — one bold sentence naming what is wrong. A reader who reads only this line knows the problem.

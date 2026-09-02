@@ -166,7 +166,11 @@ For a skill that runs a long tool-calling loop, also put this in the standing bl
 
 A skill that produces files rather than a report, or that is pure reference with no run loop, needs neither. Adding them there is noise.
 
-A skill may also drop any sentence it has encoded structurally instead. `code-review` keeps only "write it for a reviewer who did not watch you work"; its output shape puts the verdict first and admits sections conditionally, so the outcome-first and match-the-length sentences would restate what the format already enforces. Prefer the structure — an instruction competing with a template loses. Note the substitution where you make it, so a later audit reads it as a decision rather than a gap.
+A skill may also drop any sentence it has encoded structurally instead. `code-review` keeps only "write it for a reviewer who did not watch you work"; its output shape puts the verdict first and admits sections conditionally, so the outcome-first and match-the-length sentences would restate what the format already enforces. Prefer the structure — an instruction competing with a template loses.
+
+The same skill splits the tool-loop block rather than taking or leaving it whole. The narration half is omitted: it runs unattended in CI, where a line before each tool call is output nobody reads. The grounding half is kept and strengthened, because a shorter finding leaves less prose in which the basis for a claim would otherwise show.
+
+Record every substitution and omission where you make it, and keep the record complete — a partial account is worse than none, because the next audit reads it as the whole list and closes the gaps it does not mention.
 
 ### Don't add self-check scaffolding
 
