@@ -216,6 +216,11 @@ Mismatches:
 - **Impl is public** → important, S, low. Phase 7. Action: prepend `internal` modifier.
 - **`<feature>DataModule` is not exposed (or named differently)** → important, S, low. Phase 7. Action: rename to canonical, mark public.
 - **App module depends on `:feature:<x>:data`** → important, S, medium. Phase 8. Action: remove the dependency; the ui module's `<feature>Modules` aggregator already includes `<feature>DataModule`.
+- **Repositories split per form factor** (a mobile repository and a separate TV one for the same feature) → important, M, medium. Phase 7. The conventions put one shared `feature/<x>/data` behind both ui modules; only the ui layer splits by form factor. Action: merge the two into the shared data module and have `ui-mobile` and `ui-tv` depend on it. Check with:
+  ```bash
+  find feature -type d -name 'data*' | sort
+  ```
+  → one `data` directory per feature, never `data-mobile` / `data-tv` or two repository implementations of the same interface.
 
 ## 6. DI library
 

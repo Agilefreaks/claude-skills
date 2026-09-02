@@ -151,11 +151,10 @@ For each finding, record a tuple `(finding, severity, effort, risk, conventions-
 - **risk**: `low` (mechanical change, well-tested by gradle), `medium` (could break runtime behavior in subtle ways), `high` (semantic change — DI provider swap, navigation library swap, etc.).
 - **conventions-section**: pointer like "conventions §The 9 convention plugins" or "conventions §Screen / ScreenContent contract" so the user can read the canonical shape themselves.
 
-Categories to walk, in this order (matches the phasing in Step 4):
-
-Audit these thirteen areas, in order. `references/audit-checklist.md` carries the grep
-recipe, the severity/effort/risk mapping, and the conventions section to cite for each one —
-work from it rather than from memory, and don't restate its criteria here.
+Audit these thirteen areas, in this order — it matches the phasing in Step 4.
+`references/audit-checklist.md` carries the grep recipe, the severity/effort/risk mapping,
+and the conventions section to cite for each one; work from it rather than from memory, and
+don't restate its criteria here.
 
 1. Foundation — version catalog, AGP/Kotlin/KSP/Compose alignment, `build-logic/`, `gradle.properties`, wrapper
 2. Module layout — `core/*`, per-feature `data` + `ui-*` split, app modules

@@ -11,6 +11,17 @@ description: "Outside-in, risk-driven code review methodology. Use when reviewin
 
 ---
 
+## Recording findings — applies from Phase 0 onward
+
+**Record every finding with a severity and a confidence, from the first phase.** Do not narrow the search while reviewing: a concern you decline to write down in an early phase cannot be recovered in Phase 6. Filtering happens once, in the summary, where a human can see what was filtered and disagree with it.
+
+- **Severity** — `blocker` (must not ship as-is: breaks the build, solves the wrong problem, introduces a security hole, or removes a contract other code depends on), `important` (should be addressed before merge), `nice-to-have` (worth noting, safe to defer).
+- **Confidence** — `high` (verified in the diff or the surrounding code), `medium` (consistent with what the diff shows, not confirmed), `low` (a question worth asking, not yet a claim). Say plainly what you did not check rather than raising the confidence to match the concern.
+
+This applies to inline comments as much as to the summary: an inline finding carries the same two tags.
+
+---
+
 ## Setup
 
 When asked to set up, configure, onboard, or create a rules file for this skill:
@@ -182,12 +193,7 @@ If your project has defined platform-specific posting mechanics (how to post a r
 - **Medium** — touches existing behavior or shared code, but well-tested and the dependencies are understood
 - **High** — modifies shared components with dependents, tests changed or missing for the change type, security or auth involved
 
-**Record every finding with a severity and a confidence.** Do not narrow the search while reviewing — a concern you decline to write down in Phases 1–5 cannot be recovered later. Filtering happens here, in the summary, where a human can see what was filtered.
-
-- **Severity** — `blocker` (must not ship as-is: breaks the build, solves the wrong problem, introduces a security hole, or removes a contract other code depends on), `important` (should be addressed before merge), `nice-to-have` (worth noting, safe to defer).
-- **Confidence** — `high` (verified in the diff or the surrounding code), `medium` (consistent with what the diff shows, not confirmed), `low` (a question worth asking, not yet a claim). Say plainly what you did not check rather than raising the confidence to match the concern.
-
-A low-confidence blocker is still worth raising; a low-confidence nice-to-have usually is not. Lead the concerns with the blockers.
+**Filter here, not earlier.** Every finding recorded in Phases 0–5 reaches this point; decide now which ones reach the author. A low-confidence blocker is still worth raising; a low-confidence nice-to-have usually is not. Lead the concerns with the blockers.
 
 **Produce a review summary** that includes:
 - Context: what the PR does, what problem it solves

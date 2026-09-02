@@ -72,6 +72,15 @@ Run checks relevant to the changes. Skip sections for unaffected areas.
 
 _See inline comments in the Files Changed tab for specific line-level concerns._
 
+Inline findings carry the same two tags, after the marker:
+
+```
+<!-- code-review-finding -->
+`[important]` `[confidence: high]` **Short title.**
+
+Explanation.
+```
+
 _General concerns, blockers first:_
 - `[blocker | important | nice-to-have]` `[confidence: high | medium | low]` [Concern and why it matters]
 

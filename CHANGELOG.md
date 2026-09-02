@@ -10,9 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Plugin validation in CI** (`.github/workflows/validate.yml`) — runs `claude plugin validate`
-  against the marketplace manifest and every plugin directory on each pull request. The repo has
-  no build system or test runner, so this is its first automated gate. Requires Claude Code
-  v2.1.233 or later.
+  against the marketplace manifest and every plugin directory on each pull request, then checks
+  that each plugin's version agrees across all three places it is written: `plugin.json`, its
+  `marketplace.json` entry, and its README Plugin Catalogue row. `claude plugin validate` checks
+  that the manifests parse, not that they agree, and this PR's own review caught five stale
+  catalogue rows — so the check is now automatic rather than a review item. The repo has no
+  build system or test runner, so this is its first automated gate. Claude Code is pinned to
+  major v2 so an upstream release cannot silently redden the only gate.
 - Tables of contents in the six `references/` files over 100 lines that lacked one
   (`audit-checklist.md`, `migration-playbook.md`, `build-logic.md`, `dev-tools.md`,
   `compose-authoring.md`, `file-templates.md`). Long reference files are often previewed with a

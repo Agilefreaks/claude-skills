@@ -267,16 +267,15 @@ Phrase the question in plain language; do not reference phase numbers or interna
 Before touching any production code, name the failing test that edit serves. If you cannot
 name it, stop — write the test first. Exception: the explicitly named escape hatch below.
 
-Drive the test-first loop using the chosen test collaboration mode. The full state machine
-for each mode is in `references/test-collaboration-modes.md`.
+Drive the test-first loop using the chosen test collaboration mode. Read
+`references/test-collaboration-modes.md` before the first test — it holds the full state
+machine for each mode and is the operational source of truth for who writes the test, who
+writes the assertions, and who implements. The default, *Solo AI*, is: write one failing
+test, confirm it genuinely fails, implement the minimum to make it pass, re-run to confirm
+green, checkpoint-commit, repeat.
 
 **Invariant across all modes: exactly one test at a time.** Never generate 2–10 tests
 up front. One failing test → implement → green → commit → next test.
-
-Read that reference before the first test — it is the operational source of truth for who
-writes the test, who writes the assertions, and who implements, in each mode. The default,
-*Solo AI*, is: write one failing test, confirm it genuinely fails, implement the minimum to
-make it pass, re-run to confirm green, checkpoint-commit, repeat.
 
 **Testing strategy:** every test written in this phase follows the project's documented
 testing strategy surfaced in Explore — the appropriate level and kind of test for the layer

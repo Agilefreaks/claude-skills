@@ -22,7 +22,9 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install Claude Code
-        run: npm install -g @anthropic-ai/claude-code
+        # Pinned to a major so an upstream release can't silently turn the repo's
+        # only gate red; still picks up fixes within v2.
+        run: npm install -g @anthropic-ai/claude-code@2
 
       - name: Validate marketplace manifest
         run: claude plugin validate .
@@ -37,3 +39,37 @@ jobs:
             echo "::endgroup::"
           done
           exit $status
+
+      # `claude plugin validate` checks that the manifests parse, not that they
+      # agree. Each plugin's version must match in three places: its plugin.json,
+      # its marketplace.json entry, and its README Plugin Catalogue row.
+      - name: Check version agreement
+        run: |
+          python3 - <<'EOF'
+          import json, pathlib, re, sys
+
+          marketplace = json.loads(pathlib.Path(".claude-plugin/marketplace.json").read_text())
+          readme = pathlib.Path("README.md").read_text()
+          failed = []
+
+          for plugin in marketplace["plugins"]:
+              name = plugin["name"]
+              manifest = json.loads(
+                  pathlib.Path(f"plugins/{name}/.claude-plugin/plugin.json").read_text()
+              )["version"]
+              row = re.search(
+                  r"\| \[%s\]\(plugins/%s/\) \|.*?\| (\d+\.\d+\.\d+) \|" % (name, name),
+                  readme,
+              )
+              catalogue = row.group(1) if row else "missing"
+              if not plugin["version"] == manifest == catalogue:
+                  failed.append(
+                      f"{name}: marketplace.json={plugin['version']} "
+                      f"plugin.json={manifest} README={catalogue}"
+                  )
+              print(f"{name}: {plugin['version']}")
+
+          for line in failed:
+              print(f"::error::version mismatch -- {line}")
+          sys.exit(1 if failed else 0)
+          EOF
