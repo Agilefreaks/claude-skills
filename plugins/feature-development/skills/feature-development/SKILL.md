@@ -3,7 +3,8 @@ name: feature-development
 description: "End-to-end development methodology for features and bug fixes: frame the
   requirement, explore the codebase and establish a green test baseline (plus root-cause
   analysis for bugs), plan, implement with a configurable test-first loop, verify by
-  driving the running app, and hand off for review. Use when developing a new feature,
+  driving the running app, hand off for review, and compound recurring corrections into
+  project rules and memory. Use when developing a new feature,
   fixing a bug or regression, debugging broken behaviour, working a ticket or issue, or
   implementing a spec from scratch. Invoke it at the very first turn the work is identified —
   including during plan mode, because its first phases (framing, codebase exploration, and
@@ -13,7 +14,7 @@ description: "End-to-end development methodology for features and bug fixes: fra
 
 # Feature Development Skill
 
-> End-to-end development for features and bug fixes: frame → explore → plan → implement → verify → hand off.
+> End-to-end development for features and bug fixes: frame → explore → plan → implement → verify → hand off → compound.
 >
 > Build/test/lint/run commands are not configured here — the skill uses whatever your
 > project already has in CLAUDE.md or .claude/rules/. Review hand-off, branch conventions,
@@ -53,6 +54,12 @@ These hold for the whole session, not just the phase you are in.
    read delegates the actual work to your collaborators. Review your own diff before asking
    anyone else to.
 
+7. **Corrections are the product too.** When a human corrects you — a rejected plan, redone
+   work, a convention you did not know — append one line naming the correction and its
+   assumption to a running note on disk, not only the conversation. A compacted transcript
+   cannot be excavated later, and recurrence across rounds is the final phase's signal. Re-read
+   that phase from this file at hand-off; it will be out of context by then.
+
 ### Reporting as you go
 
 Say in one line what you are about to do before your first tool call, and give a brief update when you find something load-bearing or change direction — a root cause located, a test that will not go red, a plan step that turned out wrong.
@@ -72,7 +79,8 @@ skip or defer it. The mapping is direct:
 - **Phase 3's hard checkpoint *is* ExitPlanMode.** Presenting the plan and waiting for
   explicit approval is exactly plan mode's approval gate. The user's approval is the
   authorization to implement.
-- **Approval ⇒ Phases 4–6.** Implement, Verify, and Hand Off run after plan mode is exited.
+- **Approval ⇒ Phases 4–7.** Implement, Verify, Hand Off, and Compound run after plan mode is
+  exited.
 
 If you are invoked while planning a feature, a bug fix, or a ticket, this is the skill for
 that work from the first turn — begin at Phase 1.
@@ -324,6 +332,39 @@ prepares and narrates; a human decides whether to ship.
 
 ---
 
+## Phase 7: Compound
+
+Append this round's corrections to the running note, then drain only what earned a write. Most
+rounds drain nothing and end in silence — no report, no question, no rejected-candidates list.
+
+An entry earns a write only when it **cost rework this round or has recurred** on the note
+**and** will bind future rounds — never merely because it is sitting there; a one-off nit stays
+put, and a second sighting is evidence no single round could supply. Drop an entry that the
+code, tests, or git history already say, or that is true only of this ticket. An existing rule
+already covering it is not a new rule — it is evidence that one was unclear or unread; propose
+an edit to it, or nothing.
+
+Route what survives to one destination — see `references/compounding.md` for worked calls:
+
+- **Project rules** — a convention a reviewer could reasonably disagree with; binds the team.
+- **Project memory (CLAUDE.md)** — a fact about this codebase that would have shortened
+  exploration; rules say what to do, memory what is true.
+- **Personal memory** — how this human works, true elsewhere too; never in a file that binds
+  teammates.
+
+Raise survivors once, in the hand-off message, not a separate round of questions. Write only
+what's approved, in its own commit, never folded into the feature commits.
+
+**Extension point:** where the note lives and which destinations are in scope. Follow a
+documented project preference; otherwise keep the note local and uncommitted, and ask before
+writing outside this repository.
+
+**What to defer to a human:** every write, and whether a correction is a standing convention at
+all — a preference voiced once reads exactly like a rule. A recorded rule is obeyed, not
+re-derived, so a wrong one costs more than a missing one.
+
+---
+
 ## Setup
 
 When asked to set up, configure, onboard, or create a rules file for this skill:
@@ -344,6 +385,8 @@ When asked to set up, configure, onboard, or create a rules file for this skill:
      into the implementation loop so every test written follows the project's strategy
      automatically. Mention in the closing setup summary that a strategy was found and will
      be followed.
+   - Whether the project keeps rules files and a `CLAUDE.md` at all — proposals need
+     somewhere to land, and a project with neither should be asked before one is created
 3. Present **skill-specific choices only** via interactive dialogs. **All questions must be
    phrased in plain, user-facing language — never expose the skill's internal phase numbers
    or names (e.g. "Phase 1", "Phase 3", "Frame", "Hand Off") in a question or option label.
@@ -385,6 +428,11 @@ When asked to set up, configure, onboard, or create a rules file for this skill:
        no reshape step needed
      - *Keep every checkpoint*: commit per green, never reshape (maximum bisect granularity,
        noisiest published history)
+   - **Learning from feedback** — corrections that come up during the work are always noted;
+     this controls when you are asked about turning one into a durable rule:
+     - *When it recurs or cost rework* (default): stays quiet otherwise
+     - *Only when I ask*: never volunteers; acts on the notes only when you ask it to
+     - *Off*: notes nothing, suggests nothing
    - **Trigger enforcement (optional, off by default)** — install a `UserPromptSubmit` hook
      in this project so the harness nudges Claude to invoke `feature-development` whenever it
      detects feature, bug, or ticket intent. This is the only enforcement-level trigger; the

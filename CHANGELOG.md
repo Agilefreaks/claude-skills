@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **feature-development** (0.4.0 → 0.5.0) — added a seventh phase, Compound: after hand-off,
+  route corrections that recurred across rounds or cost rework this round to project rules,
+  project memory (`CLAUDE.md`), or personal memory. The design is capture-always,
+  surface-rarely — every correction is appended to a running note the moment it lands (new
+  Core Principle 7), but only an entry that cost rework this round or has recurred on the note
+  earns a proposal; most rounds drain the note to nothing and the phase ends in silence, with
+  no report and no list of rejected candidates. Recurrence is the point: a single round is
+  n=1 evidence — exactly the "small detail" a per-feature approval ritual would otherwise
+  surface — so letting the note persist across features is what makes "only when necessary" a
+  mechanical test instead of an adjective. The standing rule, not the phase, is the
+  load-bearing half: Hand Off is already the phase a long session reaches last, per the
+  0.3.0 → 0.4.0 entry below, and Compound runs later still, so by the time it fires the
+  transcript holding the corrections may already be gone — the record has to land on disk as
+  it happens, not be excavated from context afterward. Phase 7 closes at ~19,770 characters,
+  inside the ~20,000-character compaction boundary with ~230 characters of margin; routing
+  rationale and worked routing calls that didn't fit moved to new `references/compounding.md`.
+  Every write is a proposal raised once, alongside the hand-off message — nothing is written
+  without approval, and approved writes land in their own commit, never folded into the
+  feature commits. Setup gained a fourth choice (default: on, quiet unless a correction
+  recurred or cost rework).
+
 ## [1.7.0] - 2026-09-02
 
 ### Added
