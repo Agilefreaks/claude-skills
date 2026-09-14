@@ -21,15 +21,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   mechanical test instead of an adjective. The standing rule, not the phase, is the
   load-bearing half: Hand Off is already the phase a long session reaches last, per the
   0.3.0 → 0.4.0 entry below, and Compound runs later still, so by the time it fires the
-  transcript holding the corrections may already be gone — the note is kept untracked and on
-  disk so it survives regardless, and the standing rule no longer asserts Phase 7 itself is
+  transcript holding the corrections may already be gone — the note lives untracked at
+  `.claude/compound-notes.md` by default, so it survives regardless and every session can
+  find the same file again, and the standing rule no longer asserts Phase 7 itself is
   definitely out of context by then, only that it should not be assumed to still be there.
   Phase 6 now holds its PR/MR description unsent until Phase 7 has checked the running note,
   so a survivor has a real, still-open hand-off to fold into rather than needing a second
-  message. Phase 7 closes at ~19,849 characters (character count, e.g. `wc -m` or Python's
-  `len()` — `wc -c` counts bytes and reads higher on this file due to multi-byte dashes and
-  arrows), inside the ~20,000-character compaction boundary with ~150 characters of margin;
-  routing rationale and worked routing calls that didn't fit moved to new
+  message. Phase 7 closes at ~19,908 characters, inside the ~20,000-character compaction
+  boundary with ~90 characters of margin; routing rationale and worked routing calls that
+  didn't fit moved to new
   `references/compounding.md`. Every write is a proposal, folded into that same hand-off —
   nothing is written without approval, and approved writes land in their own commit, never
   folded into the feature commits. Setup gained a fourth choice (default: on, quiet unless a

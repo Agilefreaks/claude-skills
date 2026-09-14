@@ -56,9 +56,10 @@ These hold for the whole session, not just the phase you are in.
 
 7. **Corrections are the product too.** When a human corrects you — a rejected plan, redone
    work, a convention you did not know — append one line naming the correction and its
-   assumption to an untracked running note on disk, not only the conversation. A compacted
-   transcript cannot be excavated later, and recurrence across rounds is the final phase's
-   signal. Re-read that phase from this file at hand-off — don't assume it is still in context.
+   assumption to `.claude/compound-notes.md` (untracked), not only the conversation. A
+   compacted transcript cannot be excavated later, and recurrence across rounds is the final
+   phase's signal. Re-read that phase from this file at hand-off — don't assume it is still
+   in context.
 
 ### Reporting as you go
 
@@ -356,9 +357,10 @@ Route what survives to one destination — see `references/compounding.md` for w
 Fold survivors into that hand-off — never a separate round of questions. Write only what's
 approved, in its own commit, never folded into the feature commits.
 
-**Extension point:** which destinations are in scope and how eagerly to surface a
-survivor. Follow a documented project preference; otherwise surface only when an entry
-recurred or cost rework, and ask before writing outside this repository.
+**Extension point:** where the note lives, which destinations are in scope, and how
+eagerly to surface a survivor. Follow a documented project preference; otherwise use
+`.claude/compound-notes.md`, surface only when it recurred or cost rework, and ask before
+writing outside this repository.
 
 **What to defer to a human:** every write, and whether a correction is a standing convention at
 all — a preference voiced once reads exactly like a rule. A recorded rule is obeyed, not
