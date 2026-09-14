@@ -56,9 +56,9 @@ These hold for the whole session, not just the phase you are in.
 
 7. **Corrections are the product too.** When a human corrects you — a rejected plan, redone
    work, a convention you did not know — append one line naming the correction and its
-   assumption to a running note on disk, not only the conversation. A compacted transcript
-   cannot be excavated later, and recurrence across rounds is the final phase's signal. Re-read
-   that phase from this file at hand-off; it will be out of context by then.
+   assumption to an untracked running note on disk, not only the conversation. A compacted
+   transcript cannot be excavated later, and recurrence across rounds is the final phase's
+   signal. Re-read that phase from this file at hand-off — don't assume it is still in context.
 
 ### Reporting as you go
 
@@ -317,8 +317,9 @@ review. Otherwise, apply an inline checklist:
 - Security boundaries (no unsanitized input, no hardcoded secrets, no overly broad permissions)
 - Naming consistency and no dead code introduced
 
-Prepare the PR/MR description from the linear walkthrough and the Phase 1 spec. If your
-project defines a PR template or posting mechanics, follow them.
+Prepare the PR/MR description from the linear walkthrough and the Phase 1 spec, but hold
+it unsent until Phase 7 checks the running note; then follow your project's PR template or
+posting mechanics.
 
 Lead with the outcome: the first sentence of your hand-off says what now works that did not
 before. The walkthrough comes after. Write it for a reviewer who did not watch you work —
@@ -352,12 +353,12 @@ Route what survives to one destination — see `references/compounding.md` for w
 - **Personal memory** — how this human works, true elsewhere too; never in a file that binds
   teammates.
 
-Raise survivors once, in the hand-off message, not a separate round of questions. Write only
-what's approved, in its own commit, never folded into the feature commits.
+Fold survivors into that hand-off — never a separate round of questions. Write only what's
+approved, in its own commit, never folded into the feature commits.
 
-**Extension point:** where the note lives and which destinations are in scope. Follow a
-documented project preference; otherwise keep the note local and uncommitted, and ask before
-writing outside this repository.
+**Extension point:** which destinations are in scope and how eagerly to surface a
+survivor. Follow a documented project preference; otherwise surface only when an entry
+recurred or cost rework, and ask before writing outside this repository.
 
 **What to defer to a human:** every write, and whether a correction is a standing convention at
 all — a preference voiced once reads exactly like a rule. A recorded rule is obeyed, not
@@ -432,7 +433,7 @@ When asked to set up, configure, onboard, or create a rules file for this skill:
      this controls when you are asked about turning one into a durable rule:
      - *When it recurs or cost rework* (default): stays quiet otherwise
      - *Only when I ask*: never volunteers; acts on the notes only when you ask it to
-     - *Off*: notes nothing, suggests nothing
+     - *Off*: keeps noting privately; Phase 7 never surfaces or proposes anything
    - **Trigger enforcement (optional, off by default)** — install a `UserPromptSubmit` hook
      in this project so the harness nudges Claude to invoke `feature-development` whenever it
      detects feature, bug, or ticket intent. This is the only enforcement-level trigger; the
