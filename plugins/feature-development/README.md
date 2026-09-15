@@ -1,13 +1,14 @@
 # feature-development
 
 End-to-end development methodology for Claude Code — covers new features and bug fixes.
-Six phases: frame the requirement (or document the defect), explore and establish a green
+Seven phases: frame the requirement (or document the defect), explore and establish a green
 baseline (plus root-cause analysis for bugs), plan, implement with a configurable
-test-first loop, verify by driving the running app, and hand off for review.
+test-first loop, verify by driving the running app, hand off for review, and compound
+recurring corrections into the project's rules and memory.
 
-> **Status:** the six-phase methodology is distilled from established agentic engineering
-> practice. The three test-collaboration modes are pending real-project validation.
-> Feedback welcome.
+> **Status:** the seven-phase methodology is distilled from established agentic engineering
+> practice. The three test-collaboration modes and the compound step are pending
+> real-project validation. Feedback welcome.
 
 ## What it does
 
@@ -21,6 +22,7 @@ The skill encodes a complete feature development workflow:
 | **Implement** | Test-first entry gate; test-first loop (one test at a time); follows project testing strategy; checkpoint commits |
 | **Verify** | Full suite + agent drives the running app against acceptance criteria |
 | **Hand Off** | Curate checkpoints into logical commits; linear walkthrough; self-review before presenting |
+| **Compound** | Route corrections that recurred or cost rework to project rules, project memory, or personal memory — proposed, never written without approval. Most rounds end here in silence. |
 
 ## Works with plan mode
 
@@ -30,7 +32,7 @@ This skill and plan mode are complementary. The phase-to-mode mapping is direct:
 |---|---|
 | **Plan mode active** | Phase 1 (Frame), Phase 2 (Explore & Baseline), Phase 3 (Plan) |
 | **Phase 3 checkpoint** | ExitPlanMode — the plan is presented; user approval is the authorization gate |
-| **After approval** | Phase 4 (Implement), Phase 5 (Verify), Phase 6 (Hand Off) |
+| **After approval** | Phase 4 (Implement), Phase 5 (Verify), Phase 6 (Hand Off), Phase 7 (Compound) |
 
 If you're in plan mode and a user says "implement this feature" or drops a ticket link,
 invoke the skill immediately — don't wait until plan mode exits.
@@ -80,7 +82,7 @@ Run `set up feature-development` in Claude Code or Claude.ai Cowork. The Setup w
    build, test, or lint commands already configured there.
 2. Detects whether a `code-review` or `run`/`verify` skill is present.
 3. Asks only skill-specific questions: test collaboration mode, branch convention,
-   spec artifact location, and commit granularity.
+   spec artifact location, commit granularity, and how eagerly to surface learnings.
 4. Writes `.claude/rules/feature-development.md` with only your non-default choices.
 
 If you accept all defaults, no rules file is needed.
@@ -107,8 +109,9 @@ or reference a ticket:
 work ticket AF-412
 ```
 
-The skill walks through all six phases, pausing for your explicit approval before
-implementing (Phase 3 checkpoint) and before merging (Phase 6 hand-off).
+The skill walks through all seven phases, pausing for your explicit approval before
+implementing (Phase 3 checkpoint), before merging (Phase 6 hand-off), and before writing
+anything a recurring correction earned (Phase 7 compound — usually nothing to approve).
 
 ## Extension points
 
@@ -120,6 +123,9 @@ consuming project (written by Setup). Configurable:
 - Branch naming convention
 - Spec artifact location
 - Review delegation (auto-detected from existing rules)
+- Learning from feedback — how eagerly the skill offers to turn a recurring correction into
+  a project rule or memory update (default: only when it recurred or cost rework); which
+  destinations are in scope, and where the running note of corrections lives
 - Trigger enforcement (opt-in, off by default) — install a `UserPromptSubmit` hook in your
   project via `/update-config` so the harness nudges Claude to invoke the skill on
   feature/bug/ticket intent. Useful for teams that have seen the skill under-trigger. No
@@ -134,3 +140,6 @@ your project already has in `CLAUDE.md` or `.claude/rules/`.
 - Bypass the Phase 3 human checkpoint
 - Skip verification when test-first doesn't fit (switches to manual testing instead)
 - Write tests that always pass (escape hatch routes to agentic manual testing)
+- Write to project rules, `CLAUDE.md`, or personal memory without explicit approval
+- Ask about every correction — most rounds surface nothing; only a correction that recurred
+  or cost rework is raised, and only once, alongside the hand-off
