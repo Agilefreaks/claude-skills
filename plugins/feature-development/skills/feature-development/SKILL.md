@@ -56,10 +56,10 @@ These hold for the whole session, not just the phase you are in.
 
 7. **Corrections are the product too.** When a human corrects you — a rejected plan, redone
    work, a convention you did not know — append one line naming the correction and its
-   assumption to `.claude/compound-notes.md` (untracked), not only the conversation. A
-   compacted transcript cannot be excavated later, and recurrence across rounds is the final
-   phase's signal. Re-read that phase from this file at hand-off — don't assume it is still
-   in context.
+   assumption to `.claude/compound-notes.md`, gitignoring it first if needed, not only the
+   conversation. A compacted transcript cannot be excavated later, and recurrence across
+   rounds is the final phase's signal. Re-read that phase from this file at hand-off — don't
+   assume it is still in context.
 
 ### Reporting as you go
 
@@ -390,6 +390,8 @@ When asked to set up, configure, onboard, or create a rules file for this skill:
      be followed.
    - Whether the project keeps rules files and a `CLAUDE.md` at all — proposals need
      somewhere to land, and a project with neither should be asked before one is created
+   - Whether `.claude/compound-notes.md` is already covered by `.gitignore` — add an entry
+     if not, so the note this skill writes can never end up committed by accident
 3. Present **skill-specific choices only** via interactive dialogs. **All questions must be
    phrased in plain, user-facing language — never expose the skill's internal phase numbers
    or names (e.g. "Phase 1", "Phase 3", "Frame", "Hand Off") in a question or option label.
