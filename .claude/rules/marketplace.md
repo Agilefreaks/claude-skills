@@ -59,9 +59,9 @@ After bumping plugin versions and promoting the `[Unreleased]` heading in
 `CHANGELOG.md` to a dated version (e.g. `[1.1.0] - 2026-06-05`) and merging to
 `main`, create a **GitHub Release**:
 
-1. Tag: the new version prefixed with `v` (e.g. `v1.1.0`), pointing at the
-   merge commit on `main`.
-2. Release title: same as the tag (e.g. `v1.1.0`).
+1. Tag: the bare version number, no `v` prefix (e.g. `1.1.0`), pointing at the
+   `chore(release)` commit on `main`.
+2. Release title: same as the tag (e.g. `1.1.0`).
 3. Release notes: paste the content of that version's CHANGELOG section.
 
 Publishing the release fires `.github/workflows/release-notify.yml`, which posts

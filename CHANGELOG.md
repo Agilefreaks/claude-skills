@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **`.claude/rules/marketplace.md`** — "Publishing a release" documented `v`-prefixed tags
+  (`v1.1.0`) pointing at "the merge commit on `main`". Every release so far — seven, `1.8.0`
+  included — used a bare version number with no `v`, and the tag points at the
+  `chore(release)` commit itself, which lands on `main` by direct push, not a merge. Corrected
+  both to match the established precedent rather than the stale example.
+
 ## [1.8.0] - 2026-09-15
 
 ### Added
