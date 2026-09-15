@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-09-15
+
 ### Added
 
 - **feature-development** (0.4.0 → 0.5.0) — added a seventh phase, Compound: after hand-off,
