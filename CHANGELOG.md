@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **code-review** (1.4.0 → 1.4.1) — corrected the Fable-vs-Opus cost and classifier framing
+  in the CI Integration setup step and README, stale after Claude Opus 5.5's release: Fable
+  is now ~2.5x Opus's per-token cost (not ~2x), and Opus 5.5 runs the same class of safety
+  classifiers Fable already did, so the refusal-risk contrast no longer favors one model.
+  Found by a `/claude-api prompt-audit` re-baseline for Opus 5.5; the rest of the audit found
+  no dated prompting patterns — see the PR description for the full report.
+
 ## [1.8.0] - 2026-09-15
 
 ### Added
