@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.9.0] - 2026-09-23
+
 ### Changed
 
 - **code-review** (1.4.0 → 1.4.1) — corrected the Fable-vs-Opus cost and classifier framing
