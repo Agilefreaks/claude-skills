@@ -20,21 +20,20 @@ description: "Outside-in, risk-driven code review methodology. Use when reviewin
 
 This applies to inline comments as much as to the summary: an inline finding carries the same two tags.
 
-Tie every claim to something you actually read or ran, and name it in the evidence. A finding written in the shape below carries less prose than it used to, so the basis for a claim has to be *in* it rather than around it: quote the line, or the command output, not your recollection of either. If a check failed, say so with its output; if you could not run one, say that instead of implying you did.
+Tie every claim to something you actually read or ran. The basis goes in the finding's details (below), or in the lead's reason when there are no details, and it is checkable rather than exhaustive: one quoted line, value or command result, not a trail of how you got there. If a check failed, say so with its output; if you could not run one, say that instead of implying you did.
 
-**Write each finding as claim, evidence, consequence — and stop there.**
+**Write each finding as a lead, with optional details.**
 
-- **Claim** — one bold sentence naming what is wrong. A reader who reads only this line knows the problem.
-- **Evidence** — the file, the line, the quoted text or output that shows it.
-- **Consequence** — what breaks, who hits it, or what it costs to leave.
+- **Lead** — the severity and confidence tags, then one or two plain sentences saying **what to change and why**: "I recommend X because Y." When confidence is below high, ask instead: "Should X? Y." A reader who reads only the lead knows what to do. Aim for under about 40 words.
+- **Details** *(only when the lead cannot stand alone)* — the evidence and the consequence, in plain prose, under about 100 words. Collapse it where the platform can (on GitHub, a `<details><summary>Why</summary>` block), so the thread reads as a short ask that expands on demand. Skip it only when the lead's reason already names the basis for the claim.
 
 **If you cannot state a consequence, you have found a style preference, not a defect.** Record it anyway — `nice-to-have`, at whatever confidence it deserves — and let Phase 6 decide whether it reaches the author. Most will not, and a project's linters and conventions carry them better than a review does. What you must not do is decline to write it down: brevity makes proofreading findings cheap to write, and a review made of cheap findings is the mediocre review this methodology exists to avoid — but the fix for that is filtering in the summary, where a human can see what was filtered, not silence at discovery.
 
-Leave out how you found it, what you ruled out on the way, and where the project solves this elsewhere unless that *is* the fix. If the author wants the reasoning they will ask, and the thread is the place for it — a review is a conversation, not a report.
+**Write every comment for the author reading their own diff.** Use the names that appear in the code. Do not use private shorthand: refer to a project document or principle by what it says, never by its number or a nickname you coined. Do not chain class or method names to trace a call path; name the one that matters. Do not cite the file and line the comment is already attached to. Leave out how you found it, what you ruled out on the way, and where the project solves this elsewhere unless that *is* the fix. If the author wants the reasoning they will ask, and the thread is the place for it — a review is a conversation, not a report.
 
 This is about prose, not coverage. It never changes how many findings you record or how many reach the author. Where brevity and the recording rule that opens this section seem to pull against each other, **the recording rule wins**.
 
-This shape is the default. If a project has set a review detail level (see Setup), follow it: at *Standard*, keep the same three parts and add the reasoning behind the finding. The level changes how much prose a finding gets, never how many findings there are.
+This shape is the default. If a project has set a review detail level (see Setup), follow it: at *Standard*, every finding carries a details block that adds the reasoning behind it. The level changes how much prose a finding gets, never how many findings there are.
 
 ---
 
@@ -50,7 +49,7 @@ If your project defines platform posting mechanics, use them to fetch this state
 
 If no prior review state exists, this is a first review — proceed to Phase 1 and skip the re-review steps in Phase 6.
 
-**Read every thread; act only on your own.** Human reviewers' threads inform the review — never raise a concern a human reviewer has already raised, whether or not it was answered. Identify your own threads by the hidden marker embedded in each finding you post (see Phase 6), never by the posting account — the account differs between CI and local runs.
+**Read every thread; act only on your own.** Human reviewers' threads inform the review — never raise a concern that any existing thread has already raised, whoever posted it, whether or not it carries your marker, and whether or not it was answered. Identify your own threads, for replying and resolving, by the hidden marker embedded in each finding you post (see Phase 6), never by the posting account — the account differs between CI and local runs. Every inline finding must carry that marker: a comment posted without it is invisible to the next round and gets raised again.
 
 For each of your own prior findings, classify it and carry the disposition into the rest of the review:
 
@@ -184,7 +183,7 @@ If your project has defined platform-specific posting mechanics (how to post a r
 **Produce a review summary.** Four sections are always present, in this order:
 
 1. **Verdict** — one or two sentences: can this merge, and what is the one thing standing in the way.
-2. **Concerns** — the findings that reach the author, blockers first, each in the claim/evidence/consequence shape. Tag both general and line-level findings.
+2. **Concerns** — the findings that reach the author, blockers first, each as its lead (tags, then what to change and why). Tag both general and line-level findings. A finding with an inline thread keeps its details there; a finding with no line carries its details in a collapsed block here.
 3. **Risk** — the level, always. Add reasoning only where the concerns don't already show it.
 4. **For a human** — the checklist below. It is never omitted; it is the only place the review states what it did not verify.
 
@@ -205,7 +204,7 @@ Do not restate a concern that already appears above. A finding and a deferral ar
 
 If a project defines an output format or a review detail level, follow it. Otherwise use the shape above. If your project defines posting mechanics, follow them for how to fetch, reply to, resolve, delete, and post comments on your platform.
 
-Write it for a reviewer who did not watch you work: name the file and the behaviour rather than referring to a finding by number, and spell out an acronym the first time it appears.
+Name the file and the behaviour rather than referring to a finding by number, and spell out an acronym the first time it appears.
 
 An example of the whole shape, for a first review of a small bug fix:
 
@@ -215,20 +214,32 @@ right; the test proves something narrower than the bug report describes.
 
 **Concerns**
 
-`[important]` `[confidence: high]` **The regression test bypasses the reported failure path.**
-`spec/signup_spec.rb:42` asserts the validation error on the model. The bug report describes a
-blank email on the signup form rendering a 500.
-A future change to the controller re-opens this bug with the suite green.
+`[important]` `[confidence: high]` I recommend `spec/signup_spec.rb` submit the signup form
+instead of validating the model: the bug is a blank email on the form rendering a 500, and a
+controller change could bring it back with the suite green.
 
-`[nice-to-have]` `[confidence: medium]` **The blank-email guard has no sibling for invalid emails.**
-`User#validate_email` handles `nil` but not malformed input, and the same form accepts both.
-If this bug arrived by that route, the invalid case is still open — worth a ticket either way.
+`[nice-to-have]` `[confidence: medium]` Should the guard also reject malformed emails? The same
+form accepts both, so the invalid case may still be open. Worth a ticket either way.
 
 **Risk** — Low. Isolated to signup validation; no shared code touched.
 
 **For a human**
 - This review did not run the code.
 - Nothing else deferred.
+```
+
+An example of one inline comment, posted on the line it is about:
+
+```
+<!-- code-review-finding -->
+`[nice-to-have]` `[confidence: high]` I recommend giving `retries` a default of 3 in the schema,
+because only the service layer sets it today and a direct insert fails `NOT NULL`.
+
+<details><summary>Why</summary>
+
+The column is `NOT NULL` with no default. A backfill script or manual insert raises a
+constraint error, while the README says the database supplies this value.
+</details>
 ```
 
 ---
@@ -262,7 +273,7 @@ When asked to set up, configure, onboard, or create a rules file for this skill:
    - **Build Verification** — how to verify the build is passing (CI status checks, specific commands)
    - **Coding Conventions** — project-specific checks beyond the skill's defaults (architecture rules, style rules already enforced by linters)
    - **Output Format** — custom structure for the review output, or use the built-in format
-   - **Review Detail** — how much prose each finding gets: *Brief* (default — claim, evidence, consequence), or *Standard* (adds the reasoning behind each finding, for teams who review asynchronously and want fewer round trips). This dials prose only; neither setting changes which findings are reported.
+   - **Review Detail** — how much prose each finding gets: *Brief* (default — a short lead, with collapsed details only when the lead cannot stand alone), or *Standard* (every finding carries a details block with the reasoning behind it, for teams who review asynchronously and want fewer round trips). This dials prose only; neither setting changes which findings are reported.
    - **Posting Mechanics** — how to post the review (GitHub PR comment, inline comments, stdout)
    - **Re-review Thread Handling** — on a re-review, what to do with your own prior finding threads: *Reply and resolve* (default — reply in-thread and resolve threads that are fixed or answered), *Reply only* (reply in-thread but leave resolution to humans), or *Summary only* (never touch prior threads; report their status only in the summary)
    - **CI Integration** — offer to generate a GitHub Actions workflow that runs this review automatically on every PR. Always ask this, even if no `.github/workflows/` directory exists yet — this may be the project's first workflow. Present model choices: *Opus (recommended)* / *Sonnet* / *Fable* / *Skip*. Default: Opus. When presenting Fable, say what the trade is: the strongest reviewer available, at roughly 2.5x Opus's per-token cost, with more classifiers that can decline a security-heavy diff — which surfaces as a failed CI run rather than a review. Pass model **aliases**, not dated identifiers, so the workflow tracks the current release instead of pinning a retired one.
