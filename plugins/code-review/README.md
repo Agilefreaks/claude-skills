@@ -144,8 +144,12 @@ jq -n \
   --arg commit_id "$COMMIT_SHA" \
   --arg path "relative/path/to/file.rb" \
   --arg body "<!-- code-review-finding -->
-\`[important]\` \`[confidence: high]\` **What is wrong.**
-The evidence. The consequence." \
+\`[important]\` \`[confidence: high]\` I recommend X, because Y.
+
+<details><summary>Why</summary>
+
+The evidence and the consequence, in plain prose.
+</details>" \
   --argjson line 42 \
   '{commit_id: $commit_id, event: "COMMENT", body: "", comments: [{path: $path, line: $line, side: "RIGHT", body: $body}]}' \
 | gh api repos/${REPO}/pulls/${PR_NUMBER}/reviews --method POST --input -

@@ -20,12 +20,12 @@ description: "Outside-in, risk-driven code review methodology. Use when reviewin
 
 This applies to inline comments as much as to the summary: an inline finding carries the same two tags.
 
-Tie every claim to something you actually read or ran. The basis goes in the finding's details (below), and it is checkable rather than exhaustive: one quoted line or one command result, not a trail of how you got there. If a check failed, say so with its output; if you could not run one, say that instead of implying you did.
+Tie every claim to something you actually read or ran. The basis goes in the finding's details (below), or in the lead's reason when there are no details, and it is checkable rather than exhaustive: one quoted line, value or command result, not a trail of how you got there. If a check failed, say so with its output; if you could not run one, say that instead of implying you did.
 
 **Write each finding as a lead, with optional details.**
 
 - **Lead** — the severity and confidence tags, then one or two plain sentences saying **what to change and why**: "I recommend X because Y." When confidence is below high, ask instead: "Should X? Y." A reader who reads only the lead knows what to do. Aim for under about 40 words.
-- **Details** *(only when the lead cannot stand alone)* — the evidence and the consequence, in plain prose, under about 100 words. Collapse it where the platform can (on GitHub, a `<details><summary>Why</summary>` block), so the thread reads as a short ask that expands on demand. Skip it when the lead already carries the evidence.
+- **Details** *(only when the lead cannot stand alone)* — the evidence and the consequence, in plain prose, under about 100 words. Collapse it where the platform can (on GitHub, a `<details><summary>Why</summary>` block), so the thread reads as a short ask that expands on demand. Skip it only when the lead's reason already names the basis for the claim.
 
 **If you cannot state a consequence, you have found a style preference, not a defect.** Record it anyway — `nice-to-have`, at whatever confidence it deserves — and let Phase 6 decide whether it reaches the author. Most will not, and a project's linters and conventions carry them better than a review does. What you must not do is decline to write it down: brevity makes proofreading findings cheap to write, and a review made of cheap findings is the mediocre review this methodology exists to avoid — but the fix for that is filtering in the summary, where a human can see what was filtered, not silence at discovery.
 
@@ -214,9 +214,9 @@ right; the test proves something narrower than the bug report describes.
 
 **Concerns**
 
-`[important]` `[confidence: high]` I recommend testing the signup form instead of the model:
-the bug is a blank email on the form rendering a 500, and a controller change could bring it
-back with the suite green.
+`[important]` `[confidence: high]` I recommend `spec/signup_spec.rb` submit the signup form
+instead of validating the model: the bug is a blank email on the form rendering a 500, and a
+controller change could bring it back with the suite green.
 
 `[nice-to-have]` `[confidence: medium]` Should the guard also reject malformed emails? The same
 form accepts both, so the invalid case may still be open. Worth a ticket either way.

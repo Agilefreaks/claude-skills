@@ -20,7 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   summary now covers every comment: names from the code, no private shorthand, no call-chain
   traces. Phase 0 now skips any concern an existing thread already raised, marker or not, and
   states that every inline finding must carry the marker, since an unmarked comment was
-  re-posted on the next round. Coverage is untouched: findings are still recorded with
+  re-posted on the next round. When details are skipped, the lead's reason must itself name
+  the basis for the claim, so a finding never ships with neither. Coverage is untouched: findings are still recorded with
   severity and confidence and filtered only in the summary.
 
 ## [1.9.0] - 2026-09-23
