@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **code-review** (1.4.1 → 1.5.0) — inline findings are a short lead plus optional collapsed
+  details. Measured on a real PR with 17 inline threads, each ran 120–190 words and the author
+  asked for the bot to be more concise. The 1.4.0 shape (claim, evidence, consequence) had no
+  place for the recommendation, so the fix came last, and the evidence rule produced audit
+  trails of file paths, call chains and quoted docs. A finding is now the tags plus one or two
+  sentences saying what to change and why ("I recommend X, because Y", or a question when
+  confidence is below high), with the evidence and consequence in a collapsed `<details>` block
+  only when the lead cannot stand alone. The plain-language rule that applied only to the
+  summary now covers every comment: names from the code, no private shorthand, no call-chain
+  traces. Phase 0 now skips any concern an existing thread already raised, marker or not, and
+  states that every inline finding must carry the marker, since an unmarked comment was
+  re-posted on the next round. Coverage is untouched: findings are still recorded with
+  severity and confidence and filtered only in the summary.
+
 ## [1.9.0] - 2026-09-23
 
 ### Changed

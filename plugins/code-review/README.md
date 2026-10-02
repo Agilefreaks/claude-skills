@@ -64,22 +64,26 @@ only where they say something those four do not, so a small change gets a short 
 
 **Previous Findings** _(re-reviews only)_ — one line each: Resolved / Answered / Still open, plus a few words.
 
-**Concerns** — blockers first. Each finding is claim, evidence, consequence:
+**Concerns** — blockers first. Each finding is a short lead, with details only when the lead cannot stand alone:
 
-`[blocker | important | nice-to-have]` `[confidence: high | medium | low]` **What is wrong.**
-The file and line, or the quoted output, that shows it.
-What breaks, who hits it, or what it costs to leave.
+`[blocker | important | nice-to-have]` `[confidence: high | medium | low]` I recommend X, because Y.
+(Below high confidence it asks instead: "Should X? Y.")
 
 (If none: "No issues found")
 
-Inline findings use the same three parts, after the marker:
+Inline findings use the same shape, after the marker. The details are collapsed by default, so the thread reads as a short ask that expands on demand:
 
 \`\`\`
 <!-- code-review-finding -->
-`[important]` `[confidence: high]` **What is wrong.**
-The evidence.
-The consequence.
+`[important]` `[confidence: high]` I recommend X, because Y.
+
+<details><summary>Why</summary>
+
+The evidence and the consequence, in plain prose.
+</details>
 \`\`\`
+
+Comments are written for the author reading their own diff: names from the code, no private shorthand, no call-chain traces, no citing the line the comment is already attached to.
 
 **Risk** — the level, always. Reasoning only where the concerns don't already show it.
 
@@ -197,7 +201,7 @@ Run `set up code-review` in Claude Code or Claude.ai Cowork to generate `.github
 
 Opus is the default and the right choice for almost every repo. Fable is available for high-stakes reviews at roughly 2.5x Opus's per-token cost; note that both models run safety classifiers that can decline a security-heavy diff, which shows up as a failed CI run rather than a posted review. The workflow passes a model *alias* rather than a dated model id, so it follows the current release instead of pinning one that will be retired.
 
-The most capable models write longer prose by default, and effort does not reliably shorten it — so length is set by the skill, not the model. Reviews are **Brief** out of the box: four required sections, and each finding written as claim, evidence, consequence. If your team would rather have the reasoning inline than ask for it in the thread, set **Review Detail** to *Standard* during Setup. Neither setting changes which findings are reported; only how much prose each one gets.
+The most capable models write longer prose by default, and effort does not reliably shorten it — so length is set by the skill, not the model. Reviews are **Brief** out of the box: four required sections, and each finding written as a short lead with collapsed details only when needed. If your team would rather have the reasoning on every finding than ask for it in the thread, set **Review Detail** to *Standard* during Setup. Neither setting changes which findings are reported; only how much prose each one gets.
 
 After the file is generated, add `CLAUDE_CODE_OAUTH_TOKEN` as a repository secret:
 
