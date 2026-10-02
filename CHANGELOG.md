@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.10.0] - 2026-10-02
+
 ### Changed
 
 - **code-review** (1.4.1 → 1.5.0) — inline findings are a short lead plus optional collapsed
